@@ -204,6 +204,13 @@ const PricingSection = () => {
                     </button>
                   ))}
                 </div>
+                {selectedServerType === "dedicated" && (
+                  <div className="mt-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                    <p className="text-xs text-amber-400">
+                      <span className="font-semibold">Note:</span> With dedicated servers you can set your own limits. However, if the server crashes due to the limits you set, it's your responsibility.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Commitment Selection */}
