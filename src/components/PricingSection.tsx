@@ -18,8 +18,8 @@ const locations = [
 ];
 
 const serverTypes = [
-  { id: "dedicated", name: "Dedicated", baseAddition: 0, description: "Server just for you" },
-  { id: "shared", name: "Shared", baseAddition: 1000, description: "Shared with members" },
+  { id: "shared", name: "Shared", baseAddition: 0, description: "Shared with members" },
+  { id: "dedicated", name: "Dedicated", baseAddition: 1000, description: "Server just for you" },
 ];
 
 const commitments = [
@@ -35,7 +35,7 @@ const PricingSection = () => {
   const [selectedEndpoint, setSelectedEndpoint] = useState("mainnet");
   const [selectedLocation, setSelectedLocation] = useState("newyork");
   const [selectedCommitment, setSelectedCommitment] = useState("monthly");
-  const [selectedServerType, setSelectedServerType] = useState("dedicated");
+  const [selectedServerType, setSelectedServerType] = useState("shared");
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
   const { formatPrice } = useCurrency();
@@ -71,9 +71,9 @@ const PricingSection = () => {
     const serverType = serverTypes.find(s => s.id === selectedServerType);
     let serverAddition = serverType?.baseAddition || 0;
     
-    // Apply 20% EU markup for shared servers
-    if (selectedServerType === "shared" && isEULocation) {
-      serverAddition = serverAddition * 1.20;
+    // Apply 15% EU markup for dedicated servers
+    if (selectedServerType === "dedicated" && isEULocation) {
+      serverAddition = serverAddition * 1.15;
     }
     
     // Calculate final price in USD
@@ -197,7 +197,7 @@ const PricingSection = () => {
                         <div className="text-xs mt-1 text-secondary font-semibold">
                           +${serverType.baseAddition.toLocaleString()}/mo
                           {locations.find(l => l.id === selectedLocation)?.isEU && (
-                            <span className="ml-1">(+20% EU)</span>
+                            <span className="ml-1">(+15% EU)</span>
                           )}
                         </div>
                       )}
