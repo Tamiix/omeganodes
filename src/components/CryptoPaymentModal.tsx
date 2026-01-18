@@ -11,11 +11,17 @@ interface CryptoPaymentModalProps {
   commitment: string;
 }
 
-const cryptoOptions = [
-  { id: "sol", name: "Solana", symbol: "SOL", icon: "◎", address: "8b6cCUhEYL2B7UMC15phYkf9y9GEs3cUV2UQ4zECHroA" },
-  { id: "usdc", name: "USDC", symbol: "USDC", icon: "$", address: "8b6cCUhEYL2B7UMC15phYkf9y9GEs3cUV2UQ4zECHroA", subtext: "SPL Token" },
-  { id: "usdt", name: "USDT", symbol: "USDT", icon: "₮", address: "8b6cCUhEYL2B7UMC15phYkf9y9GEs3cUV2UQ4zECHroA", subtext: "SPL Token" },
-];
+const PRODUCTION_WALLET = "8b6cCUhEYL2B7UMC15phYkf9y9GEs3cUV2UQ4zECHroA";
+const TEST_WALLET = "vpVbwh9bWRJcur5xSfpEHnAzQ74XeTpG9XDWVvzzSR8";
+
+const getCryptoOptions = (isTestMode: boolean) => {
+  const wallet = isTestMode ? TEST_WALLET : PRODUCTION_WALLET;
+  return [
+    { id: "sol", name: "Solana", symbol: "SOL", icon: "◎", address: wallet },
+    { id: "usdc", name: "USDC", symbol: "USDC", icon: "$", address: wallet, subtext: "SPL Token" },
+    { id: "usdt", name: "USDT", symbol: "USDT", icon: "₮", address: wallet, subtext: "SPL Token" },
+  ];
+};
 
 type PaymentStep = "select" | "processing" | "success" | "failed";
 
@@ -24,6 +30,10 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
   const [copied, setCopied] = useState(false);
   const [paymentStep, setPaymentStep] = useState<PaymentStep>("select");
   const [transactionRef, setTransactionRef] = useState<string>("");
+  const [isTestMode, setIsTestMode] = useState(false);
+
+  const cryptoOptions = getCryptoOptions(isTestMode);
+  const TEST_AMOUNT = 0.1;
 
   const handleCopy = (address: string) => {
     navigator.clipboard.writeText(address);
@@ -37,13 +47,16 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
     setPaymentStep("processing");
     
     try {
-      const totalAmount = getTotalAmount();
+      const totalAmount = isTestMode ? TEST_AMOUNT : getTotalAmount();
+      const walletAddress = isTestMode ? TEST_WALLET : PRODUCTION_WALLET;
       
       // Call the edge function to verify payment on-chain
       const { data, error } = await supabase.functions.invoke('verify-solana-payment', {
         body: {
           tokenType: selectedCrypto,
-          expectedAmount: totalAmount
+          expectedAmount: totalAmount,
+          walletAddress: walletAddress,
+          isTestMode: isTestMode
         }
       });
 
@@ -75,6 +88,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
     setPaymentStep("select");
     setSelectedCrypto(null);
     setTransactionRef("");
+    setIsTestMode(false);
     onClose();
   };
 
@@ -172,20 +186,46 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
             </DialogHeader>
 
             <div className="space-y-6 py-4">
+              {/* Test Mode Toggle */}
+              <div className="flex items-center justify-between p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+                <div className="flex items-center gap-2">
+                  <span className="text-yellow-500 text-sm font-medium">🧪 Test Mode</span>
+                  <span className="text-xs text-muted-foreground">(0.1 USD)</span>
+                </div>
+                <button
+                  onClick={() => setIsTestMode(!isTestMode)}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    isTestMode ? "bg-yellow-500" : "bg-muted"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                      isTestMode ? "translate-x-7" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+
               {/* Order Summary */}
               <div className="p-4 rounded-lg bg-muted/30 border border-border">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm text-muted-foreground">Plan</span>
-                  <span className="text-sm font-medium">{getCommitmentLabel()}</span>
+                  <span className="text-sm font-medium">
+                    {isTestMode ? "Test Payment" : getCommitmentLabel()}
+                  </span>
                 </div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-muted-foreground">Monthly Rate</span>
-                  <span className="text-sm font-medium">${amount}/mo</span>
-                </div>
+                {!isTestMode && (
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-muted-foreground">Monthly Rate</span>
+                    <span className="text-sm font-medium">${amount}/mo</span>
+                  </div>
+                )}
                 <div className="border-t border-border my-3" />
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Total Due</span>
-                  <span className="text-lg font-bold text-gradient-omega">${getTotalAmount()}</span>
+                  <span className="text-lg font-bold text-gradient-omega">
+                    ${isTestMode ? TEST_AMOUNT.toFixed(2) : getTotalAmount()}
+                  </span>
                 </div>
               </div>
 
@@ -232,7 +272,9 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Send exactly <span className="font-semibold text-foreground">${getTotalAmount()}</span> worth of {cryptoOptions.find(c => c.id === selectedCrypto)?.symbol}. 
+                    Send exactly <span className="font-semibold text-foreground">
+                      ${isTestMode ? TEST_AMOUNT.toFixed(2) : getTotalAmount()}
+                    </span> worth of {cryptoOptions.find(c => c.id === selectedCrypto)?.symbol}. 
                     Your subscription will activate after on-chain confirmation.
                   </p>
                 </div>

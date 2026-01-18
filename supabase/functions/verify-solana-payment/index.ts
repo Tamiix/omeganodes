@@ -12,6 +12,8 @@ const WALLET_ADDRESSES: Record<string, string> = {
   usdt: "8b6cCUhEYL2B7UMC15phYkf9y9GEs3cUV2UQ4zECHroA",
 };
 
+const TEST_WALLET = "vpVbwh9bWRJcur5xSfpEHnAzQ74XeTpG9XDWVvzzSR8";
+
 // Token mint addresses on Solana mainnet
 const TOKEN_MINTS: Record<string, string> = {
   usdc: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
@@ -21,7 +23,8 @@ const TOKEN_MINTS: Record<string, string> = {
 interface VerifyPaymentRequest {
   tokenType: string;
   expectedAmount: number;
-  walletAddress?: string; // Optional: sender's wallet for more precise matching
+  walletAddress?: string;
+  isTestMode?: boolean;
 }
 
 serve(async (req) => {
@@ -31,9 +34,9 @@ serve(async (req) => {
   }
 
   try {
-    const { tokenType, expectedAmount, walletAddress } = await req.json() as VerifyPaymentRequest;
+    const { tokenType, expectedAmount, isTestMode } = await req.json() as VerifyPaymentRequest;
     
-    console.log(`Verifying payment: ${tokenType}, expected amount: $${expectedAmount}`);
+    console.log(`Verifying payment: ${tokenType}, expected amount: $${expectedAmount}, test mode: ${isTestMode}`);
     
     if (!tokenType || !expectedAmount) {
       return new Response(
@@ -41,8 +44,8 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    const receiverAddress = WALLET_ADDRESSES[tokenType.toLowerCase()];
+    // Use test wallet if in test mode, otherwise use production wallet
+    const receiverAddress = isTestMode ? TEST_WALLET : WALLET_ADDRESSES[tokenType.toLowerCase()];
     if (!receiverAddress || receiverAddress.includes("OMEGA_")) {
       console.log("Wallet address not configured; cannot verify on-chain payment.");
       return new Response(
