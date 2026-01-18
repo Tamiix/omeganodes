@@ -12,9 +12,14 @@ const endpoints = [
 ];
 
 const locations = [
-  { id: "newyork", name: "New York", region: "US", priceModifier: 1.0 },
-  { id: "frankfurt", name: "Frankfurt", region: "EU", priceModifier: 1.12 },
-  { id: "amsterdam", name: "Amsterdam", region: "EU", priceModifier: 1.18 },
+  { id: "newyork", name: "New York", region: "US", priceModifier: 1.0, isEU: false },
+  { id: "frankfurt", name: "Frankfurt", region: "EU", priceModifier: 1.12, isEU: true },
+  { id: "amsterdam", name: "Amsterdam", region: "EU", priceModifier: 1.18, isEU: true },
+];
+
+const serverTypes = [
+  { id: "dedicated", name: "Dedicated", baseAddition: 0, description: "Server just for you" },
+  { id: "shared", name: "Shared", baseAddition: 1000, description: "Shared with members" },
 ];
 
 const commitments = [
@@ -30,6 +35,7 @@ const PricingSection = () => {
   const [selectedEndpoint, setSelectedEndpoint] = useState("mainnet");
   const [selectedLocation, setSelectedLocation] = useState("newyork");
   const [selectedCommitment, setSelectedCommitment] = useState("monthly");
+  const [selectedServerType, setSelectedServerType] = useState("dedicated");
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
   const { formatPrice } = useCurrency();
@@ -55,22 +61,32 @@ const PricingSection = () => {
     // Get location modifier
     const location = locations.find(l => l.id === selectedLocation);
     const locationModifier = location?.priceModifier || 1;
+    const isEULocation = location?.isEU || false;
     
     // Get commitment discount
     const commitment = commitments.find(c => c.id === selectedCommitment);
     const discountPercent = commitment?.discount || 0;
     
+    // Get server type addition
+    const serverType = serverTypes.find(s => s.id === selectedServerType);
+    let serverAddition = serverType?.baseAddition || 0;
+    
+    // Apply 20% EU markup for shared servers
+    if (selectedServerType === "shared" && isEULocation) {
+      serverAddition = serverAddition * 1.20;
+    }
+    
     // Calculate final price in USD
     const calculatedPrice = basePrice + (combinedPercent * (maxPrice - basePrice));
-    const originalPrice = Math.round(calculatedPrice * endpointModifier * locationModifier);
-    const discountedPrice = Math.round(originalPrice * (1 - discountPercent));
+    const baseWithModifiers = Math.round((calculatedPrice * endpointModifier * locationModifier) + serverAddition);
+    const discountedPrice = Math.round(baseWithModifiers * (1 - discountPercent));
     
     return { 
       price: discountedPrice, 
-      originalPrice, 
+      originalPrice: baseWithModifiers, 
       discount: discountPercent 
     };
-  }, [rps, tps, selectedEndpoint, selectedLocation, selectedCommitment]);
+  }, [rps, tps, selectedEndpoint, selectedLocation, selectedCommitment, selectedServerType]);
 
   return (
     <section id="pricing" className="py-24 relative overflow-hidden">
@@ -154,6 +170,37 @@ const PricingSection = () => {
                     >
                       <div>{location.name}</div>
                       <div className="text-xs mt-1 opacity-70">{location.region}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Server Type Selection */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-foreground mb-3">
+                  Server Type
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {serverTypes.map((serverType) => (
+                    <button
+                      key={serverType.id}
+                      onClick={() => setSelectedServerType(serverType.id)}
+                      className={`py-3 px-4 rounded-lg border text-sm font-medium transition-all ${
+                        selectedServerType === serverType.id
+                          ? "bg-primary/10 border-primary text-primary"
+                          : "bg-muted/30 border-border text-muted-foreground hover:border-muted-foreground/50"
+                      }`}
+                    >
+                      <div>{serverType.name}</div>
+                      <div className="text-xs mt-1 opacity-70">{serverType.description}</div>
+                      {serverType.baseAddition > 0 && (
+                        <div className="text-xs mt-1 text-secondary font-semibold">
+                          +${serverType.baseAddition.toLocaleString()}/mo
+                          {locations.find(l => l.id === selectedLocation)?.isEU && (
+                            <span className="ml-1">(+20% EU)</span>
+                          )}
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
