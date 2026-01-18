@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, Loader2, Clock, XCircle, CheckCircle, ExternalLink } from "lucide-react";
+import { Copy, Check, Loader2, XCircle, CheckCircle, ExternalLink, Zap, Shield, Activity, Info } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,6 +14,8 @@ interface CryptoPaymentModalProps {
 const PRODUCTION_WALLET = "8b6cCUhEYL2B7UMC15phYkf9y9GEs3cUV2UQ4zECHroA";
 const TEST_WALLET = "vpVbwh9bWRJcur5xSfpEHnAzQ74XeTpG9XDWVvzzSR8";
 
+const USD_TO_EUR = 0.92; // Conversion rate
+
 const getCryptoOptions = (isTestMode: boolean) => {
   const wallet = isTestMode ? TEST_WALLET : PRODUCTION_WALLET;
   return [
@@ -23,6 +25,22 @@ const getCryptoOptions = (isTestMode: boolean) => {
   ];
 };
 
+// swQoS pricing tiers
+const SWQOS_TIERS = [
+  { stake: 100000, label: "100K", price: 350 },
+  { stake: 200000, label: "200K", price: 700 },
+  { stake: 300000, label: "300K", price: 1050 },
+  { stake: 400000, label: "400K", price: 1400 },
+  { stake: 500000, label: "500K", price: 1750 },
+  { stake: 600000, label: "600K", price: 2100 },
+  { stake: 700000, label: "700K", price: 2450 },
+  { stake: 800000, label: "800K", price: 2800 },
+  { stake: 900000, label: "900K", price: 3150 },
+  { stake: 1000000, label: "1M", price: 3500 },
+];
+
+const SHREDS_PRICE = 150; // EUR per month
+
 type PaymentStep = "select" | "processing" | "success" | "failed";
 
 const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPaymentModalProps) => {
@@ -31,6 +49,8 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
   const [paymentStep, setPaymentStep] = useState<PaymentStep>("select");
   const [transactionRef, setTransactionRef] = useState<string>("");
   const [isTestMode, setIsTestMode] = useState(false);
+  const [includeShreds, setIncludeShreds] = useState(false);
+  const [swqosTier, setSwqosTier] = useState<number | null>(null);
 
   const cryptoOptions = getCryptoOptions(isTestMode);
   const TEST_AMOUNT = 0.1;
@@ -41,16 +61,39 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const getBaseAmountEUR = () => {
+    return Math.round(amount * USD_TO_EUR);
+  };
+
+  const getTotalMonths = () => {
+    switch (commitment) {
+      case "3months": return 3;
+      case "6months": return 6;
+      case "1year": return 12;
+      default: return 1;
+    }
+  };
+
+  const getTotalAmount = () => {
+    if (isTestMode) return TEST_AMOUNT;
+    
+    const months = getTotalMonths();
+    const baseTotal = getBaseAmountEUR() * months;
+    const shredsTotal = includeShreds ? SHREDS_PRICE * months : 0;
+    const swqosTotal = swqosTier !== null ? SWQOS_TIERS[swqosTier].price : 0;
+    
+    return baseTotal + shredsTotal + swqosTotal;
+  };
+
   const handlePaymentSent = async () => {
     if (!selectedCrypto) return;
     
     setPaymentStep("processing");
     
     try {
-      const totalAmount = isTestMode ? TEST_AMOUNT : getTotalAmount();
+      const totalAmount = getTotalAmount();
       const walletAddress = isTestMode ? TEST_WALLET : PRODUCTION_WALLET;
       
-      // Call the edge function to verify payment on-chain
       const { data, error } = await supabase.functions.invoke('verify-solana-payment', {
         body: {
           tokenType: selectedCrypto,
@@ -67,11 +110,9 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
       }
 
       if (data?.detected) {
-        // Payment was detected
         setTransactionRef(data.signature || `OMG-${Date.now().toString(36).toUpperCase()}`);
         setPaymentStep("success");
       } else {
-        // Payment not detected
         setPaymentStep("failed");
       }
     } catch (err) {
@@ -89,6 +130,8 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
     setSelectedCrypto(null);
     setTransactionRef("");
     setIsTestMode(false);
+    setIncludeShreds(false);
+    setSwqosTier(null);
     onClose();
   };
 
@@ -101,18 +144,9 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
     }
   };
 
-  const getTotalAmount = () => {
-    switch (commitment) {
-      case "3months": return amount * 3;
-      case "6months": return amount * 6;
-      case "1year": return amount * 12;
-      default: return amount;
-    }
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg bg-card border-border">
+      <DialogContent className="sm:max-w-lg bg-card border-border max-h-[90vh] overflow-y-auto">
         {paymentStep === "processing" && (
           <div className="py-12 text-center">
             <Loader2 className="w-12 h-12 mx-auto mb-4 text-primary animate-spin" />
@@ -193,12 +227,12 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-6 py-4">
+            <div className="space-y-5 py-4">
               {/* Test Mode Toggle */}
               <div className="flex items-center justify-between p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
                 <div className="flex items-center gap-2">
                   <span className="text-yellow-500 text-sm font-medium">🧪 Test Mode</span>
-                  <span className="text-xs text-muted-foreground">(0.1 USD)</span>
+                  <span className="text-xs text-muted-foreground">(€0.10)</span>
                 </div>
                 <button
                   onClick={() => setIsTestMode(!isTestMode)}
@@ -214,6 +248,109 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
                 </button>
               </div>
 
+              {/* Add-ons Section */}
+              {!isTestMode && (
+                <div className="space-y-4">
+                  <label className="text-sm font-medium">Add-ons (Optional)</label>
+                  
+                  {/* Shreds Add-on */}
+                  <div 
+                    onClick={() => setIncludeShreds(!includeShreds)}
+                    className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                      includeShreds 
+                        ? "bg-primary/10 border-primary" 
+                        : "bg-muted/30 border-border hover:border-muted-foreground/50"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="font-semibold">🔥 Shreds</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/20 text-secondary font-medium">
+                            +€{SHREDS_PRICE}/mo
+                          </span>
+                        </div>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Zap className="w-3.5 h-3.5 text-primary" />
+                            <span>Faster gRPC connection</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Activity className="w-3.5 h-3.5 text-primary" />
+                            <span>Faster transaction landing</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Shield className="w-3.5 h-3.5 text-primary" />
+                            <span>More stable connection</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                        includeShreds ? "border-primary bg-primary" : "border-muted-foreground/50"
+                      }`}>
+                        {includeShreds && <Check className="w-3 h-3 text-primary-foreground" />}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* swQoS Add-on */}
+                  <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold">⚡ swQoS Service</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          €350 per 100K stake (up to 1M)
+                        </p>
+                      </div>
+                      <div className="group relative">
+                        <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                        <div className="absolute right-0 top-6 w-48 p-2 rounded bg-popover border border-border text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                          Staked Weighted Quality of Service for priority transaction processing
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-5 gap-2">
+                      {SWQOS_TIERS.slice(0, 5).map((tier, index) => (
+                        <button
+                          key={tier.stake}
+                          onClick={() => setSwqosTier(swqosTier === index ? null : index)}
+                          className={`py-2 px-1 rounded text-xs font-medium transition-all ${
+                            swqosTier === index
+                              ? "bg-primary/10 border border-primary text-primary"
+                              : "bg-muted/50 border border-transparent text-muted-foreground hover:border-muted-foreground/30"
+                          }`}
+                        >
+                          {tier.label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-5 gap-2 mt-2">
+                      {SWQOS_TIERS.slice(5, 10).map((tier, index) => (
+                        <button
+                          key={tier.stake}
+                          onClick={() => setSwqosTier(swqosTier === index + 5 ? null : index + 5)}
+                          className={`py-2 px-1 rounded text-xs font-medium transition-all ${
+                            swqosTier === index + 5
+                              ? "bg-primary/10 border border-primary text-primary"
+                              : "bg-muted/50 border border-transparent text-muted-foreground hover:border-muted-foreground/30"
+                          }`}
+                        >
+                          {tier.label}
+                        </button>
+                      ))}
+                    </div>
+                    {swqosTier !== null && (
+                      <div className="mt-3 text-sm text-center text-secondary font-medium">
+                        +€{SWQOS_TIERS[swqosTier].price.toLocaleString()} one-time
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Order Summary */}
               <div className="p-4 rounded-lg bg-muted/30 border border-border">
                 <div className="flex justify-between items-center mb-2">
@@ -223,16 +360,30 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
                   </span>
                 </div>
                 {!isTestMode && (
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-muted-foreground">Monthly Rate</span>
-                    <span className="text-sm font-medium">${amount}/mo</span>
-                  </div>
+                  <>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-muted-foreground">Monthly Rate</span>
+                      <span className="text-sm font-medium">€{getBaseAmountEUR()}/mo</span>
+                    </div>
+                    {includeShreds && (
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm text-muted-foreground">Shreds Add-on</span>
+                        <span className="text-sm font-medium">+€{SHREDS_PRICE}/mo</span>
+                      </div>
+                    )}
+                    {swqosTier !== null && (
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm text-muted-foreground">swQoS ({SWQOS_TIERS[swqosTier].label} stake)</span>
+                        <span className="text-sm font-medium">+€{SWQOS_TIERS[swqosTier].price.toLocaleString()}</span>
+                      </div>
+                    )}
+                  </>
                 )}
                 <div className="border-t border-border my-3" />
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Total Due</span>
                   <span className="text-lg font-bold text-gradient-omega">
-                    ${isTestMode ? TEST_AMOUNT.toFixed(2) : getTotalAmount()}
+                    €{isTestMode ? TEST_AMOUNT.toFixed(2) : getTotalAmount().toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -281,7 +432,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Send exactly <span className="font-semibold text-foreground">
-                      ${isTestMode ? TEST_AMOUNT.toFixed(2) : getTotalAmount()}
+                      €{isTestMode ? TEST_AMOUNT.toFixed(2) : getTotalAmount().toLocaleString()}
                     </span> worth of {cryptoOptions.find(c => c.id === selectedCrypto)?.symbol}. 
                     Your subscription will activate after on-chain confirmation.
                   </p>
