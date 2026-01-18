@@ -44,15 +44,12 @@ serve(async (req) => {
 
     const receiverAddress = WALLET_ADDRESSES[tokenType.toLowerCase()];
     if (!receiverAddress || receiverAddress.includes("OMEGA_")) {
-      console.log("Wallet address not configured, simulating payment detection");
-      // For demo purposes, randomly succeed 70% of the time
-      const detected = Math.random() > 0.3;
+      console.log("Wallet address not configured; cannot verify on-chain payment.");
       return new Response(
-        JSON.stringify({ 
-          success: detected, 
-          detected,
-          message: detected ? "Payment detected" : "Payment not found",
-          demo: true
+        JSON.stringify({
+          success: true,
+          detected: false,
+          message: "Payment verification is not configured yet. Please try again later."
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
