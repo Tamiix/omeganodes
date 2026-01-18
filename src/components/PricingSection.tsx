@@ -9,14 +9,22 @@ const endpoints = [
   { id: "testnet", name: "Testnet", priceModifier: 0.5 },
 ];
 
+const locations = [
+  { id: "newyork", name: "New York", region: "US", priceModifier: 1.0 },
+  { id: "frankfurt", name: "Frankfurt", region: "EU", priceModifier: 1.15 },
+  { id: "amsterdam", name: "Amsterdam", region: "EU", priceModifier: 1.15 },
+];
+
 const PricingSection = () => {
   const [rps, setRps] = useState(100);
   const [tps, setTps] = useState(50);
   const [selectedEndpoint, setSelectedEndpoint] = useState("mainnet");
 
+  const [selectedLocation, setSelectedLocation] = useState("newyork");
+
   const price = useMemo(() => {
-    const basePrice = 100;
-    const maxPrice = 750;
+    const basePrice = 125;
+    const maxPrice = 950;
     
     // Calculate RPS contribution (100-4000 range)
     const rpsPercent = (rps - 100) / (4000 - 100);
@@ -29,13 +37,17 @@ const PricingSection = () => {
     
     // Get endpoint modifier
     const endpoint = endpoints.find(e => e.id === selectedEndpoint);
-    const modifier = endpoint?.priceModifier || 1;
+    const endpointModifier = endpoint?.priceModifier || 1;
+    
+    // Get location modifier
+    const location = locations.find(l => l.id === selectedLocation);
+    const locationModifier = location?.priceModifier || 1;
     
     // Calculate final price
     const calculatedPrice = basePrice + (combinedPercent * (maxPrice - basePrice));
     
-    return Math.round(calculatedPrice * modifier);
-  }, [rps, tps, selectedEndpoint]);
+    return Math.round(calculatedPrice * endpointModifier * locationModifier);
+  }, [rps, tps, selectedEndpoint, selectedLocation]);
 
   return (
     <section id="pricing" className="py-24 relative overflow-hidden">
@@ -77,7 +89,7 @@ const PricingSection = () => {
             
             <div className="relative p-8 sm:p-10 rounded-2xl bg-card border border-border">
               {/* Endpoint Selection */}
-              <div className="mb-8">
+              <div className="mb-6">
                 <label className="block text-sm font-medium text-foreground mb-3">
                   Select Endpoint
                 </label>
@@ -96,6 +108,29 @@ const PricingSection = () => {
                       {endpoint.priceModifier < 1 && (
                         <span className="ml-2 text-xs text-secondary">50% off</span>
                       )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Location Selection */}
+              <div className="mb-8">
+                <label className="block text-sm font-medium text-foreground mb-3">
+                  Select Location
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  {locations.map((location) => (
+                    <button
+                      key={location.id}
+                      onClick={() => setSelectedLocation(location.id)}
+                      className={`py-3 px-4 rounded-lg border text-sm font-medium transition-all ${
+                        selectedLocation === location.id
+                          ? "bg-primary/10 border-primary text-primary"
+                          : "bg-muted/30 border-border text-muted-foreground hover:border-muted-foreground/50"
+                      }`}
+                    >
+                      <div>{location.name}</div>
+                      <div className="text-xs mt-1 opacity-70">{location.region}</div>
                     </button>
                   ))}
                 </div>
