@@ -1,7 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, Loader2, Clock } from "lucide-react";
+import { Copy, Check, Loader2, Clock, XCircle, CheckCircle } from "lucide-react";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CryptoPaymentModalProps {
   isOpen: boolean;
@@ -16,12 +17,13 @@ const cryptoOptions = [
   { id: "usdt", name: "USDT", symbol: "USDT", icon: "₮", address: "omegaNodeXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", subtext: "SPL Token" },
 ];
 
-type PaymentStep = "select" | "processing" | "pending";
+type PaymentStep = "select" | "processing" | "success" | "failed";
 
 const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPaymentModalProps) => {
   const [selectedCrypto, setSelectedCrypto] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [paymentStep, setPaymentStep] = useState<PaymentStep>("select");
+  const [transactionRef, setTransactionRef] = useState<string>("");
 
   const handleCopy = (address: string) => {
     navigator.clipboard.writeText(address);
@@ -29,17 +31,50 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handlePaymentSent = () => {
+  const handlePaymentSent = async () => {
+    if (!selectedCrypto) return;
+    
     setPaymentStep("processing");
-    // Simulate processing delay
-    setTimeout(() => {
-      setPaymentStep("pending");
-    }, 2000);
+    
+    try {
+      const totalAmount = getTotalAmount();
+      
+      // Call the edge function to verify payment on-chain
+      const { data, error } = await supabase.functions.invoke('verify-solana-payment', {
+        body: {
+          tokenType: selectedCrypto,
+          expectedAmount: totalAmount
+        }
+      });
+
+      if (error) {
+        console.error("Error verifying payment:", error);
+        setPaymentStep("failed");
+        return;
+      }
+
+      if (data?.detected) {
+        // Payment was detected
+        setTransactionRef(data.signature || `OMG-${Date.now().toString(36).toUpperCase()}`);
+        setPaymentStep("success");
+      } else {
+        // Payment not detected
+        setPaymentStep("failed");
+      }
+    } catch (err) {
+      console.error("Error calling verification:", err);
+      setPaymentStep("failed");
+    }
+  };
+
+  const handleRetry = () => {
+    setPaymentStep("select");
   };
 
   const handleClose = () => {
     setPaymentStep("select");
     setSelectedCrypto(null);
+    setTransactionRef("");
     onClose();
   };
 
@@ -68,29 +103,61 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
           <div className="py-12 text-center">
             <Loader2 className="w-12 h-12 mx-auto mb-4 text-primary animate-spin" />
             <h3 className="text-xl font-bold mb-2">Verifying Payment</h3>
-            <p className="text-muted-foreground">Please wait while we confirm your transaction...</p>
+            <p className="text-muted-foreground">Checking the Solana blockchain for your transaction...</p>
           </div>
         )}
 
-        {paymentStep === "pending" && (
+        {paymentStep === "success" && (
           <div className="py-12 text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-secondary/20 flex items-center justify-center">
-              <Clock className="w-8 h-8 text-secondary" />
+              <CheckCircle className="w-8 h-8 text-secondary" />
             </div>
-            <h3 className="text-xl font-bold mb-2">Payment Pending</h3>
+            <h3 className="text-xl font-bold mb-2">Payment Confirmed!</h3>
             <p className="text-muted-foreground mb-6">
-              Your payment is being processed. You'll receive a confirmation email once verified.
-              This usually takes 1-10 minutes.
+              Your payment has been verified on-chain. Your subscription is now active!
             </p>
             <div className="p-4 rounded-lg bg-muted/30 border border-border mb-6">
               <div className="text-sm text-muted-foreground mb-1">Transaction Reference</div>
-              <code className="text-sm font-mono text-primary">OMG-{Date.now().toString(36).toUpperCase()}</code>
+              <code className="text-xs font-mono text-primary break-all">{transactionRef}</code>
             </div>
             <Button variant="omega" onClick={handleClose} className="w-full">
               Done
             </Button>
             <p className="text-xs text-muted-foreground mt-4">
-              Questions? Join our <a href="https://discord.gg/omeganode" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Discord</a> for support.
+              Check your email for subscription details.
+            </p>
+          </div>
+        )}
+
+        {paymentStep === "failed" && (
+          <div className="py-12 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-destructive/20 flex items-center justify-center">
+              <XCircle className="w-8 h-8 text-destructive" />
+            </div>
+            <h3 className="text-xl font-bold mb-2">Payment Not Detected</h3>
+            <p className="text-muted-foreground mb-6">
+              We couldn't detect your payment on the Solana blockchain. 
+              Please ensure you've sent the correct amount to the correct address.
+            </p>
+            <div className="p-4 rounded-lg bg-muted/30 border border-border mb-6 text-left">
+              <div className="text-sm font-medium mb-2">Troubleshooting tips:</div>
+              <ul className="text-xs text-muted-foreground space-y-1">
+                <li>• Wait a few minutes for the transaction to confirm</li>
+                <li>• Verify you sent to the correct wallet address</li>
+                <li>• Ensure you sent the exact amount required</li>
+                <li>• Check that you used the Solana network</li>
+              </ul>
+            </div>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={handleClose} className="flex-1">
+                Cancel
+              </Button>
+              <Button variant="omega" onClick={handleRetry} className="flex-1">
+                Try Again
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-4">
+              Need help? Join our <a href="https://discord.gg/omeganode" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Discord</a> for support.
             </p>
           </div>
         )}
@@ -166,7 +233,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Send exactly <span className="font-semibold text-foreground">${getTotalAmount()}</span> worth of {cryptoOptions.find(c => c.id === selectedCrypto)?.symbol}. 
-                    Your subscription will activate within 10 minutes after confirmation.
+                    Your subscription will activate after on-chain confirmation.
                   </p>
                 </div>
               )}
