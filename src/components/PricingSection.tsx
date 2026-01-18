@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useMemo } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Check, Zap, Calendar } from "lucide-react";
+import CryptoPaymentModal from "./CryptoPaymentModal";
 
 const endpoints = [
   { id: "mainnet", name: "Mainnet", priceModifier: 1.0 },
@@ -11,18 +12,26 @@ const endpoints = [
 
 const locations = [
   { id: "newyork", name: "New York", region: "US", priceModifier: 1.0 },
-  { id: "frankfurt", name: "Frankfurt", region: "EU", priceModifier: 1.15 },
-  { id: "amsterdam", name: "Amsterdam", region: "EU", priceModifier: 1.15 },
+  { id: "frankfurt", name: "Frankfurt", region: "EU", priceModifier: 1.12 },
+  { id: "amsterdam", name: "Amsterdam", region: "EU", priceModifier: 1.18 },
+];
+
+const commitments = [
+  { id: "monthly", name: "Monthly", months: 1, discount: 0, label: "No commitment" },
+  { id: "3months", name: "3 Months", months: 3, discount: 0.15, label: "Save 15%" },
+  { id: "6months", name: "6 Months", months: 6, discount: 0.22, label: "Save 22%" },
+  { id: "1year", name: "1 Year", months: 12, discount: 0.30, label: "Save 30%" },
 ];
 
 const PricingSection = () => {
   const [rps, setRps] = useState(100);
   const [tps, setTps] = useState(50);
   const [selectedEndpoint, setSelectedEndpoint] = useState("mainnet");
-
   const [selectedLocation, setSelectedLocation] = useState("newyork");
+  const [selectedCommitment, setSelectedCommitment] = useState("monthly");
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
-  const price = useMemo(() => {
+  const { price, originalPrice, discount } = useMemo(() => {
     const basePrice = 125;
     const maxPrice = 950;
     
@@ -43,11 +52,21 @@ const PricingSection = () => {
     const location = locations.find(l => l.id === selectedLocation);
     const locationModifier = location?.priceModifier || 1;
     
+    // Get commitment discount
+    const commitment = commitments.find(c => c.id === selectedCommitment);
+    const discountPercent = commitment?.discount || 0;
+    
     // Calculate final price
     const calculatedPrice = basePrice + (combinedPercent * (maxPrice - basePrice));
+    const originalPrice = Math.round(calculatedPrice * endpointModifier * locationModifier);
+    const discountedPrice = Math.round(originalPrice * (1 - discountPercent));
     
-    return Math.round(calculatedPrice * endpointModifier * locationModifier);
-  }, [rps, tps, selectedEndpoint, selectedLocation]);
+    return { 
+      price: discountedPrice, 
+      originalPrice, 
+      discount: discountPercent 
+    };
+  }, [rps, tps, selectedEndpoint, selectedLocation, selectedCommitment]);
 
   return (
     <section id="pricing" className="py-24 relative overflow-hidden">
@@ -114,7 +133,7 @@ const PricingSection = () => {
               </div>
 
               {/* Location Selection */}
-              <div className="mb-8">
+              <div className="mb-6">
                 <label className="block text-sm font-medium text-foreground mb-3">
                   Select Location
                 </label>
@@ -131,6 +150,31 @@ const PricingSection = () => {
                     >
                       <div>{location.name}</div>
                       <div className="text-xs mt-1 opacity-70">{location.region}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Commitment Selection */}
+              <div className="mb-8">
+                <label className="block text-sm font-medium text-foreground mb-3">
+                  Commitment Period
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {commitments.map((commitment) => (
+                    <button
+                      key={commitment.id}
+                      onClick={() => setSelectedCommitment(commitment.id)}
+                      className={`py-3 px-3 rounded-lg border text-sm font-medium transition-all ${
+                        selectedCommitment === commitment.id
+                          ? "bg-primary/10 border-primary text-primary"
+                          : "bg-muted/30 border-border text-muted-foreground hover:border-muted-foreground/50"
+                      }`}
+                    >
+                      <div>{commitment.name}</div>
+                      <div className={`text-xs mt-1 ${commitment.discount > 0 ? "text-secondary font-semibold" : "opacity-70"}`}>
+                        {commitment.label}
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -186,11 +230,20 @@ const PricingSection = () => {
               {/* Price Display */}
               <div className="text-center mb-8">
                 <div className="text-sm text-muted-foreground mb-2">Monthly payment</div>
-                <div className="flex items-baseline justify-center gap-1">
+                <div className="flex items-baseline justify-center gap-2">
+                  {discount > 0 && (
+                    <span className="text-2xl text-muted-foreground line-through">${originalPrice}</span>
+                  )}
                   <span className="text-5xl sm:text-6xl font-bold text-gradient-omega">${price}</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
-                <div className="text-sm text-secondary mt-2">Cancel anytime • No long-term commitment</div>
+                {discount > 0 ? (
+                  <div className="text-sm text-secondary mt-2">
+                    You save ${originalPrice - price}/mo with {commitments.find(c => c.id === selectedCommitment)?.name} commitment
+                  </div>
+                ) : (
+                  <div className="text-sm text-secondary mt-2">Cancel anytime • No long-term commitment</div>
+                )}
               </div>
 
               {/* Features List */}
@@ -213,17 +266,30 @@ const PricingSection = () => {
               </div>
 
               {/* CTA Button */}
-              <Button variant="omega" size="lg" className="w-full gap-2">
+              <Button 
+                variant="omega" 
+                size="lg" 
+                className="w-full gap-2"
+                onClick={() => setIsPaymentOpen(true)}
+              >
                 <Zap className="w-4 h-4" />
                 Subscribe Now
               </Button>
 
               <p className="text-center text-xs text-muted-foreground mt-4">
-                Secure payment via crypto or card • Instant activation
+                Secure payment via crypto • Instant activation
               </p>
             </div>
           </div>
         </motion.div>
+
+        {/* Crypto Payment Modal */}
+        <CryptoPaymentModal
+          isOpen={isPaymentOpen}
+          onClose={() => setIsPaymentOpen(false)}
+          amount={price}
+          commitment={selectedCommitment}
+        />
 
         {/* Discord CTA */}
         <motion.div
