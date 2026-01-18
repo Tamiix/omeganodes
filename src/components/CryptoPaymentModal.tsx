@@ -3,18 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Copy, Check, Loader2, XCircle, CheckCircle, ExternalLink, Zap, Shield, Activity, Info } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface CryptoPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  amount: number;
+  amount: number; // Amount in USD
   commitment: string;
 }
 
 const PRODUCTION_WALLET = "8b6cCUhEYL2B7UMC15phYkf9y9GEs3cUV2UQ4zECHroA";
 const TEST_WALLET = "vpVbwh9bWRJcur5xSfpEHnAzQ74XeTpG9XDWVvzzSR8";
-
-const USD_TO_EUR = 0.92; // Conversion rate
 
 const getCryptoOptions = (isTestMode: boolean) => {
   const wallet = isTestMode ? TEST_WALLET : PRODUCTION_WALLET;
@@ -25,21 +24,21 @@ const getCryptoOptions = (isTestMode: boolean) => {
   ];
 };
 
-// swQoS pricing tiers
+// swQoS pricing tiers (USD)
 const SWQOS_TIERS = [
-  { stake: 100000, label: "100K", price: 350 },
-  { stake: 200000, label: "200K", price: 700 },
-  { stake: 300000, label: "300K", price: 1050 },
-  { stake: 400000, label: "400K", price: 1400 },
-  { stake: 500000, label: "500K", price: 1750 },
-  { stake: 600000, label: "600K", price: 2100 },
-  { stake: 700000, label: "700K", price: 2450 },
-  { stake: 800000, label: "800K", price: 2800 },
-  { stake: 900000, label: "900K", price: 3150 },
-  { stake: 1000000, label: "1M", price: 3500 },
+  { stake: 100000, label: "100K", price: 380 },
+  { stake: 200000, label: "200K", price: 760 },
+  { stake: 300000, label: "300K", price: 1140 },
+  { stake: 400000, label: "400K", price: 1520 },
+  { stake: 500000, label: "500K", price: 1900 },
+  { stake: 600000, label: "600K", price: 2280 },
+  { stake: 700000, label: "700K", price: 2660 },
+  { stake: 800000, label: "800K", price: 3040 },
+  { stake: 900000, label: "900K", price: 3420 },
+  { stake: 1000000, label: "1M", price: 3800 },
 ];
 
-const SHREDS_PRICE = 5000; // EUR per month
+const SHREDS_PRICE = 5435; // USD per month (~5000 EUR)
 
 type PaymentStep = "select" | "processing" | "success" | "failed";
 
@@ -52,6 +51,8 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
   const [includeShreds, setIncludeShreds] = useState(false);
   const [swqosTier, setSwqosTier] = useState<number | null>(null);
 
+  const { formatPrice } = useCurrency();
+
   const cryptoOptions = getCryptoOptions(isTestMode);
   const TEST_AMOUNT = 0.1;
 
@@ -59,10 +60,6 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
     navigator.clipboard.writeText(address);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const getBaseAmountEUR = () => {
-    return Math.round(amount * USD_TO_EUR);
   };
 
   const getTotalMonths = () => {
@@ -78,7 +75,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
     if (isTestMode) return TEST_AMOUNT;
     
     const months = getTotalMonths();
-    const baseTotal = getBaseAmountEUR() * months;
+    const baseTotal = amount * months;
     const shredsTotal = includeShreds ? SHREDS_PRICE * months : 0;
     const swqosTotal = swqosTier !== null ? SWQOS_TIERS[swqosTier].price : 0;
     
@@ -265,9 +262,9 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="font-semibold">🔥 Shreds</span>
+                          <span className="font-semibold">🔥 Private Shreds</span>
                           <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/20 text-secondary font-medium">
-                            +€{SHREDS_PRICE}/mo
+                            +{formatPrice(SHREDS_PRICE)}/mo
                           </span>
                         </div>
                         <div className="space-y-1.5">
@@ -363,18 +360,18 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
                   <>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm text-muted-foreground">Monthly Rate</span>
-                      <span className="text-sm font-medium">€{getBaseAmountEUR()}/mo</span>
+                      <span className="text-sm font-medium">{formatPrice(amount)}/mo</span>
                     </div>
                     {includeShreds && (
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-muted-foreground">Shreds Add-on</span>
-                        <span className="text-sm font-medium">+€{SHREDS_PRICE}/mo</span>
+                        <span className="text-sm text-muted-foreground">Private Shreds</span>
+                        <span className="text-sm font-medium">+{formatPrice(SHREDS_PRICE)}/mo</span>
                       </div>
                     )}
                     {swqosTier !== null && (
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-sm text-muted-foreground">swQoS ({SWQOS_TIERS[swqosTier].label} stake)</span>
-                        <span className="text-sm font-medium">+€{SWQOS_TIERS[swqosTier].price.toLocaleString()}</span>
+                        <span className="text-sm font-medium">+{formatPrice(SWQOS_TIERS[swqosTier].price)}</span>
                       </div>
                     )}
                   </>
@@ -383,7 +380,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Total Due</span>
                   <span className="text-lg font-bold text-gradient-omega">
-                    €{isTestMode ? TEST_AMOUNT.toFixed(2) : getTotalAmount().toLocaleString()}
+                    {isTestMode ? `$${TEST_AMOUNT.toFixed(2)}` : formatPrice(getTotalAmount())}
                   </span>
                 </div>
               </div>
@@ -432,7 +429,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Send exactly <span className="font-semibold text-foreground">
-                      €{isTestMode ? TEST_AMOUNT.toFixed(2) : getTotalAmount().toLocaleString()}
+                      {isTestMode ? `$${TEST_AMOUNT.toFixed(2)}` : formatPrice(getTotalAmount())}
                     </span> worth of {cryptoOptions.find(c => c.id === selectedCrypto)?.symbol}. 
                     Your subscription will activate after on-chain confirmation.
                   </p>

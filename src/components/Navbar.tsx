@@ -1,10 +1,13 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { useState } from "react";
-
+import { useCurrency } from "@/contexts/CurrencyContext";
+import CurrencySelector from "./CurrencySelector";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [currencyOpen, setCurrencyOpen] = useState(false);
+  const { currency, showSelector, setShowSelector } = useCurrency();
 
   return (
     <motion.nav
@@ -43,6 +46,15 @@ const Navbar = () => {
 
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-3">
+            {/* Currency Selector */}
+            <button
+              onClick={() => setCurrencyOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/50 border border-border/50 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all"
+            >
+              <span>{currency.symbol}</span>
+              <span>{currency.code}</span>
+              <ChevronDown className="w-3.5 h-3.5" />
+            </button>
             {/* Discord */}
             <a
               href="https://discord.gg/omeganode"
@@ -69,6 +81,16 @@ const Navbar = () => {
               Get Started
             </Button>
           </div>
+
+          {/* Currency Selector Modal */}
+          <CurrencySelector 
+            open={currencyOpen || showSelector} 
+            onOpenChange={(open) => {
+              setCurrencyOpen(open);
+              if (!open) setShowSelector(false);
+            }}
+            isFirstVisit={showSelector}
+          />
 
           {/* Mobile Menu Button */}
           <button
