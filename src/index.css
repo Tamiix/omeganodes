@@ -2,102 +2,91 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-/* OmegaNode Design System - Cosmic Purple/Pink Web3 Theme */
+/* OmegaNode Design System - Clean Dark Theme with Purple/Teal Accents */
 
 @layer base {
   :root {
-    /* Core cosmic dark palette */
-    --background: 260 30% 4%;
-    --foreground: 270 20% 95%;
+    /* Core dark palette - cleaner, less "AI" looking */
+    --background: 220 16% 6%;
+    --foreground: 0 0% 95%;
 
-    --card: 260 35% 8%;
-    --card-foreground: 270 20% 95%;
+    --card: 220 16% 9%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 260 35% 8%;
-    --popover-foreground: 270 20% 95%;
+    --popover: 220 16% 9%;
+    --popover-foreground: 0 0% 95%;
 
-    /* Omega Purple - Primary Brand */
-    --primary: 270 80% 60%;
-    --primary-foreground: 270 20% 98%;
+    /* Omega Purple - Primary Brand (softer, more professional) */
+    --primary: 262 60% 58%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Cosmic Pink - Secondary */
-    --secondary: 320 70% 55%;
-    --secondary-foreground: 320 20% 98%;
+    /* Teal/Green - Secondary accent (matches your site) */
+    --secondary: 160 70% 45%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 260 25% 15%;
-    --muted-foreground: 260 15% 55%;
+    --muted: 220 14% 14%;
+    --muted-foreground: 220 10% 50%;
 
-    /* Accent - Electric Violet */
-    --accent: 280 85% 65%;
-    --accent-foreground: 280 20% 98%;
+    /* Accent - Softer violet */
+    --accent: 262 50% 50%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 75% 55%;
+    --destructive: 0 65% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 260 30% 18%;
-    --input: 260 30% 18%;
-    --ring: 270 80% 60%;
+    --border: 220 14% 16%;
+    --input: 220 14% 16%;
+    --ring: 262 60% 58%;
 
-    --radius: 0.75rem;
+    --radius: 0.625rem;
 
     /* Custom Omega tokens */
-    --omega-glow: 270 100% 70%;
-    --omega-pink: 320 85% 60%;
-    --omega-cyan: 190 90% 55%;
-    --omega-dark: 260 40% 6%;
-    --omega-darker: 260 50% 3%;
-    
-    /* Gradients */
-    --gradient-omega: linear-gradient(135deg, hsl(270 80% 60%) 0%, hsl(320 85% 60%) 50%, hsl(270 80% 60%) 100%);
-    --gradient-cosmic: linear-gradient(180deg, hsl(260 40% 6%) 0%, hsl(260 50% 3%) 100%);
-    --gradient-glow: radial-gradient(ellipse at center, hsl(270 100% 70% / 0.15) 0%, transparent 70%);
-    --gradient-card: linear-gradient(135deg, hsl(260 35% 10%) 0%, hsl(260 40% 6%) 100%);
-    
-    /* Shadows */
-    --shadow-glow: 0 0 60px hsl(270 100% 70% / 0.3);
-    --shadow-glow-sm: 0 0 30px hsl(270 100% 70% / 0.2);
-    --shadow-card: 0 10px 40px hsl(260 50% 3% / 0.5);
+    --omega-purple: 262 60% 58%;
+    --omega-teal: 160 70% 45%;
+    --omega-green: 142 70% 45%;
+    --omega-dark: 220 16% 6%;
+    --omega-card: 220 16% 9%;
 
-    --sidebar-background: 260 40% 6%;
-    --sidebar-foreground: 270 20% 95%;
-    --sidebar-primary: 270 80% 60%;
-    --sidebar-primary-foreground: 270 20% 98%;
-    --sidebar-accent: 260 35% 12%;
-    --sidebar-accent-foreground: 270 20% 95%;
-    --sidebar-border: 260 30% 18%;
-    --sidebar-ring: 270 80% 60%;
+    --sidebar-background: 220 16% 6%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 262 60% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 16% 12%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 220 14% 16%;
+    --sidebar-ring: 262 60% 58%;
   }
 
   .dark {
-    --background: 260 30% 4%;
-    --foreground: 270 20% 95%;
-    --card: 260 35% 8%;
-    --card-foreground: 270 20% 95%;
-    --popover: 260 35% 8%;
-    --popover-foreground: 270 20% 95%;
-    --primary: 270 80% 60%;
-    --primary-foreground: 270 20% 98%;
-    --secondary: 320 70% 55%;
-    --secondary-foreground: 320 20% 98%;
-    --muted: 260 25% 15%;
-    --muted-foreground: 260 15% 55%;
-    --accent: 280 85% 65%;
-    --accent-foreground: 280 20% 98%;
-    --destructive: 0 75% 55%;
+    --background: 220 16% 6%;
+    --foreground: 0 0% 95%;
+    --card: 220 16% 9%;
+    --card-foreground: 0 0% 95%;
+    --popover: 220 16% 9%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 262 60% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 160 70% 45%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 14% 14%;
+    --muted-foreground: 220 10% 50%;
+    --accent: 262 50% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 65% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border: 260 30% 18%;
-    --input: 260 30% 18%;
-    --ring: 270 80% 60%;
-    --sidebar-background: 260 40% 6%;
-    --sidebar-foreground: 270 20% 95%;
-    --sidebar-primary: 270 80% 60%;
-    --sidebar-primary-foreground: 270 20% 98%;
-    --sidebar-accent: 260 35% 12%;
-    --sidebar-accent-foreground: 270 20% 95%;
-    --sidebar-border: 260 30% 18%;
-    --sidebar-ring: 270 80% 60%;
+    --border: 220 14% 16%;
+    --input: 220 14% 16%;
+    --ring: 262 60% 58%;
+    --sidebar-background: 220 16% 6%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 262 60% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 16% 12%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 220 14% 16%;
+    --sidebar-ring: 262 60% 58%;
   }
 }
 
@@ -108,7 +97,7 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
   }
 
   html {
@@ -123,73 +112,32 @@
 
   .text-gradient-omega {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(270 80% 60%) 0%, hsl(320 85% 60%) 100%);
+    background-image: linear-gradient(135deg, hsl(262 60% 58%) 0%, hsl(280 60% 65%) 100%);
+  }
+
+  .text-gradient-teal {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(160 70% 45%) 0%, hsl(142 70% 50%) 100%);
   }
 
   .bg-gradient-omega {
-    background: linear-gradient(135deg, hsl(270 80% 60%) 0%, hsl(320 85% 60%) 100%);
+    background: linear-gradient(135deg, hsl(262 60% 58%) 0%, hsl(280 60% 65%) 100%);
   }
 
-  .bg-gradient-cosmic {
-    background: linear-gradient(180deg, hsl(260 40% 6%) 0%, hsl(260 50% 3%) 100%);
+  .border-glow {
+    position: relative;
   }
 
-  .glow-omega {
-    box-shadow: 0 0 60px hsl(270 100% 70% / 0.3);
-  }
-
-  .glow-omega-sm {
-    box-shadow: 0 0 30px hsl(270 100% 70% / 0.2);
-  }
-
-  .border-gradient-omega {
-    border: 1px solid transparent;
-    background: linear-gradient(hsl(260 35% 8%), hsl(260 35% 8%)) padding-box,
-                linear-gradient(135deg, hsl(270 80% 60%) 0%, hsl(320 85% 60%) 100%) border-box;
-  }
-
-  .glass-omega {
-    @apply backdrop-blur-xl;
-    background: hsl(260 35% 8% / 0.8);
-    border: 1px solid hsl(260 30% 18% / 0.5);
-  }
-
-  .animate-pulse-glow {
-    animation: pulse-glow 3s ease-in-out infinite;
-  }
-
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
-  }
-
-  .animate-shimmer {
-    animation: shimmer 3s linear infinite;
-  }
-}
-
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 40px hsl(270 100% 70% / 0.2);
-  }
-  50% {
-    box-shadow: 0 0 80px hsl(270 100% 70% / 0.4);
-  }
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -200% center;
-  }
-  100% {
-    background-position: 200% center;
+  .border-glow::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, hsl(262 60% 58% / 0.5), hsl(160 70% 45% / 0.3));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
   }
 }

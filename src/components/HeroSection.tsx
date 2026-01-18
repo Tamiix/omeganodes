@@ -1,119 +1,116 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap, Shield, Globe } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-cosmic" />
-      
-      {/* Animated Grid */}
-      <div className="absolute inset-0 opacity-20">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 pb-16">
+      {/* Subtle grid background */}
+      <div className="absolute inset-0 opacity-[0.03]">
         <div className="absolute inset-0" style={{
-          backgroundImage: `linear-gradient(hsl(270 80% 60% / 0.1) 1px, transparent 1px),
-                           linear-gradient(90deg, hsl(270 80% 60% / 0.1) 1px, transparent 1px)`,
-          backgroundSize: '60px 60px'
+          backgroundImage: `linear-gradient(hsl(262 60% 58% / 0.3) 1px, transparent 1px),
+                           linear-gradient(90deg, hsl(262 60% 58% / 0.3) 1px, transparent 1px)`,
+          backgroundSize: '80px 80px'
         }} />
       </div>
 
-      {/* Glow Orbs */}
-      <motion.div
-        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-primary/20 blur-[100px]"
-      />
-      <motion.div
-        animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-secondary/20 blur-[100px]"
-      />
+      {/* Subtle glow */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] rounded-full bg-primary/5 blur-[120px]" />
 
-      {/* Content */}
       <div className="container mx-auto px-6 relative z-10">
-        <div className="max-w-5xl mx-auto text-center">
-          {/* Badge */}
+        <div className="max-w-4xl mx-auto text-center">
+          {/* Top badges */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/5 mb-8"
+            transition={{ duration: 0.5 }}
+            className="flex items-center justify-center gap-3 mb-10"
           >
-            <Zap className="w-4 h-4 text-primary" />
-            <span className="text-sm text-muted-foreground">Next-Gen Node Infrastructure</span>
+            <span className="px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm text-primary font-medium">
+              Introducing Omega
+            </span>
+            <a href="#pricing" className="group flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Learn More 
+              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            </a>
           </motion.div>
 
           {/* Main Heading */}
           <motion.h1
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight"
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-[1.1] tracking-tight"
           >
-            <span className="text-foreground">Power Your </span>
-            <span className="text-gradient-omega">Web3</span>
+            Enterprise-Grade{" "}
+            <span className="text-gradient-omega">Solana Infrastructure</span>,
             <br />
-            <span className="text-foreground">Infrastructure</span>
+            Delivered at Light Speed
           </motion.h1>
 
           {/* Subtitle */}
           <motion.p
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10"
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-8 leading-relaxed"
           >
-            Ultra-fast, secure, and reliable node services. One-time payment, 
-            lifetime access. Join the network that powers the future of decentralization.
+            Access Solana's fastest and most resilient RPC infrastructure. With our globally 
+            distributed network spanning 3 strategic locations and backed by 700k+ SOL in stake.
           </motion.p>
 
-          {/* CTA Buttons */}
+          {/* CTA Button */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="mb-10"
           >
-            <Button variant="omega" size="xl" className="gap-2 group">
-              Get OmegaNode Access
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            <Button variant="omegaOutline" size="xl">
-              Learn More
+            <Button variant="omega" size="lg" className="gap-2 group">
+              Get Started Today
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Button>
           </motion.div>
 
-          {/* Stats Row */}
+          {/* Trust indicators */}
           <motion.div
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8"
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="flex flex-wrap items-center justify-center gap-6 mb-16"
           >
-            {[
-              { icon: Zap, value: "99.99%", label: "Uptime" },
-              { icon: Globe, value: "10+", label: "Regions" },
-              { icon: Shield, value: "5000+", label: "Active Nodes" },
-              { icon: Zap, value: "<10ms", label: "Latency" },
-            ].map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
-                className="group p-6 rounded-2xl border-gradient-omega bg-card/50 backdrop-blur-sm hover:bg-card transition-all duration-300"
-              >
-                <stat.icon className="w-6 h-6 text-primary mx-auto mb-3 group-hover:scale-110 transition-transform" />
-                <div className="text-2xl sm:text-3xl font-bold text-foreground mb-1">{stat.value}</div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
-              </motion.div>
-            ))}
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-full bg-secondary/20 flex items-center justify-center">
+                <Check className="w-3 h-3 text-secondary" />
+              </div>
+              <span className="text-sm text-muted-foreground">99.99% Guaranteed Uptime</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-full bg-secondary/20 flex items-center justify-center">
+                <Check className="w-3 h-3 text-secondary" />
+              </div>
+              <span className="text-sm text-muted-foreground">Sub-1ms Response Time</span>
+            </div>
+          </motion.div>
+
+          {/* Stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="grid grid-cols-2 gap-6 max-w-md mx-auto"
+          >
+            <div className="p-5 rounded-xl bg-card border border-border">
+              <div className="text-2xl sm:text-3xl font-bold text-foreground mb-1">&lt;1ms</div>
+              <div className="text-sm text-muted-foreground">Latency</div>
+            </div>
+            <div className="p-5 rounded-xl bg-card border border-border">
+              <div className="text-2xl sm:text-3xl font-bold text-foreground mb-1">3</div>
+              <div className="text-sm text-muted-foreground">Regions</div>
+            </div>
           </motion.div>
         </div>
       </div>
-
-      {/* Bottom Gradient */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
     </section>
   );
 };
