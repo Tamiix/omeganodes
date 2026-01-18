@@ -8,82 +8,90 @@ import {
 
 const faqs = [
   {
-    question: "What is OmegaNode?",
-    answer: "OmegaNode is a next-generation node infrastructure service that provides ultra-fast, secure, and reliable RPC access for Web3 applications. Our global network ensures optimal performance with sub-10ms latency and 99.99% uptime guarantee.",
+    question: "How do I start using Omega RPC?",
+    answer: "Join our Discord server, verify your account, and use our simple command to whitelist your IP. You'll receive your endpoint instantly - no complicated setup needed.",
   },
   {
-    question: "How does the one-time payment work?",
-    answer: "Unlike traditional subscription models, OmegaNode offers lifetime access with a single payment of $499. This includes unlimited RPC access, priority routing, auto-scaling up to 5000 RPS, and all future feature updates at no additional cost.",
+    question: "What networks do you support?",
+    answer: "We currently offer RPC nodes for Solana mainnet and testnet, with our mainnet validator launching soon. Our testnet validator is already actively participating in network consensus.",
   },
   {
-    question: "What blockchains do you support?",
-    answer: "We currently support major blockchain networks including Ethereum, Solana, Polygon, and more. Our infrastructure is constantly expanding to include new networks based on community demand.",
+    question: "What makes Omega different?",
+    answer: "We combine enterprise-grade infrastructure + custom gRPC solutions with a simple, Discord-based setup process. Our focus is on delivering maximum performance without the complexity typically associated with RPC services.",
   },
   {
-    question: "How do I connect to Discord for support?",
-    answer: "After purchasing OmegaNode access, you'll receive an exclusive invite link to our private Discord community. There you'll get dedicated support channels, direct access to our team, and connect with other node operators.",
+    question: "What are your performance metrics?",
+    answer: "Our infrastructure delivers consistent sub 1ms average response times with 99.9% uptime. Each endpoint supports up to 4000 requests per second, ensuring your applications run smoothly.",
   },
   {
-    question: "Can I upgrade my access tier?",
-    answer: "The OmegaNode Pass includes our full feature set. As we add new capabilities, they're automatically included in your existing pass. We're committed to continuously improving the service for all pass holders.",
+    question: "Do you have rate limits?",
+    answer: "All plans come with generous request limits designed for real-world usage. Need more? Our scaling options can accommodate any volume requirement.",
   },
   {
-    question: "What payment methods do you accept?",
-    answer: "We accept cryptocurrency payments (ETH, SOL, USDC) as well as traditional payment methods via credit/debit cards. All transactions are processed securely with instant activation.",
+    question: "How do you handle network congestion?",
+    answer: "Our load balancing system automatically distributes traffic across multiple nodes, ensuring consistent performance even during peak network activity.",
   },
 ];
 
 const FAQSection = () => {
   return (
-    <section id="faq" className="py-32 relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-cosmic" />
-
-      <div className="container mx-auto px-6 relative z-10">
+    <section id="faq" className="py-24 relative">
+      <div className="container mx-auto px-6">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          transition={{ duration: 0.5 }}
+          className="text-center mb-12"
         >
-          <span className="text-primary font-semibold text-sm uppercase tracking-wider mb-4 block">
+          <span className="text-primary font-medium text-sm uppercase tracking-wider mb-3 block">
             FAQ
           </span>
-          <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
-            <span className="text-foreground">Frequently Asked </span>
-            <span className="text-gradient-omega">Questions</span>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+            Frequently Asked Questions
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Everything you need to know about OmegaNode
+          <p className="text-muted-foreground max-w-xl mx-auto">
+            Find quick answers to common questions about our RPC infrastructure.
           </p>
         </motion.div>
 
         {/* FAQ Accordion */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="max-w-3xl mx-auto"
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="max-w-2xl mx-auto"
         >
-          <Accordion type="single" collapsible className="space-y-4">
+          <Accordion type="single" collapsible className="space-y-3">
             {faqs.map((faq, index) => (
               <AccordionItem
                 key={index}
                 value={`item-${index}`}
-                className="border border-border/50 rounded-xl px-6 bg-card/50 backdrop-blur-sm data-[state=open]:border-primary/30 transition-colors"
+                className="border border-border rounded-lg px-5 bg-card data-[state=open]:border-primary/30 transition-colors"
               >
-                <AccordionTrigger className="text-left text-lg font-semibold text-foreground hover:text-primary hover:no-underline py-6">
+                <AccordionTrigger className="text-left text-base font-medium text-foreground hover:text-primary hover:no-underline py-4">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pb-6 leading-relaxed">
+                <AccordionContent className="text-muted-foreground text-sm pb-4 leading-relaxed">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
+
+          <p className="text-center text-sm text-muted-foreground mt-8">
+            Still have questions?{" "}
+            <a 
+              href="https://discord.gg/jMurX9gDDe" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              Contact us on Discord
+            </a>
+          </p>
         </motion.div>
       </div>
     </section>
