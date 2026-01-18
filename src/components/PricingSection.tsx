@@ -19,7 +19,7 @@ const locations = [
 
 const serverTypes = [
   { id: "shared", name: "Shared", baseAddition: 0, description: "Shared with members" },
-  { id: "dedicated", name: "Dedicated", baseAddition: 1000, description: "Server just for you" },
+  { id: "dedicated", name: "Dedicated", baseAddition: 2300, description: "Set your own limits" },
 ];
 
 const commitments = [
