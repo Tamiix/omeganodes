@@ -39,7 +39,7 @@ const SWQOS_TIERS = [
   { stake: 1000000, label: "1M", price: 3500 },
 ];
 
-const SHREDS_PRICE = 150; // EUR per month
+const SHREDS_PRICE = 5000; // EUR per month
 
 type PaymentStep = "select" | "processing" | "success" | "failed";
 
