@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, Loader2, Clock, XCircle, CheckCircle } from "lucide-react";
+import { Copy, Check, Loader2, Clock, XCircle, CheckCircle, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -130,10 +130,18 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
             <p className="text-muted-foreground mb-6">
               Your payment has been verified on-chain. Your subscription is now active!
             </p>
-            <div className="p-4 rounded-lg bg-muted/30 border border-border mb-6">
-              <div className="text-sm text-muted-foreground mb-1">Transaction Reference</div>
+            <div className="p-4 rounded-lg bg-muted/30 border border-border mb-4">
+              <div className="text-sm text-muted-foreground mb-1">Transaction Signature</div>
               <code className="text-xs font-mono text-primary break-all">{transactionRef}</code>
             </div>
+            <a
+              href={`https://solscan.io/tx/${transactionRef}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-primary hover:underline mb-6"
+            >
+              View on Solscan <ExternalLink className="w-4 h-4" />
+            </a>
             <Button variant="omega" onClick={handleClose} className="w-full">
               Done
             </Button>

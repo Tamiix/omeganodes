@@ -20,6 +20,9 @@ const TOKEN_MINTS: Record<string, string> = {
   usdt: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
 };
 
+// Time window for valid transactions (2 minutes in seconds)
+const TX_TIME_WINDOW_SECONDS = 120;
+
 interface VerifyPaymentRequest {
   tokenType: string;
   expectedAmount: number;
@@ -81,8 +84,16 @@ serve(async (req) => {
       console.log("Recent signatures:", JSON.stringify(signaturesData.result?.slice(0, 3)));
 
       if (signaturesData.result && signaturesData.result.length > 0) {
+        const now = Math.floor(Date.now() / 1000);
+        
         // Check recent transactions for matching amount
         for (const sig of signaturesData.result) {
+          // Skip transactions older than 2 minutes
+          if (sig.blockTime && (now - sig.blockTime) > TX_TIME_WINDOW_SECONDS) {
+            console.log(`Skipping old transaction: ${sig.signature}, age: ${now - sig.blockTime}s`);
+            continue;
+          }
+
           const txResponse = await fetch(rpcUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -104,7 +115,7 @@ serve(async (req) => {
               const postBalance = meta.postBalances[0] || 0;
               const received = (postBalance - preBalance) / 1e9;
               
-              console.log(`Transaction found: received ${received} SOL`);
+              console.log(`Transaction found: received ${received} SOL, age: ${now - sig.blockTime}s`);
               
               // Check if amount matches (with small tolerance for fees)
               if (received > 0) {
@@ -114,6 +125,7 @@ serve(async (req) => {
                     detected: true,
                     signature: sig.signature,
                     amount: received,
+                    blockTime: sig.blockTime,
                     message: "Payment detected and verified"
                   }),
                   { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -161,19 +173,29 @@ serve(async (req) => {
           });
 
           const signaturesData = await signaturesResponse.json();
+          const now = Math.floor(Date.now() / 1000);
           
           if (signaturesData.result && signaturesData.result.length > 0) {
-            // Found recent token transfers
-            console.log(`Found ${signaturesData.result.length} recent token transactions`);
-            
-            return new Response(
-              JSON.stringify({ 
-                success: true, 
-                detected: true,
-                message: "Token payment detected"
-              }),
-              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            // Filter to only recent transactions (within 2 minutes)
+            const recentTxs = signaturesData.result.filter((sig: { blockTime?: number }) => 
+              sig.blockTime && (now - sig.blockTime) <= TX_TIME_WINDOW_SECONDS
             );
+
+            if (recentTxs.length > 0) {
+              const mostRecent = recentTxs[0];
+              console.log(`Found ${recentTxs.length} recent token transactions within ${TX_TIME_WINDOW_SECONDS}s`);
+              
+              return new Response(
+                JSON.stringify({ 
+                  success: true, 
+                  detected: true,
+                  signature: mostRecent.signature,
+                  blockTime: mostRecent.blockTime,
+                  message: "Token payment detected"
+                }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              );
+            }
           }
         }
       }
