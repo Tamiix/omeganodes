@@ -7,9 +7,9 @@ const corsHeaders = {
 
 // OmegaNode wallet addresses for receiving payments
 const WALLET_ADDRESSES: Record<string, string> = {
-  sol: "OMEGA_SOL_WALLET_ADDRESS", // Replace with actual SOL wallet
-  usdc: "OMEGA_USDC_WALLET_ADDRESS", // Replace with actual USDC token account
-  usdt: "OMEGA_USDT_WALLET_ADDRESS", // Replace with actual USDT token account
+  sol: "8b6cCUhEYL2B7UMC15phYkf9y9GEs3cUV2UQ4zECHroA",
+  usdc: "8b6cCUhEYL2B7UMC15phYkf9y9GEs3cUV2UQ4zECHroA",
+  usdt: "8b6cCUhEYL2B7UMC15phYkf9y9GEs3cUV2UQ4zECHroA",
 };
 
 // Token mint addresses on Solana mainnet

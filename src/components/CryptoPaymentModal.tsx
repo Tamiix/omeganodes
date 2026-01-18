@@ -12,9 +12,9 @@ interface CryptoPaymentModalProps {
 }
 
 const cryptoOptions = [
-  { id: "sol", name: "Solana", symbol: "SOL", icon: "◎", address: "omegaNodeXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" },
-  { id: "usdc", name: "USDC", symbol: "USDC", icon: "$", address: "omegaNodeXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", subtext: "SPL Token" },
-  { id: "usdt", name: "USDT", symbol: "USDT", icon: "₮", address: "omegaNodeXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", subtext: "SPL Token" },
+  { id: "sol", name: "Solana", symbol: "SOL", icon: "◎", address: "8b6cCUhEYL2B7UMC15phYkf9y9GEs3cUV2UQ4zECHroA" },
+  { id: "usdc", name: "USDC", symbol: "USDC", icon: "$", address: "8b6cCUhEYL2B7UMC15phYkf9y9GEs3cUV2UQ4zECHroA", subtext: "SPL Token" },
+  { id: "usdt", name: "USDT", symbol: "USDT", icon: "₮", address: "8b6cCUhEYL2B7UMC15phYkf9y9GEs3cUV2UQ4zECHroA", subtext: "SPL Token" },
 ];
 
 type PaymentStep = "select" | "processing" | "success" | "failed";
