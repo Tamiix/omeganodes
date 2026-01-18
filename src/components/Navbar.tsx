@@ -4,6 +4,7 @@ import { Menu, X, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import CurrencySelector from "./CurrencySelector";
+import omegaLogo from "@/assets/omega-logo.png";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [currencyOpen, setCurrencyOpen] = useState(false);
@@ -20,9 +21,11 @@ const Navbar = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <a href="#" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-omega flex items-center justify-center">
-              <span className="text-lg font-bold text-primary-foreground">Ω</span>
-            </div>
+            <img 
+              src={omegaLogo} 
+              alt="Omega Logo" 
+              className="w-10 h-10 object-contain"
+            />
             <span className="text-lg font-semibold text-foreground">
               Omega
             </span>
