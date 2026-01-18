@@ -32,8 +32,9 @@ const PricingSection = () => {
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
   const { price, originalPrice, discount } = useMemo(() => {
-    const basePrice = 125;
-    const maxPrice = 950;
+    // EUR pricing
+    const basePrice = 115;
+    const maxPrice = 875;
     
     // Calculate RPS contribution (100-4000 range)
     const rpsPercent = (rps - 100) / (4000 - 100);
@@ -56,7 +57,7 @@ const PricingSection = () => {
     const commitment = commitments.find(c => c.id === selectedCommitment);
     const discountPercent = commitment?.discount || 0;
     
-    // Calculate final price
+    // Calculate final price in EUR
     const calculatedPrice = basePrice + (combinedPercent * (maxPrice - basePrice));
     const originalPrice = Math.round(calculatedPrice * endpointModifier * locationModifier);
     const discountedPrice = Math.round(originalPrice * (1 - discountPercent));
@@ -232,14 +233,14 @@ const PricingSection = () => {
                 <div className="text-sm text-muted-foreground mb-2">Monthly payment</div>
                 <div className="flex items-baseline justify-center gap-2">
                   {discount > 0 && (
-                    <span className="text-2xl text-muted-foreground line-through">${originalPrice}</span>
+                    <span className="text-2xl text-muted-foreground line-through">€{originalPrice}</span>
                   )}
-                  <span className="text-5xl sm:text-6xl font-bold text-gradient-omega">${price}</span>
+                  <span className="text-5xl sm:text-6xl font-bold text-gradient-omega">€{price}</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
                 {discount > 0 ? (
                   <div className="text-sm text-secondary mt-2">
-                    You save ${originalPrice - price}/mo with {commitments.find(c => c.id === selectedCommitment)?.name} commitment
+                    You save €{originalPrice - price}/mo with {commitments.find(c => c.id === selectedCommitment)?.name} commitment
                   </div>
                 ) : (
                   <div className="text-sm text-secondary mt-2">Cancel anytime • No long-term commitment</div>
