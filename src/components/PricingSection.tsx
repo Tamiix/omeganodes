@@ -1,8 +1,8 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useState, useMemo } from "react";
 import { Slider } from "@/components/ui/slider";
-import { Check, Zap, Calendar } from "lucide-react";
+import { Check, Zap, Calendar, Cpu, Server, Plus } from "lucide-react";
 import CryptoPaymentModal from "./CryptoPaymentModal";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
@@ -18,7 +18,22 @@ const locations = [
 
 const serverTypes = [
   { id: "shared", name: "Shared", baseAddition: 0, description: "Shared with members" },
-  { id: "dedicated", name: "Dedicated", baseAddition: 2300, description: "Set your own limits" },
+  { id: "dedicated", name: "Dedicated", baseAddition: 0, description: "Full control & custom limits" },
+];
+
+const dedicatedSpecs = [
+  { 
+    id: "epyc-9354p", 
+    cpu: "AMD EPYC 9354p", 
+    memory: "1024GB RAM", 
+    price: 2700 
+  },
+  { 
+    id: "epyc-9374f", 
+    cpu: "AMD EPYC 9374F", 
+    memory: "1024GB RAM", 
+    price: 2900 
+  },
 ];
 
 const commitments = [
@@ -28,6 +43,23 @@ const commitments = [
   { id: "1year", name: "1 Year", months: 12, discount: 0.30, label: "Save 30%" },
 ];
 
+const dedicatedFeatures = [
+  "JITO Shredstream & Omega in-house improvements",
+  "Yellowstone gRPC included",
+  "Arbitrage friendly limits applied",
+  "Dedicated staked connection from our validator pool",
+  "Base stake allocation: 50,000 SOL",
+];
+
+const sharedFeatures = [
+  "Full RPC node access",
+  "Priority support via Discord",
+  "99.99% uptime SLA",
+  "All 3 regions included",
+  "Real-time monitoring",
+  "Dedicated endpoint",
+];
+
 const PricingSection = () => {
   const [rps, setRps] = useState(100);
   const [tps, setTps] = useState(50);
@@ -35,57 +67,64 @@ const PricingSection = () => {
   const [selectedLocation, setSelectedLocation] = useState("newyork");
   const [selectedCommitment, setSelectedCommitment] = useState("monthly");
   const [selectedServerType, setSelectedServerType] = useState("shared");
+  const [selectedDedicatedSpec, setSelectedDedicatedSpec] = useState("epyc-9354p");
+  const [additionalStakePackages, setAdditionalStakePackages] = useState(0);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
   const { formatPrice } = useCurrency();
 
+  const isDedicated = selectedServerType === "dedicated";
+
   const { price, originalPrice, discount } = useMemo(() => {
-    // USD pricing (base)
-    const basePrice = 125;
-    const maxPrice = 950;
-    
-    // Calculate RPS contribution (100-4000 range)
-    const rpsPercent = (rps - 100) / (4000 - 100);
-    
-    // Calculate TPS contribution (50-2000 range)
-    const tpsPercent = (tps - 50) / (2000 - 50);
-    
-    // Weighted average (RPS has slightly more weight)
-    const combinedPercent = (rpsPercent * 0.55) + (tpsPercent * 0.45);
-    
-    // Get endpoint modifier
-    const endpoint = endpoints.find(e => e.id === selectedEndpoint);
-    const endpointModifier = endpoint?.priceModifier || 1;
-    
-    // Get location modifier
-    const location = locations.find(l => l.id === selectedLocation);
-    const locationModifier = location?.priceModifier || 1;
-    const isEULocation = location?.isEU || false;
-    
-    // Get commitment discount
-    const commitment = commitments.find(c => c.id === selectedCommitment);
-    const discountPercent = commitment?.discount || 0;
-    
-    // Get server type addition
-    const serverType = serverTypes.find(s => s.id === selectedServerType);
-    let serverAddition = serverType?.baseAddition || 0;
-    
-    // Apply 15% EU markup for dedicated servers
-    if (selectedServerType === "dedicated" && isEULocation) {
-      serverAddition = serverAddition * 1.15;
+    if (isDedicated) {
+      // Dedicated server pricing
+      const spec = dedicatedSpecs.find(s => s.id === selectedDedicatedSpec);
+      const basePrice = spec?.price || 2700;
+      
+      // Additional stake packages ($350 each)
+      const stakeAddition = additionalStakePackages * 350;
+      
+      // Get commitment discount
+      const commitment = commitments.find(c => c.id === selectedCommitment);
+      const discountPercent = commitment?.discount || 0;
+      
+      const totalBeforeDiscount = basePrice + stakeAddition;
+      const discountedPrice = Math.round(totalBeforeDiscount * (1 - discountPercent));
+      
+      return { 
+        price: discountedPrice, 
+        originalPrice: totalBeforeDiscount, 
+        discount: discountPercent 
+      };
+    } else {
+      // Shared server pricing (original logic)
+      const basePrice = 125;
+      const maxPrice = 950;
+      
+      const rpsPercent = (rps - 100) / (4000 - 100);
+      const tpsPercent = (tps - 50) / (2000 - 50);
+      const combinedPercent = (rpsPercent * 0.55) + (tpsPercent * 0.45);
+      
+      const endpoint = endpoints.find(e => e.id === selectedEndpoint);
+      const endpointModifier = endpoint?.priceModifier || 1;
+      
+      const location = locations.find(l => l.id === selectedLocation);
+      const locationModifier = location?.priceModifier || 1;
+      
+      const commitment = commitments.find(c => c.id === selectedCommitment);
+      const discountPercent = commitment?.discount || 0;
+      
+      const calculatedPrice = basePrice + (combinedPercent * (maxPrice - basePrice));
+      const baseWithModifiers = Math.round(calculatedPrice * endpointModifier * locationModifier);
+      const discountedPrice = Math.round(baseWithModifiers * (1 - discountPercent));
+      
+      return { 
+        price: discountedPrice, 
+        originalPrice: baseWithModifiers, 
+        discount: discountPercent 
+      };
     }
-    
-    // Calculate final price in USD
-    const calculatedPrice = basePrice + (combinedPercent * (maxPrice - basePrice));
-    const baseWithModifiers = Math.round((calculatedPrice * endpointModifier * locationModifier) + serverAddition);
-    const discountedPrice = Math.round(baseWithModifiers * (1 - discountPercent));
-    
-    return { 
-      price: discountedPrice, 
-      originalPrice: baseWithModifiers, 
-      discount: discountPercent 
-    };
-  }, [rps, tps, selectedEndpoint, selectedLocation, selectedCommitment, selectedServerType]);
+  }, [rps, tps, selectedEndpoint, selectedLocation, selectedCommitment, selectedServerType, selectedDedicatedSpec, additionalStakePackages, isDedicated]);
 
   return (
     <section id="pricing" className="py-24 relative overflow-hidden">
@@ -126,53 +165,54 @@ const PricingSection = () => {
             <div className="absolute -inset-1 bg-gradient-omega rounded-2xl blur-lg opacity-20" />
             
             <div className="relative p-8 sm:p-10 rounded-2xl bg-card border border-border">
-              {/* Endpoint Selection */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-foreground mb-3">
-                  Select Endpoint
-                </label>
-                <div className="flex gap-3">
-                  {endpoints.map((endpoint) => (
-                    <button
-                      key={endpoint.id}
-                      onClick={() => setSelectedEndpoint(endpoint.id)}
-                      className={`flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition-all ${
-                        selectedEndpoint === endpoint.id
-                          ? "bg-primary/10 border-primary text-primary"
-                          : "bg-muted/30 border-border text-muted-foreground hover:border-muted-foreground/50"
-                      }`}
-                    >
-                      {endpoint.name}
-                      {endpoint.priceModifier < 1 && (
-                        <span className="ml-2 text-xs text-secondary">50% off</span>
-                      )}
-                    </button>
-                  ))}
+              {/* Endpoint Selection - only show for shared */}
+              {!isDedicated && (
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-foreground mb-3">
+                    Select Endpoint
+                  </label>
+                  <div className="flex gap-3">
+                    {endpoints.map((endpoint) => (
+                      <button
+                        key={endpoint.id}
+                        onClick={() => setSelectedEndpoint(endpoint.id)}
+                        className={`flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition-all ${
+                          selectedEndpoint === endpoint.id
+                            ? "bg-primary/10 border-primary text-primary"
+                            : "bg-muted/30 border-border text-muted-foreground hover:border-muted-foreground/50"
+                        }`}
+                      >
+                        {endpoint.name}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Location Selection */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-foreground mb-3">
-                  Select Location
-                </label>
-                <div className="grid grid-cols-3 gap-3">
-                  {locations.map((location) => (
-                    <button
-                      key={location.id}
-                      onClick={() => setSelectedLocation(location.id)}
-                      className={`py-3 px-4 rounded-lg border text-sm font-medium transition-all ${
-                        selectedLocation === location.id
-                          ? "bg-primary/10 border-primary text-primary"
-                          : "bg-muted/30 border-border text-muted-foreground hover:border-muted-foreground/50"
-                      }`}
-                    >
-                      <div>{location.name}</div>
-                      <div className="text-xs mt-1 opacity-70">{location.region}</div>
-                    </button>
-                  ))}
+              {/* Location Selection - only show for shared */}
+              {!isDedicated && (
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-foreground mb-3">
+                    Select Location
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {locations.map((location) => (
+                      <button
+                        key={location.id}
+                        onClick={() => setSelectedLocation(location.id)}
+                        className={`py-3 px-4 rounded-lg border text-sm font-medium transition-all ${
+                          selectedLocation === location.id
+                            ? "bg-primary/10 border-primary text-primary"
+                            : "bg-muted/30 border-border text-muted-foreground hover:border-muted-foreground/50"
+                        }`}
+                      >
+                        <div>{location.name}</div>
+                        <div className="text-xs mt-1 opacity-70">{location.region}</div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Server Type Selection */}
               <div className="mb-6">
@@ -190,27 +230,114 @@ const PricingSection = () => {
                           : "bg-muted/30 border-border text-muted-foreground hover:border-muted-foreground/50"
                       }`}
                     >
-                      <div>{serverType.name}</div>
+                      <div className="flex items-center justify-center gap-2">
+                        {serverType.id === "dedicated" && <Server className="w-4 h-4" />}
+                        {serverType.name}
+                      </div>
                       <div className="text-xs mt-1 opacity-70">{serverType.description}</div>
-                      {serverType.baseAddition > 0 && (
-                        <div className="text-xs mt-1 text-secondary font-semibold">
-                          +${serverType.baseAddition.toLocaleString()}/mo
-                          {locations.find(l => l.id === selectedLocation)?.isEU && (
-                            <span className="ml-1">(+15% EU)</span>
-                          )}
-                        </div>
-                      )}
                     </button>
                   ))}
                 </div>
-                {selectedServerType === "dedicated" && (
-                  <div className="mt-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
-                    <p className="text-xs text-amber-400">
-                      <span className="font-semibold">Note:</span> With dedicated servers you can set your own limits. However, if the server crashes due to the limits you set, it's your responsibility.
-                    </p>
-                  </div>
-                )}
               </div>
+
+              {/* Dedicated Server Options */}
+              <AnimatePresence>
+                {isDedicated && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {/* Warning/Info Note */}
+                    <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
+                      <p className="text-sm text-amber-400 font-medium mb-2">⚠️ Important Notice</p>
+                      <p className="text-xs text-amber-400/90">
+                        With dedicated servers, you have <span className="font-semibold">complete control over your limits</span>. 
+                        You can configure RPS, TPS, and other parameters to your exact requirements. 
+                        However, <span className="font-semibold">if the server becomes unstable or crashes due to the limits you configure, 
+                        you are fully responsible</span>. We recommend starting conservative and scaling up gradually.
+                      </p>
+                    </div>
+
+                    {/* Server Specifications */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-medium text-foreground mb-3">
+                        <Cpu className="w-4 h-4 inline mr-2" />
+                        Server Specifications
+                      </label>
+                      <div className="space-y-3">
+                        {dedicatedSpecs.map((spec) => (
+                          <button
+                            key={spec.id}
+                            onClick={() => setSelectedDedicatedSpec(spec.id)}
+                            className={`w-full py-4 px-5 rounded-lg border text-left transition-all ${
+                              selectedDedicatedSpec === spec.id
+                                ? "bg-primary/10 border-primary"
+                                : "bg-muted/30 border-border hover:border-muted-foreground/50"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className={`font-medium ${selectedDedicatedSpec === spec.id ? "text-primary" : "text-foreground"}`}>
+                                  {spec.cpu}
+                                </p>
+                                <p className="text-sm text-muted-foreground mt-0.5">{spec.memory}</p>
+                              </div>
+                              <div className={`text-lg font-bold ${selectedDedicatedSpec === spec.id ? "text-primary" : "text-foreground"}`}>
+                                ${spec.price.toLocaleString()}<span className="text-sm font-normal text-muted-foreground">/mo</span>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2 text-center">
+                        Different configurations available upon request
+                      </p>
+                    </div>
+
+                    {/* Additional Stake Packages */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-medium text-foreground mb-3">
+                        <Plus className="w-4 h-4 inline mr-2" />
+                        Additional Stake Allocation
+                      </label>
+                      <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <p className="text-sm text-foreground">Extra 100,000 SOL stake per package</p>
+                            <p className="text-xs text-muted-foreground">$350 per additional stake package</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => setAdditionalStakePackages(Math.max(0, additionalStakePackages - 1))}
+                              disabled={additionalStakePackages === 0}
+                              className="w-8 h-8 rounded-lg bg-muted border border-border flex items-center justify-center text-foreground hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              -
+                            </button>
+                            <span className="text-lg font-bold text-primary w-8 text-center">{additionalStakePackages}</span>
+                            <button
+                              onClick={() => setAdditionalStakePackages(additionalStakePackages + 1)}
+                              className="w-8 h-8 rounded-lg bg-primary/20 border border-primary/50 flex items-center justify-center text-primary hover:bg-primary/30"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                        {additionalStakePackages > 0 && (
+                          <div className="pt-3 border-t border-border">
+                            <p className="text-sm text-secondary">
+                              Total stake: {(50000 + additionalStakePackages * 100000).toLocaleString()} SOL 
+                              <span className="text-muted-foreground ml-2">(+${(additionalStakePackages * 350).toLocaleString()}/mo)</span>
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Commitment Selection */}
               <div className="mb-8">
@@ -237,49 +364,61 @@ const PricingSection = () => {
                 </div>
               </div>
 
-              {/* RPS Slider */}
-              <div className="mb-8">
-                <div className="flex justify-between items-center mb-3">
-                  <label className="text-sm font-medium text-foreground">
-                    Requests per Second (RPS)
-                  </label>
-                  <span className="text-sm font-mono font-semibold text-primary">{rps.toLocaleString()} RPS</span>
-                </div>
-                <Slider
-                  value={[rps]}
-                  onValueChange={(value) => setRps(value[0])}
-                  min={100}
-                  max={4000}
-                  step={100}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                  <span>100</span>
-                  <span>4,000</span>
-                </div>
-              </div>
+              {/* RPS/TPS Sliders - only show for shared */}
+              <AnimatePresence>
+                {!isDedicated && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {/* RPS Slider */}
+                    <div className="mb-8">
+                      <div className="flex justify-between items-center mb-3">
+                        <label className="text-sm font-medium text-foreground">
+                          Requests per Second (RPS)
+                        </label>
+                        <span className="text-sm font-mono font-semibold text-primary">{rps.toLocaleString()} RPS</span>
+                      </div>
+                      <Slider
+                        value={[rps]}
+                        onValueChange={(value) => setRps(value[0])}
+                        min={100}
+                        max={4000}
+                        step={100}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                        <span>100</span>
+                        <span>4,000</span>
+                      </div>
+                    </div>
 
-              {/* TPS Slider */}
-              <div className="mb-10">
-                <div className="flex justify-between items-center mb-3">
-                  <label className="text-sm font-medium text-foreground">
-                    Transactions per Second (TPS)
-                  </label>
-                  <span className="text-sm font-mono font-semibold text-primary">{tps.toLocaleString()} TPS</span>
-                </div>
-                <Slider
-                  value={[tps]}
-                  onValueChange={(value) => setTps(value[0])}
-                  min={50}
-                  max={2000}
-                  step={50}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                  <span>50</span>
-                  <span>2,000</span>
-                </div>
-              </div>
+                    {/* TPS Slider */}
+                    <div className="mb-10">
+                      <div className="flex justify-between items-center mb-3">
+                        <label className="text-sm font-medium text-foreground">
+                          Transactions per Second (TPS)
+                        </label>
+                        <span className="text-sm font-mono font-semibold text-primary">{tps.toLocaleString()} TPS</span>
+                      </div>
+                      <Slider
+                        value={[tps]}
+                        onValueChange={(value) => setTps(value[0])}
+                        min={50}
+                        max={2000}
+                        step={50}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                        <span>50</span>
+                        <span>2,000</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Divider */}
               <div className="border-t border-border my-8" />
@@ -305,16 +444,9 @@ const PricingSection = () => {
 
               {/* Features List */}
               <div className="grid sm:grid-cols-2 gap-3 mb-8">
-                {[
-                  "Full RPC node access",
-                  "Priority support via Discord",
-                  "99.99% uptime SLA",
-                  "All 3 regions included",
-                  "Real-time monitoring",
-                  "Dedicated endpoint",
-                ].map((feature) => (
-                  <div key={feature} className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0">
+                {(isDedicated ? dedicatedFeatures : sharedFeatures).map((feature) => (
+                  <div key={feature} className="flex items-start gap-2">
+                    <div className="w-4 h-4 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                       <Check className="w-2.5 h-2.5 text-secondary" />
                     </div>
                     <span className="text-sm text-muted-foreground">{feature}</span>
