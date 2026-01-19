@@ -1,19 +1,15 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ChevronDown, LogIn } from "lucide-react";
+import { Menu, X, LogIn } from "lucide-react";
 import { useState } from "react";
-import { useCurrency } from "@/contexts/CurrencyContext";
 import { useAuth } from "@/hooks/useAuth";
-import CurrencySelector from "./CurrencySelector";
 import AuthModal from "./AuthModal";
 import UserMenu from "./UserMenu";
 import omegaLogo from "@/assets/omega-logo.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [currencyOpen, setCurrencyOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-  const { currency, showSelector, setShowSelector } = useCurrency();
   const { user, isLoading } = useAuth();
 
   return (
@@ -55,15 +51,6 @@ const Navbar = () => {
 
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-3">
-            {/* Currency Selector */}
-            <button
-              onClick={() => setCurrencyOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/50 border border-border/50 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all"
-            >
-              <span>{currency.symbol}</span>
-              <span>{currency.code}</span>
-              <ChevronDown className="w-3.5 h-3.5" />
-            </button>
             {/* Discord */}
             <a
               href="https://discord.gg/omeganode"
@@ -108,16 +95,6 @@ const Navbar = () => {
               Get Started
             </Button>
           </div>
-
-          {/* Currency Selector Modal */}
-          <CurrencySelector 
-            open={currencyOpen || showSelector} 
-            onOpenChange={(open) => {
-              setCurrencyOpen(open);
-              if (!open) setShowSelector(false);
-            }}
-            isFirstVisit={showSelector}
-          />
 
           {/* Auth Modal */}
           <AuthModal open={authOpen} onOpenChange={setAuthOpen} />

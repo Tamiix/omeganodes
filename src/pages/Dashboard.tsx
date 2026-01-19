@@ -11,10 +11,14 @@ import {
   ExternalLink,
   Clock,
   Server,
-  MapPin
+  MapPin,
+  Settings,
+  ChevronDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import CurrencySelector from '@/components/CurrencySelector';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -50,10 +54,12 @@ interface ConnectionUrl {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, profile, isLoading } = useAuth();
+  const { currency } = useCurrency();
   const [orders, setOrders] = useState<Order[]>([]);
   const [connections, setConnections] = useState<ConnectionUrl[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'orders' | 'connections'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'connections' | 'settings'>('orders');
+  const [currencyOpen, setCurrencyOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -169,6 +175,17 @@ const Dashboard = () => {
           >
             <Link2 className="w-4 h-4" />
             Connections ({connections.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              activeTab === 'settings'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted/50 text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Settings className="w-4 h-4" />
+            Settings
           </button>
         </div>
 
@@ -358,6 +375,71 @@ const Dashboard = () => {
             )}
           </div>
         )}
+
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
+          <div className="space-y-6">
+            <Card className="bg-card border-border">
+              <CardHeader>
+                <CardTitle className="text-lg">Display Settings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Currency Setting */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-foreground">Currency</p>
+                    <p className="text-sm text-muted-foreground">
+                      Select your preferred display currency
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setCurrencyOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/50 border border-border hover:border-primary/30 transition-all"
+                  >
+                    <span className="text-lg">{currency.symbol}</span>
+                    <span className="font-medium text-foreground">{currency.code}</span>
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card border-border">
+              <CardHeader>
+                <CardTitle className="text-lg">Account Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Username</p>
+                    <p className="font-medium text-foreground">{profile?.username}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Email</p>
+                    <p className="font-medium text-foreground">{user?.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Member Since</p>
+                    <p className="font-medium text-foreground">
+                      {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      }) : '-'}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Currency Selector Modal */}
+        <CurrencySelector 
+          open={currencyOpen} 
+          onOpenChange={setCurrencyOpen}
+          isFirstVisit={false}
+        />
       </main>
     </div>
   );
