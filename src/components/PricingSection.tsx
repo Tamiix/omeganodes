@@ -81,18 +81,23 @@ const PricingSection = () => {
       const spec = dedicatedSpecs.find(s => s.id === selectedDedicatedSpec);
       const basePrice = spec?.price || 2700;
       
-      // Additional stake packages ($350 each)
-      const stakeAddition = additionalStakePackages * 350;
+      // Additional stake packages ($350 each) - monthly recurring
+      // Apply 10% discount on stake if 3-month commitment
+      const stakeDiscountPercent = selectedCommitment === "3months" ? 0.10 : 0;
+      const stakePerPackage = 350 * (1 - stakeDiscountPercent);
+      const stakeAddition = additionalStakePackages * stakePerPackage;
       
-      // Get commitment discount
+      // Get commitment discount for base server price
       const commitment = commitments.find(c => c.id === selectedCommitment);
       const discountPercent = commitment?.discount || 0;
       
-      const totalBeforeDiscount = basePrice + stakeAddition;
-      const discountedPrice = Math.round(totalBeforeDiscount * (1 - discountPercent));
+      // Apply server discount to base price only, stake discount is separate
+      const discountedServerPrice = Math.round(basePrice * (1 - discountPercent));
+      const totalPrice = Math.round(discountedServerPrice + stakeAddition);
+      const totalBeforeDiscount = basePrice + (additionalStakePackages * 350);
       
       return { 
-        price: discountedPrice, 
+        price: totalPrice, 
         originalPrice: totalBeforeDiscount, 
         discount: discountPercent 
       };
@@ -296,17 +301,17 @@ const PricingSection = () => {
                       </p>
                     </div>
 
-                    {/* Additional Stake Packages */}
+                    {/* Additional Stake Packages - SwQoS Monthly Service */}
                     <div className="mb-6">
                       <label className="block text-sm font-medium text-foreground mb-3">
                         <Plus className="w-4 h-4 inline mr-2" />
-                        Additional Stake Allocation
+                        SwQoS Stake Service (Monthly)
                       </label>
                       <div className="p-4 rounded-lg bg-muted/30 border border-border">
                         <div className="flex items-center justify-between mb-3">
                           <div>
-                            <p className="text-sm text-foreground">Extra 100,000 SOL stake per package</p>
-                            <p className="text-xs text-muted-foreground">$350/month per additional stake package</p>
+                            <p className="text-sm text-foreground">100,000 SOL stake per package</p>
+                            <p className="text-xs text-muted-foreground">$350/month per stake package • Billed monthly</p>
                           </div>
                           <div className="flex items-center gap-3">
                             <button
@@ -318,19 +323,36 @@ const PricingSection = () => {
                             </button>
                             <span className="text-lg font-bold text-primary w-8 text-center">{additionalStakePackages}</span>
                             <button
-                              onClick={() => setAdditionalStakePackages(additionalStakePackages + 1)}
-                              className="w-8 h-8 rounded-lg bg-primary/20 border border-primary/50 flex items-center justify-center text-primary hover:bg-primary/30"
+                              onClick={() => setAdditionalStakePackages(Math.min(10, additionalStakePackages + 1))}
+                              disabled={additionalStakePackages >= 10}
+                              className="w-8 h-8 rounded-lg bg-primary/20 border border-primary/50 flex items-center justify-center text-primary hover:bg-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               +
                             </button>
                           </div>
                         </div>
+                        
+                        {/* Stake commitment info */}
                         {additionalStakePackages > 0 && (
-                          <div className="pt-3 border-t border-border">
+                          <div className="pt-3 border-t border-border space-y-2">
                             <p className="text-sm text-secondary">
-                              Total stake: {(50000 + additionalStakePackages * 100000).toLocaleString()} SOL 
-                              <span className="text-muted-foreground ml-2">(+${(additionalStakePackages * 350).toLocaleString()}/mo)</span>
+                              Total stake: {(50000 + additionalStakePackages * 100000).toLocaleString()} SOL
                             </p>
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-muted-foreground">
+                                Stake cost: ${(additionalStakePackages * 350).toLocaleString()}/mo
+                              </span>
+                              {selectedCommitment === "3months" && (
+                                <span className="text-secondary font-semibold">
+                                  10% stake discount applied!
+                                </span>
+                              )}
+                            </div>
+                            {selectedCommitment !== "3months" && additionalStakePackages > 0 && (
+                              <p className="text-xs text-amber-400/80">
+                                💡 Tip: Choose 3-month commitment to save 10% on stake packages
+                              </p>
+                            )}
                           </div>
                         )}
                       </div>
