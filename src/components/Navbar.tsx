@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import AuthModal from "./AuthModal";
 import UserMenu from "./UserMenu";
-import omegaLogo from "@/assets/omega-logo.png";
+import omegaLogo from "@/assets/omega-logo-new.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
