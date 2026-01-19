@@ -86,10 +86,8 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }
       if (found) {
         setCurrencyState(found);
       }
-    } else {
-      // First visit - show selector
-      setShowSelector(true);
     }
+    // No longer show selector on first visit - currency can be changed in dashboard settings
     setInitialized(true);
   }, []);
 

@@ -8,7 +8,6 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 
 const endpoints = [
   { id: "mainnet", name: "Mainnet", priceModifier: 1.0 },
-  { id: "testnet", name: "Testnet", priceModifier: 0.5 },
 ];
 
 const locations = [
