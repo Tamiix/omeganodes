@@ -2,6 +2,13 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
 
+const scrollToPricing = () => {
+  const pricingSection = document.getElementById('pricing');
+  if (pricingSection) {
+    pricingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+};
+
 const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 pb-16">
@@ -32,10 +39,13 @@ const HeroSection = () => {
             <span className="px-4 py-2 rounded-full bg-gradient-omega text-sm text-primary-foreground font-medium">
               Introducing Omega
             </span>
-            <a href="#pricing" className="group flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border text-sm text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all">
+            <button 
+              onClick={scrollToPricing}
+              className="group flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border text-sm text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all"
+            >
               Learn More 
               <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-            </a>
+            </button>
           </motion.div>
 
           {/* Main Heading */}
@@ -69,7 +79,7 @@ const HeroSection = () => {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10"
           >
-            <Button variant="omega" size="lg" className="gap-2 group">
+            <Button variant="omega" size="lg" className="gap-2 group" onClick={scrollToPricing}>
               Get Started Today
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Button>

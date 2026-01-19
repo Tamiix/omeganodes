@@ -7,6 +7,13 @@ import AuthModal from "./AuthModal";
 import UserMenu from "./UserMenu";
 import omegaLogo from "@/assets/omega-logo-new.png";
 
+const scrollToPricing = () => {
+  const pricingSection = document.getElementById('pricing');
+  if (pricingSection) {
+    pricingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+};
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
@@ -91,7 +98,7 @@ const Navbar = () => {
               )
             )}
 
-            <Button variant="omega" size="sm">
+            <Button variant="omega" size="sm" onClick={scrollToPricing}>
               Get Started
             </Button>
           </div>
@@ -156,7 +163,7 @@ const Navbar = () => {
               </Button>
             )}
             
-            <Button variant="omega" className="w-full">
+            <Button variant="omega" className="w-full" onClick={() => { scrollToPricing(); setIsOpen(false); }}>
               Get Started
             </Button>
           </motion.div>
