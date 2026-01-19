@@ -14,16 +14,173 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      connection_urls: {
+        Row: {
+          api_key: string
+          created_at: string
+          endpoint_type: string
+          id: string
+          is_active: boolean
+          order_id: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          api_key: string
+          created_at?: string
+          endpoint_type: string
+          id?: string
+          is_active?: boolean
+          order_id: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          api_key?: string
+          created_at?: string
+          endpoint_type?: string
+          id?: string
+          is_active?: boolean
+          order_id?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connection_urls_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          amount_usd: number
+          commitment: string
+          created_at: string
+          currency_amount: number
+          currency_code: string
+          expires_at: string | null
+          id: string
+          location: string
+          order_number: string
+          payment_method: string
+          plan_name: string
+          rps: number
+          server_type: string
+          status: string
+          tps: number
+          transaction_signature: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_usd: number
+          commitment: string
+          created_at?: string
+          currency_amount: number
+          currency_code: string
+          expires_at?: string | null
+          id?: string
+          location: string
+          order_number: string
+          payment_method: string
+          plan_name: string
+          rps: number
+          server_type: string
+          status?: string
+          tps: number
+          transaction_signature?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_usd?: number
+          commitment?: string
+          created_at?: string
+          currency_amount?: number
+          currency_code?: string
+          expires_at?: string | null
+          id?: string
+          location?: string
+          order_number?: string
+          payment_method?: string
+          plan_name?: string
+          rps?: number
+          server_type?: string
+          status?: string
+          tps?: number
+          transaction_signature?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          granted_at: string
+          granted_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +307,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const

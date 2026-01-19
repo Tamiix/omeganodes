@@ -1,14 +1,20 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown, LogIn } from "lucide-react";
 import { useState } from "react";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useAuth } from "@/hooks/useAuth";
 import CurrencySelector from "./CurrencySelector";
+import AuthModal from "./AuthModal";
+import UserMenu from "./UserMenu";
 import omegaLogo from "@/assets/omega-logo.png";
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [currencyOpen, setCurrencyOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
   const { currency, showSelector, setShowSelector } = useCurrency();
+  const { user, isLoading } = useAuth();
 
   return (
     <motion.nav
@@ -80,6 +86,24 @@ const Navbar = () => {
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
               </svg>
             </a>
+
+            {/* Auth Section */}
+            {!isLoading && (
+              user ? (
+                <UserMenu />
+              ) : (
+                <Button 
+                  variant="omegaOutline" 
+                  size="sm"
+                  onClick={() => setAuthOpen(true)}
+                  className="gap-2"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Sign In
+                </Button>
+              )
+            )}
+
             <Button variant="omega" size="sm">
               Get Started
             </Button>
@@ -94,6 +118,9 @@ const Navbar = () => {
             }}
             isFirstVisit={showSelector}
           />
+
+          {/* Auth Modal */}
+          <AuthModal open={authOpen} onOpenChange={setAuthOpen} />
 
           {/* Mobile Menu Button */}
           <button
@@ -136,6 +163,22 @@ const Navbar = () => {
                 Discord
               </a>
             </div>
+            
+            {/* Mobile Auth */}
+            {!isLoading && !user && (
+              <Button 
+                variant="omegaOutline" 
+                className="w-full gap-2"
+                onClick={() => {
+                  setAuthOpen(true);
+                  setIsOpen(false);
+                }}
+              >
+                <LogIn className="w-4 h-4" />
+                Sign In
+              </Button>
+            )}
+            
             <Button variant="omega" className="w-full">
               Get Started
             </Button>
