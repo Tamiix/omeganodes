@@ -1,22 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  Users, 
-  Shield, 
-  ShieldCheck, 
-  ShieldX,
-  Search,
-  Loader2,
-  AlertTriangle
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Search, Users, AlertTriangle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import AdminHeader from '@/components/admin/AdminHeader';
+import AdminStats from '@/components/admin/AdminStats';
+import UserCard from '@/components/admin/UserCard';
 
 interface UserProfile {
   id: string;
@@ -71,7 +63,6 @@ const Admin = () => {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      // Fetch all profiles (admin can see all)
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
@@ -79,14 +70,12 @@ const Admin = () => {
 
       if (profilesError) throw profilesError;
 
-      // Fetch all roles
       const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
         .select('*');
 
       if (rolesError) throw rolesError;
 
-      // Combine profiles with their roles
       const usersWithRoles: UserWithRoles[] = (profiles || []).map(profile => ({
         ...profile,
         roles: (roles || []).filter(r => r.user_id === profile.user_id)
@@ -179,14 +168,7 @@ const Admin = () => {
     u.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getRoleBadgeColor = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return 'bg-primary/20 text-primary border-primary/30';
-      default:
-        return 'bg-muted text-muted-foreground border-border';
-    }
-  };
+  const adminCount = users.filter(u => u.roles.some(r => r.role === 'admin')).length;
 
   if (authLoading || isLoading) {
     return (
@@ -202,62 +184,10 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate('/')}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div>
-                <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-primary" />
-                  Admin Panel
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  Manage users and admin permissions
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <AdminHeader />
 
-      {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <Card className="bg-card border-border">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Users</p>
-                  <p className="text-3xl font-bold text-foreground">{users.length}</p>
-                </div>
-                <Users className="w-10 h-10 text-primary/50" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-card border-border">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Admins</p>
-                  <p className="text-3xl font-bold text-foreground">
-                    {users.filter(u => u.roles.some(r => r.role === 'admin')).length}
-                  </p>
-                </div>
-                <ShieldCheck className="w-10 h-10 text-primary/50" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <AdminStats totalUsers={users.length} adminCount={adminCount} />
 
         {/* Search */}
         <div className="relative mb-6">
@@ -284,96 +214,17 @@ const Admin = () => {
               </CardContent>
             </Card>
           ) : (
-            filteredUsers.map((userItem, index) => {
-              const isCurrentUser = userItem.user_id === user?.id;
-              const hasAdminRole = userItem.roles.some(r => r.role === 'admin');
-
-              return (
-                <motion.div
-                  key={userItem.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <Card className="bg-card border-border hover:border-primary/30 transition-colors">
-                    <CardContent className="py-4">
-                      <div className="flex items-center justify-between flex-wrap gap-4">
-                        {/* User Info */}
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-gradient-omega flex items-center justify-center">
-                            <span className="text-primary-foreground font-medium">
-                              {userItem.username[0].toUpperCase()}
-                            </span>
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="font-medium text-foreground">{userItem.username}</p>
-                              {isCurrentUser && (
-                                <span className="text-xs text-muted-foreground">(you)</span>
-                              )}
-                            </div>
-                            <p className="text-sm text-muted-foreground">{userItem.email}</p>
-                          </div>
-                        </div>
-
-                        {/* Roles */}
-                        <div className="flex items-center gap-2">
-                          {userItem.roles.filter(r => r.role === 'admin' || r.role === 'user').map(role => (
-                            <span
-                              key={role.id}
-                              className={`px-2.5 py-1 rounded-full text-xs font-medium border ${getRoleBadgeColor(role.role)}`}
-                            >
-                              {role.role}
-                            </span>
-                          ))}
-                        </div>
-
-                        {/* Actions */}
-                        {!isCurrentUser && (
-                          <div className="flex items-center gap-2">
-                            {hasAdminRole ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => revokeAdmin(userItem.user_id)}
-                                disabled={updatingUser === userItem.user_id}
-                                className="text-destructive border-destructive/30 hover:bg-destructive/10"
-                              >
-                                {updatingUser === userItem.user_id ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <>
-                                    <ShieldX className="w-4 h-4 mr-1" />
-                                    Revoke Admin
-                                  </>
-                                )}
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => grantAdmin(userItem.user_id)}
-                                disabled={updatingUser === userItem.user_id}
-                                className="text-primary border-primary/30 hover:bg-primary/10"
-                              >
-                                {updatingUser === userItem.user_id ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <>
-                                    <ShieldCheck className="w-4 h-4 mr-1" />
-                                    Grant Admin
-                                  </>
-                                )}
-                              </Button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })
+            filteredUsers.map((userItem, index) => (
+              <UserCard
+                key={userItem.id}
+                userItem={userItem}
+                currentUserId={user?.id || ''}
+                onGrantAdmin={grantAdmin}
+                onRevokeAdmin={revokeAdmin}
+                updatingUser={updatingUser}
+                index={index}
+              />
+            ))
           )}
         </div>
 
