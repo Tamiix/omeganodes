@@ -9,12 +9,10 @@ import {
   ShieldX,
   Search,
   Loader2,
-  UserCog,
-  Package,
   AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -107,7 +105,7 @@ const Admin = () => {
     }
   };
 
-  const grantRole = async (userId: string, role: 'admin' | 'moderator') => {
+  const grantAdmin = async (userId: string) => {
     if (!user) return;
     
     setUpdatingUser(userId);
@@ -116,31 +114,31 @@ const Admin = () => {
         .from('user_roles')
         .insert({
           user_id: userId,
-          role: role,
+          role: 'admin',
           granted_by: user.id
         });
 
       if (error) {
         if (error.message.includes('duplicate')) {
           toast({
-            title: 'Already Assigned',
-            description: `User already has the ${role} role`,
+            title: 'Already Admin',
+            description: 'User already has admin role',
           });
         } else {
           throw error;
         }
       } else {
         toast({
-          title: 'Role Granted',
-          description: `Successfully granted ${role} role`,
+          title: 'Admin Granted',
+          description: 'Successfully granted admin role',
         });
         fetchUsers();
       }
     } catch (error) {
-      console.error('Error granting role:', error);
+      console.error('Error granting admin:', error);
       toast({
         title: 'Error',
-        description: 'Failed to grant role',
+        description: 'Failed to grant admin role',
         variant: 'destructive'
       });
     } finally {
@@ -148,27 +146,27 @@ const Admin = () => {
     }
   };
 
-  const revokeRole = async (userId: string, role: 'admin' | 'moderator') => {
+  const revokeAdmin = async (userId: string) => {
     setUpdatingUser(userId);
     try {
       const { error } = await supabase
         .from('user_roles')
         .delete()
         .eq('user_id', userId)
-        .eq('role', role);
+        .eq('role', 'admin');
 
       if (error) throw error;
 
       toast({
-        title: 'Role Revoked',
-        description: `Successfully revoked ${role} role`,
+        title: 'Admin Revoked',
+        description: 'Successfully revoked admin role',
       });
       fetchUsers();
     } catch (error) {
-      console.error('Error revoking role:', error);
+      console.error('Error revoking admin:', error);
       toast({
         title: 'Error',
-        description: 'Failed to revoke role',
+        description: 'Failed to revoke admin role',
         variant: 'destructive'
       });
     } finally {
@@ -185,8 +183,6 @@ const Admin = () => {
     switch (role) {
       case 'admin':
         return 'bg-primary/20 text-primary border-primary/30';
-      case 'moderator':
-        return 'bg-accent/20 text-accent border-accent/30';
       default:
         return 'bg-muted text-muted-foreground border-border';
     }
@@ -225,7 +221,7 @@ const Admin = () => {
                   Admin Panel
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Manage users and permissions
+                  Manage users and admin permissions
                 </p>
               </div>
             </div>
@@ -236,7 +232,7 @@ const Admin = () => {
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <Card className="bg-card border-border">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -258,19 +254,6 @@ const Admin = () => {
                   </p>
                 </div>
                 <ShieldCheck className="w-10 h-10 text-primary/50" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-card border-border">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Moderators</p>
-                  <p className="text-3xl font-bold text-foreground">
-                    {users.filter(u => u.roles.some(r => r.role === 'moderator')).length}
-                  </p>
-                </div>
-                <UserCog className="w-10 h-10 text-accent/50" />
               </div>
             </CardContent>
           </Card>
@@ -304,7 +287,6 @@ const Admin = () => {
             filteredUsers.map((userItem, index) => {
               const isCurrentUser = userItem.user_id === user?.id;
               const hasAdminRole = userItem.roles.some(r => r.role === 'admin');
-              const hasModeratorRole = userItem.roles.some(r => r.role === 'moderator');
 
               return (
                 <motion.div
@@ -336,7 +318,7 @@ const Admin = () => {
 
                         {/* Roles */}
                         <div className="flex items-center gap-2">
-                          {userItem.roles.map(role => (
+                          {userItem.roles.filter(r => r.role === 'admin' || r.role === 'user').map(role => (
                             <span
                               key={role.id}
                               className={`px-2.5 py-1 rounded-full text-xs font-medium border ${getRoleBadgeColor(role.role)}`}
@@ -353,7 +335,7 @@ const Admin = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => revokeRole(userItem.user_id, 'admin')}
+                                onClick={() => revokeAdmin(userItem.user_id)}
                                 disabled={updatingUser === userItem.user_id}
                                 className="text-destructive border-destructive/30 hover:bg-destructive/10"
                               >
@@ -370,7 +352,7 @@ const Admin = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => grantRole(userItem.user_id, 'admin')}
+                                onClick={() => grantAdmin(userItem.user_id)}
                                 disabled={updatingUser === userItem.user_id}
                                 className="text-primary border-primary/30 hover:bg-primary/10"
                               >
@@ -381,36 +363,6 @@ const Admin = () => {
                                     <ShieldCheck className="w-4 h-4 mr-1" />
                                     Grant Admin
                                   </>
-                                )}
-                              </Button>
-                            )}
-
-                            {hasModeratorRole && !hasAdminRole ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => revokeRole(userItem.user_id, 'moderator')}
-                                disabled={updatingUser === userItem.user_id}
-                                className="text-muted-foreground hover:bg-muted"
-                              >
-                                {updatingUser === userItem.user_id ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  'Revoke Mod'
-                                )}
-                              </Button>
-                            ) : !hasAdminRole && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => grantRole(userItem.user_id, 'moderator')}
-                                disabled={updatingUser === userItem.user_id}
-                                className="text-accent border-accent/30 hover:bg-accent/10"
-                              >
-                                {updatingUser === userItem.user_id ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  'Grant Mod'
                                 )}
                               </Button>
                             )}
