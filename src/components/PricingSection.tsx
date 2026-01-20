@@ -197,28 +197,16 @@ const PricingSection = () => {
                 </div>
               )}
 
-              {/* Location Selection - only show for shared */}
+              {/* All Regions Included Note - only show for shared */}
               {!isDedicated && (
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-foreground mb-3">
-                    Select Location
-                  </label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {locations.map((location) => (
-                      <button
-                        key={location.id}
-                        onClick={() => setSelectedLocation(location.id)}
-                        className={`py-3 px-4 rounded-lg border text-sm font-medium transition-all ${
-                          selectedLocation === location.id
-                            ? "bg-primary/10 border-primary text-primary"
-                            : "bg-muted/30 border-border text-muted-foreground hover:border-muted-foreground/50"
-                        }`}
-                      >
-                        <div>{location.name}</div>
-                        <div className="text-xs mt-1 opacity-70">{location.region}</div>
-                      </button>
-                    ))}
-                  </div>
+                <div className="mb-6 p-4 rounded-xl bg-secondary/10 border border-secondary/30">
+                  <p className="text-sm text-secondary font-medium flex items-center gap-2">
+                    <Check className="w-4 h-4" />
+                    All Regions Included
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Access from New York (US), Frankfurt (EU) & Amsterdam (EU) — one price, full coverage.
+                  </p>
                 </div>
               )}
 
