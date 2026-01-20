@@ -227,7 +227,8 @@ const UserCard = ({
                         <UserOrderCard 
                           key={order.id} 
                           order={order} 
-                          userId={userItem.user_id} 
+                          userId={userItem.user_id}
+                          username={userItem.username}
                         />
                       ))}
                     </div>

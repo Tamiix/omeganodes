@@ -54,7 +54,7 @@ interface ConnectionUrl {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, profile, isLoading } = useAuth();
-  const { currency } = useCurrency();
+  const { currency, formatPrice } = useCurrency();
   const [orders, setOrders] = useState<Order[]>([]);
   const [connections, setConnections] = useState<ConnectionUrl[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -233,10 +233,10 @@ const Dashboard = () => {
                         </div>
                         <div className="text-right">
                           <p className="text-lg font-bold text-foreground">
-                            {order.currency_code} {order.currency_amount.toFixed(2)}
+                            {formatPrice(order.amount_usd, true)}/mo
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            ~${order.amount_usd.toFixed(2)} USD
+                            ${order.amount_usd.toFixed(2)} USD
                           </p>
                         </div>
                       </div>
