@@ -90,6 +90,7 @@ serve(async (req) => {
     }
 
     const discordPayload = {
+      content: "<@404356986340114442> <@545046451219070980>",
       embeds: [embed]
     };
 
