@@ -64,6 +64,7 @@ export type Database = {
           currency_code: string
           expires_at: string | null
           id: string
+          is_test_order: boolean
           location: string
           order_number: string
           payment_method: string
@@ -83,6 +84,7 @@ export type Database = {
           currency_code: string
           expires_at?: string | null
           id?: string
+          is_test_order?: boolean
           location: string
           order_number: string
           payment_method: string
@@ -102,6 +104,7 @@ export type Database = {
           currency_code?: string
           expires_at?: string | null
           id?: string
+          is_test_order?: boolean
           location?: string
           order_number?: string
           payment_method?: string

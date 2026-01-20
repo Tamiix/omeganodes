@@ -2,9 +2,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useState, useMemo } from "react";
 import { Slider } from "@/components/ui/slider";
-import { Check, Zap, Calendar, Cpu, Server, Plus } from "lucide-react";
+import { Check, Zap, Calendar, Cpu, Server, Plus, FlaskConical } from "lucide-react";
 import CryptoPaymentModal from "./CryptoPaymentModal";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useAuth } from "@/hooks/useAuth";
 
 const endpoints = [
   { id: "mainnet", name: "Mainnet", priceModifier: 1.0 },
@@ -71,8 +72,10 @@ const PricingSection = () => {
   const [additionalStakePackages, setAdditionalStakePackages] = useState(0);
   const [rentAccessEnabled, setRentAccessEnabled] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [isTestMode, setIsTestMode] = useState(false);
 
   const { formatPrice } = useCurrency();
+  const { isAdmin } = useAuth();
 
   const isDedicated = selectedServerType === "dedicated";
 
@@ -453,7 +456,7 @@ const PricingSection = () => {
                     </div>
 
                     {/* TPS Slider */}
-                    <div className="mb-10">
+                    <div className="mb-8">
                       <div className="flex justify-between items-center mb-3">
                         <label className="text-sm font-medium text-foreground">
                           Transactions per Second (TPS)
@@ -473,6 +476,41 @@ const PricingSection = () => {
                         <span>2,000</span>
                       </div>
                     </div>
+
+                    {/* Admin Test Mode Toggle */}
+                    {isAdmin && (
+                      <div className="mb-10">
+                        <button
+                          onClick={() => setIsTestMode(!isTestMode)}
+                          className={`w-full flex items-center justify-between p-4 rounded-lg border transition-all ${
+                            isTestMode
+                              ? "bg-yellow-500/10 border-yellow-500/50"
+                              : "bg-muted/30 border-border hover:border-muted-foreground/50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <FlaskConical className={`w-5 h-5 ${isTestMode ? "text-yellow-500" : "text-muted-foreground"}`} />
+                            <div className="text-left">
+                              <p className={`font-medium ${isTestMode ? "text-yellow-500" : "text-foreground"}`}>
+                                Test Mode (Admin Only)
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Create test orders at $0.10 for verification testing
+                              </p>
+                            </div>
+                          </div>
+                          <div className={`relative w-11 h-6 rounded-full transition-colors ${
+                            isTestMode ? "bg-yellow-500" : "bg-muted"
+                          }`}>
+                            <span
+                              className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${
+                                isTestMode ? "translate-x-5" : "translate-x-0"
+                              }`}
+                            />
+                          </div>
+                        </button>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -539,6 +577,7 @@ const PricingSection = () => {
           tps={tps}
           serverType={selectedServerType}
           rentAccessEnabled={rentAccessEnabled}
+          isTestMode={isTestMode}
         />
 
         {/* Discord CTA */}
