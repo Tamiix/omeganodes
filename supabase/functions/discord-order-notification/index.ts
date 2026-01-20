@@ -17,6 +17,8 @@ interface OrderDetails {
   includeShreds: boolean;
   swqosTier: number | null;
   swqosLabel: string | null;
+  swqosStakeAmount: number | null;
+  swqosPrice: number | null;
   totalAmount: number;
   transactionSignature: string;
   isTestMode: boolean;
@@ -53,7 +55,7 @@ serve(async (req) => {
         },
         {
           name: "➕ Add-ons",
-          value: `**Private Shreds:** ${orderDetails.includeShreds ? checkMark : crossMark}\n**swQoS Stake:** ${orderDetails.swqosTier !== null ? `${checkMark} (${orderDetails.swqosLabel})` : crossMark}`,
+          value: `**Private Shreds:** ${orderDetails.includeShreds ? checkMark : crossMark}\n**swQoS Stake:** ${orderDetails.swqosTier !== null ? `${checkMark} ${orderDetails.swqosLabel} (${orderDetails.swqosStakeAmount?.toLocaleString()} SOL) - $${orderDetails.swqosPrice?.toLocaleString()}` : crossMark}`,
           inline: true
         },
         {
