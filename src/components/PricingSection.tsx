@@ -69,13 +69,18 @@ const PricingSection = () => {
   const [selectedServerType, setSelectedServerType] = useState("shared");
   const [selectedDedicatedSpec, setSelectedDedicatedSpec] = useState("epyc-9354p");
   const [additionalStakePackages, setAdditionalStakePackages] = useState(0);
+  const [rentAccessEnabled, setRentAccessEnabled] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
   const { formatPrice } = useCurrency();
 
   const isDedicated = selectedServerType === "dedicated";
 
-  const { price, originalPrice, discount } = useMemo(() => {
+  const { price, originalPrice, discount, rentAccessCost } = useMemo(() => {
+    let baseTotal = 0;
+    let beforeDiscount = 0;
+    let discountPercent = 0;
+
     if (isDedicated) {
       // Dedicated server pricing
       const spec = dedicatedSpecs.find(s => s.id === selectedDedicatedSpec);
@@ -89,18 +94,12 @@ const PricingSection = () => {
       
       // Get commitment discount for base server price
       const commitment = commitments.find(c => c.id === selectedCommitment);
-      const discountPercent = commitment?.discount || 0;
+      discountPercent = commitment?.discount || 0;
       
       // Apply server discount to base price only, stake discount is separate
       const discountedServerPrice = Math.round(basePrice * (1 - discountPercent));
-      const totalPrice = Math.round(discountedServerPrice + stakeAddition);
-      const totalBeforeDiscount = basePrice + (additionalStakePackages * 350);
-      
-      return { 
-        price: totalPrice, 
-        originalPrice: totalBeforeDiscount, 
-        discount: discountPercent 
-      };
+      baseTotal = Math.round(discountedServerPrice + stakeAddition);
+      beforeDiscount = basePrice + (additionalStakePackages * 350);
     } else {
       // Shared server pricing (original logic)
       const basePrice = 125;
@@ -117,19 +116,26 @@ const PricingSection = () => {
       const locationModifier = location?.priceModifier || 1;
       
       const commitment = commitments.find(c => c.id === selectedCommitment);
-      const discountPercent = commitment?.discount || 0;
+      discountPercent = commitment?.discount || 0;
       
       const calculatedPrice = basePrice + (combinedPercent * (maxPrice - basePrice));
       const baseWithModifiers = Math.round(calculatedPrice * endpointModifier * locationModifier);
-      const discountedPrice = Math.round(baseWithModifiers * (1 - discountPercent));
-      
-      return { 
-        price: discountedPrice, 
-        originalPrice: baseWithModifiers, 
-        discount: discountPercent 
-      };
+      baseTotal = Math.round(baseWithModifiers * (1 - discountPercent));
+      beforeDiscount = baseWithModifiers;
     }
-  }, [rps, tps, selectedEndpoint, selectedLocation, selectedCommitment, selectedServerType, selectedDedicatedSpec, additionalStakePackages, isDedicated]);
+
+    // Apply Rent Access 15% premium
+    const rentCost = rentAccessEnabled ? Math.round(baseTotal * 0.15) : 0;
+    const finalPrice = baseTotal + rentCost;
+    const finalOriginal = rentAccessEnabled ? Math.round(beforeDiscount * 1.15) : beforeDiscount;
+
+    return { 
+      price: finalPrice, 
+      originalPrice: finalOriginal, 
+      discount: discountPercent,
+      rentAccessCost: rentCost
+    };
+  }, [rps, tps, selectedEndpoint, selectedLocation, selectedCommitment, selectedServerType, selectedDedicatedSpec, additionalStakePackages, isDedicated, rentAccessEnabled]);
 
   return (
     <section id="pricing" className="py-24 relative overflow-hidden">
@@ -362,7 +368,7 @@ const PricingSection = () => {
               </AnimatePresence>
 
               {/* Commitment Selection */}
-              <div className="mb-8">
+              <div className="mb-6">
                 <label className="block text-sm font-medium text-foreground mb-3">
                   Commitment Period
                 </label>
@@ -384,6 +390,50 @@ const PricingSection = () => {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Rent Access Option */}
+              <div className="mb-8">
+                <label className="block text-sm font-medium text-foreground mb-3">
+                  Add-ons
+                </label>
+                <button
+                  onClick={() => setRentAccessEnabled(!rentAccessEnabled)}
+                  className={`w-full py-4 px-5 rounded-lg border text-left transition-all ${
+                    rentAccessEnabled
+                      ? "bg-primary/10 border-primary"
+                      : "bg-muted/30 border-border hover:border-muted-foreground/50"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                        rentAccessEnabled ? "bg-primary border-primary" : "border-muted-foreground"
+                      }`}>
+                        {rentAccessEnabled && <Check className="w-3 h-3 text-primary-foreground" />}
+                      </div>
+                      <div>
+                        <p className={`font-medium ${rentAccessEnabled ? "text-primary" : "text-foreground"}`}>
+                          Rent Access
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Rent out your unused location capacity to other users
+                        </p>
+                      </div>
+                    </div>
+                    <div className={`text-sm font-semibold ${rentAccessEnabled ? "text-primary" : "text-muted-foreground"}`}>
+                      +15%
+                    </div>
+                  </div>
+                </button>
+                {rentAccessEnabled && (
+                  <div className="mt-3 p-3 rounded-lg bg-secondary/10 border border-secondary/30">
+                    <p className="text-xs text-secondary">
+                      💡 With Rent Access enabled, you can earn passive income by renting out your server location when you're not using it. 
+                      Perfect for maximizing ROI during off-peak hours.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* RPS/TPS Sliders - only show for shared */}

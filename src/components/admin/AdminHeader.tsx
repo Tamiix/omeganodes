@@ -1,9 +1,12 @@
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Shield } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { ArrowLeft, Shield, Users, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const AdminHeader = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isCustomersPage = location.pathname === '/admin/customers';
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
@@ -27,6 +30,28 @@ const AdminHeader = () => {
                 Manage users and admin permissions
               </p>
             </div>
+          </div>
+
+          {/* Navigation Tabs */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant={!isCustomersPage ? "default" : "ghost"}
+              size="sm"
+              onClick={() => navigate('/admin')}
+              className="gap-2"
+            >
+              <Users className="w-4 h-4" />
+              Userbase
+            </Button>
+            <Button
+              variant={isCustomersPage ? "default" : "ghost"}
+              size="sm"
+              onClick={() => navigate('/admin/customers')}
+              className="gap-2"
+            >
+              <UserCheck className="w-4 h-4" />
+              Customers
+            </Button>
           </div>
         </div>
       </div>
