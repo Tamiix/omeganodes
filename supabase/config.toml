@@ -1,1 +1,7 @@
 project_id = "mmkornqvbafkricqixgk"
+
+[functions.verify-solana-payment]
+verify_jwt = false
+
+[functions.discord-order-notification]
+verify_jwt = false

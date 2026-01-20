@@ -4,12 +4,17 @@ import { Copy, Check, Loader2, XCircle, CheckCircle, ExternalLink, Zap, Shield, 
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useAuth } from "@/hooks/useAuth";
 
 interface CryptoPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   amount: number; // Amount in USD
   commitment: string;
+  rps?: number;
+  tps?: number;
+  serverType?: string;
+  rentAccessEnabled?: boolean;
 }
 
 const PRODUCTION_WALLET = "8b6cCUhEYL2B7UMC15phYkf9y9GEs3cUV2UQ4zECHroA";
@@ -42,7 +47,7 @@ const SHREDS_PRICE = 5435; // USD per month (~5000 EUR)
 
 type PaymentStep = "select" | "processing" | "success" | "failed";
 
-const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPaymentModalProps) => {
+const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tps = 50, serverType = "shared", rentAccessEnabled = false }: CryptoPaymentModalProps) => {
   const [selectedCrypto, setSelectedCrypto] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [paymentStep, setPaymentStep] = useState<PaymentStep>("select");
@@ -52,6 +57,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
   const [swqosTier, setSwqosTier] = useState<number | null>(null);
 
   const { formatPrice } = useCurrency();
+  const { user, isAdmin } = useAuth();
 
   const cryptoOptions = getCryptoOptions(isTestMode);
   const TEST_AMOUNT = 0.1;
@@ -107,7 +113,33 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
       }
 
       if (data?.detected) {
-        setTransactionRef(data.signature || `OMG-${Date.now().toString(36).toUpperCase()}`);
+        const signature = data.signature || `OMG-${Date.now().toString(36).toUpperCase()}`;
+        setTransactionRef(signature);
+        
+        // Send Discord notification
+        try {
+          await supabase.functions.invoke('discord-order-notification', {
+            body: {
+              plan: getCommitmentLabel(),
+              commitment: commitment,
+              serverType: serverType === "dedicated" ? "Dedicated" : "Shared",
+              email: user?.email || "Not logged in",
+              rps: rps,
+              tps: tps,
+              includeShreds: includeShreds,
+              swqosTier: swqosTier,
+              swqosLabel: swqosTier !== null ? SWQOS_TIERS[swqosTier].label : null,
+              totalAmount: totalAmount,
+              transactionSignature: signature,
+              isTestMode: isTestMode,
+              rentAccessEnabled: rentAccessEnabled
+            }
+          });
+        } catch (discordErr) {
+          console.error("Failed to send Discord notification:", discordErr);
+          // Don't fail the payment flow if Discord notification fails
+        }
+        
         setPaymentStep("success");
       } else {
         setPaymentStep("failed");
@@ -225,25 +257,27 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment }: CryptoPayme
             </DialogHeader>
 
             <div className="space-y-5 py-4">
-              {/* Test Mode Toggle */}
-              <div className="flex items-center justify-between p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
-                <div className="flex items-center gap-2">
-                  <span className="text-yellow-500 text-sm font-medium">🧪 Test Mode</span>
-                  <span className="text-xs text-muted-foreground">(€0.10)</span>
-                </div>
-                <button
-                  onClick={() => setIsTestMode(!isTestMode)}
-                  className={`relative w-11 h-6 rounded-full transition-colors ${
-                    isTestMode ? "bg-yellow-500" : "bg-muted"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${
-                      isTestMode ? "translate-x-5" : "translate-x-0"
+              {/* Test Mode Toggle - Admin Only */}
+              {isAdmin && (
+                <div className="flex items-center justify-between p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+                  <div className="flex items-center gap-2">
+                    <span className="text-yellow-500 text-sm font-medium">🧪 Test Mode (Admin)</span>
+                    <span className="text-xs text-muted-foreground">($0.10)</span>
+                  </div>
+                  <button
+                    onClick={() => setIsTestMode(!isTestMode)}
+                    className={`relative w-11 h-6 rounded-full transition-colors ${
+                      isTestMode ? "bg-yellow-500" : "bg-muted"
                     }`}
-                  />
-                </button>
-              </div>
+                  >
+                    <span
+                      className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${
+                        isTestMode ? "translate-x-5" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </div>
+              )}
 
               {/* Add-ons Section */}
               {!isTestMode && (
