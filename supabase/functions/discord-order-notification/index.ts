@@ -5,7 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1463233069296128206/cAjHrTSSNs0GzT5vKSHf1mqyjGPeWawlDDBDUOiGU5y81hJBhzKfP6RW0uDIV2f_OlK0";
+// Webhook URL stored securely as environment variable
+const DISCORD_WEBHOOK_URL = Deno.env.get('DISCORD_ORDER_WEBHOOK_URL') || '';
 
 interface OrderDetails {
   plan: string;
