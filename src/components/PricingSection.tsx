@@ -11,9 +11,9 @@ const endpoints = [
 ];
 
 const locations = [
-  { id: "newyork", name: "New York", region: "US", priceModifier: 1.0, isEU: false },
-  { id: "frankfurt", name: "Frankfurt", region: "EU", priceModifier: 1.12, isEU: true },
-  { id: "amsterdam", name: "Amsterdam", region: "EU", priceModifier: 1.18, isEU: true },
+  { id: "newyork", name: "New York", region: "US" },
+  { id: "frankfurt", name: "Frankfurt", region: "EU" },
+  { id: "amsterdam", name: "Amsterdam", region: "EU" },
 ];
 
 const serverTypes = [
@@ -101,9 +101,9 @@ const PricingSection = () => {
       baseTotal = Math.round(discountedServerPrice + stakeAddition);
       beforeDiscount = basePrice + (additionalStakePackages * 350);
     } else {
-      // Shared server pricing (original logic)
-      const basePrice = 125;
-      const maxPrice = 950;
+      // Shared server pricing - flat 30% markup, all locations same price
+      const basePrice = 125 * 1.30; // 30% increase
+      const maxPrice = 950 * 1.30; // 30% increase
       
       const rpsPercent = (rps - 100) / (4000 - 100);
       const tpsPercent = (tps - 50) / (2000 - 50);
@@ -112,14 +112,11 @@ const PricingSection = () => {
       const endpoint = endpoints.find(e => e.id === selectedEndpoint);
       const endpointModifier = endpoint?.priceModifier || 1;
       
-      const location = locations.find(l => l.id === selectedLocation);
-      const locationModifier = location?.priceModifier || 1;
-      
       const commitment = commitments.find(c => c.id === selectedCommitment);
       discountPercent = commitment?.discount || 0;
       
       const calculatedPrice = basePrice + (combinedPercent * (maxPrice - basePrice));
-      const baseWithModifiers = Math.round(calculatedPrice * endpointModifier * locationModifier);
+      const baseWithModifiers = Math.round(calculatedPrice * endpointModifier);
       baseTotal = Math.round(baseWithModifiers * (1 - discountPercent));
       beforeDiscount = baseWithModifiers;
     }
