@@ -304,144 +304,143 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
                 </div>
               )}
 
-              {/* Add-ons Section */}
-              {!isTestMode && (
-                <div className="space-y-4">
-                  <label className="text-sm font-medium">Add-ons (Optional)</label>
-                  
-                  {/* Shreds Add-on */}
-                  <div 
-                    onClick={() => setIncludeShreds(!includeShreds)}
-                    className={`p-4 rounded-lg border cursor-pointer transition-all ${
-                      includeShreds 
-                        ? "bg-primary/10 border-primary" 
-                        : "bg-muted/30 border-border hover:border-muted-foreground/50"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="font-semibold">🔥 Private Shreds</span>
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/20 text-secondary font-medium">
-                            +{formatPrice(SHREDS_PRICE)}/mo
-                          </span>
-                        </div>
-                        <div className="space-y-1.5">
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Zap className="w-3.5 h-3.5 text-primary" />
-                            <span>Faster gRPC connection</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Activity className="w-3.5 h-3.5 text-primary" />
-                            <span>Faster transaction landing</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Shield className="w-3.5 h-3.5 text-primary" />
-                            <span>More stable connection</span>
-                          </div>
-                        </div>
+              {/* Add-ons Section - Show in both normal and test mode */}
+              <div className="space-y-4">
+                <label className="text-sm font-medium">Add-ons (Optional)</label>
+                
+                {/* Shreds Add-on */}
+                <div 
+                  onClick={() => setIncludeShreds(!includeShreds)}
+                  className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                    includeShreds 
+                      ? "bg-primary/10 border-primary" 
+                      : "bg-muted/30 border-border hover:border-muted-foreground/50"
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-semibold">🔥 Private Shreds</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/20 text-secondary font-medium">
+                          +{formatPrice(SHREDS_PRICE)}/mo
+                        </span>
                       </div>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                        includeShreds ? "border-primary bg-primary" : "border-muted-foreground/50"
-                      }`}>
-                        {includeShreds && <Check className="w-3 h-3 text-primary-foreground" />}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* swQoS Add-on */}
-                  <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold">⚡ swQoS Service</span>
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Zap className="w-3.5 h-3.5 text-primary" />
+                          <span>Faster gRPC connection</span>
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          €350 per 100K stake (up to 1M)
-                        </p>
-                      </div>
-                      <div className="group relative">
-                        <Info className="w-4 h-4 text-muted-foreground cursor-help" />
-                        <div className="absolute right-0 top-6 w-48 p-2 rounded bg-popover border border-border text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                          Staked Weighted Quality of Service for priority transaction processing
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Activity className="w-3.5 h-3.5 text-primary" />
+                          <span>Faster transaction landing</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Shield className="w-3.5 h-3.5 text-primary" />
+                          <span>More stable connection</span>
                         </div>
                       </div>
                     </div>
-                    
-                    <div className="grid grid-cols-5 gap-2">
-                      {SWQOS_TIERS.slice(0, 5).map((tier, index) => (
-                        <button
-                          key={tier.stake}
-                          onClick={() => setSwqosTier(swqosTier === index ? null : index)}
-                          className={`py-2 px-1 rounded text-xs font-medium transition-all ${
-                            swqosTier === index
-                              ? "bg-primary/10 border border-primary text-primary"
-                              : "bg-muted/50 border border-transparent text-muted-foreground hover:border-muted-foreground/30"
-                          }`}
-                        >
-                          {tier.label}
-                        </button>
-                      ))}
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                      includeShreds ? "border-primary bg-primary" : "border-muted-foreground/50"
+                    }`}>
+                      {includeShreds && <Check className="w-3 h-3 text-primary-foreground" />}
                     </div>
-                    <div className="grid grid-cols-5 gap-2 mt-2">
-                      {SWQOS_TIERS.slice(5, 10).map((tier, index) => (
-                        <button
-                          key={tier.stake}
-                          onClick={() => setSwqosTier(swqosTier === index + 5 ? null : index + 5)}
-                          className={`py-2 px-1 rounded text-xs font-medium transition-all ${
-                            swqosTier === index + 5
-                              ? "bg-primary/10 border border-primary text-primary"
-                              : "bg-muted/50 border border-transparent text-muted-foreground hover:border-muted-foreground/30"
-                          }`}
-                        >
-                          {tier.label}
-                        </button>
-                      ))}
-                    </div>
-                    {swqosTier !== null && (
-                      <div className="mt-3 text-sm text-center text-secondary font-medium">
-                        +€{SWQOS_TIERS[swqosTier].price.toLocaleString()} one-time
-                      </div>
-                    )}
                   </div>
                 </div>
-              )}
+
+                {/* swQoS Add-on */}
+                <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold">⚡ swQoS Service</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        $350 per 100K stake (up to 1M)
+                      </p>
+                    </div>
+                    <div className="group relative">
+                      <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                      <div className="absolute right-0 top-6 w-48 p-2 rounded bg-popover border border-border text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                        Staked Weighted Quality of Service for priority transaction processing
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-5 gap-2">
+                    {SWQOS_TIERS.slice(0, 5).map((tier, index) => (
+                      <button
+                        key={tier.stake}
+                        onClick={() => setSwqosTier(swqosTier === index ? null : index)}
+                        className={`py-2 px-1 rounded text-xs font-medium transition-all ${
+                          swqosTier === index
+                            ? "bg-primary/10 border border-primary text-primary"
+                            : "bg-muted/50 border border-transparent text-muted-foreground hover:border-muted-foreground/30"
+                        }`}
+                      >
+                        {tier.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-5 gap-2 mt-2">
+                    {SWQOS_TIERS.slice(5, 10).map((tier, index) => (
+                      <button
+                        key={tier.stake}
+                        onClick={() => setSwqosTier(swqosTier === index + 5 ? null : index + 5)}
+                        className={`py-2 px-1 rounded text-xs font-medium transition-all ${
+                          swqosTier === index + 5
+                            ? "bg-primary/10 border border-primary text-primary"
+                            : "bg-muted/50 border border-transparent text-muted-foreground hover:border-muted-foreground/30"
+                        }`}
+                      >
+                        {tier.label}
+                      </button>
+                    ))}
+                  </div>
+                  {swqosTier !== null && (
+                    <div className="mt-3 text-sm text-center text-secondary font-medium">
+                      +${SWQOS_TIERS[swqosTier].price.toLocaleString()} one-time
+                    </div>
+                  )}
+                </div>
+              </div>
 
               {/* Order Summary */}
               <div className="p-4 rounded-lg bg-muted/30 border border-border">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm text-muted-foreground">Plan</span>
                   <span className="text-sm font-medium">
-                    {isTestMode ? "Test Payment" : getCommitmentLabel()}
+                    {isTestMode ? `Test Payment (${getCommitmentLabel()})` : getCommitmentLabel()}
                   </span>
                 </div>
-                {!isTestMode && (
-                  <>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm text-muted-foreground">Monthly Rate</span>
-                      <span className="text-sm font-medium">{formatPrice(amount)}/mo</span>
-                    </div>
-                    {includeShreds && (
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-muted-foreground">Private Shreds</span>
-                        <span className="text-sm font-medium">+{formatPrice(SHREDS_PRICE)}/mo</span>
-                      </div>
-                    )}
-                    {swqosTier !== null && (
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-muted-foreground">swQoS ({SWQOS_TIERS[swqosTier].label} stake)</span>
-                        <span className="text-sm font-medium">+{formatPrice(SWQOS_TIERS[swqosTier].price)}</span>
-                      </div>
-                    )}
-                  </>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-muted-foreground">Monthly Rate</span>
+                  <span className="text-sm font-medium">{formatPrice(amount)}/mo</span>
+                </div>
+                {includeShreds && (
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-muted-foreground">Private Shreds</span>
+                    <span className="text-sm font-medium">+{formatPrice(SHREDS_PRICE)}/mo</span>
+                  </div>
+                )}
+                {swqosTier !== null && (
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-muted-foreground">swQoS ({SWQOS_TIERS[swqosTier].label} stake)</span>
+                    <span className="text-sm font-medium">+{formatPrice(SWQOS_TIERS[swqosTier].price)}</span>
+                  </div>
                 )}
                 <div className="border-t border-border my-3" />
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Total Due</span>
                   <span className="text-lg font-bold text-gradient-omega">
-                    {isTestMode ? `$${TEST_AMOUNT.toFixed(2)}` : formatPrice(getTotalAmount())}
+                    {isTestMode ? "$0.10" : formatPrice(getTotalAmount())}
                   </span>
                 </div>
+                {isTestMode && (
+                  <p className="text-xs text-yellow-500 mt-2 text-center">
+                    Test mode: Only $0.10 will be charged regardless of add-ons selected
+                  </p>
+                )}
               </div>
 
               {/* Crypto Options */}
