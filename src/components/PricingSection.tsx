@@ -535,6 +535,10 @@ const PricingSection = () => {
           onClose={() => setIsPaymentOpen(false)}
           amount={price}
           commitment={selectedCommitment}
+          rps={rps}
+          tps={tps}
+          serverType={selectedServerType}
+          rentAccessEnabled={rentAccessEnabled}
         />
 
         {/* Discord CTA */}
