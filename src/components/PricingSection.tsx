@@ -64,6 +64,7 @@ const sharedFeatures = [
 const PricingSection = () => {
   const [rps, setRps] = useState(100);
   const [tps, setTps] = useState(50);
+  const [pubkeys, setPubkeys] = useState(20);
   const [selectedEndpoint, setSelectedEndpoint] = useState("mainnet");
   const [selectedLocation, setSelectedLocation] = useState("newyork");
   const [selectedCommitment, setSelectedCommitment] = useState("monthly");
@@ -120,8 +121,12 @@ const PricingSection = () => {
       
       const calculatedPrice = basePrice + (combinedPercent * (maxPrice - basePrice));
       const baseWithModifiers = Math.round(calculatedPrice * endpointModifier);
-      baseTotal = Math.round(baseWithModifiers * (1 - discountPercent));
-      beforeDiscount = baseWithModifiers;
+      
+      // PubKeys extra cost: $0 at 20, $50 at 2000 (linear scale)
+      const pubkeysExtra = Math.round(((pubkeys - 20) / (2000 - 20)) * 50);
+      
+      baseTotal = Math.round((baseWithModifiers + pubkeysExtra) * (1 - discountPercent));
+      beforeDiscount = baseWithModifiers + pubkeysExtra;
     }
 
     // Apply Rent Access 15% premium
@@ -135,7 +140,10 @@ const PricingSection = () => {
       discount: discountPercent,
       rentAccessCost: rentCost
     };
-  }, [rps, tps, selectedEndpoint, selectedLocation, selectedCommitment, selectedServerType, selectedDedicatedSpec, additionalStakePackages, isDedicated, rentAccessEnabled]);
+  }, [rps, tps, pubkeys, selectedEndpoint, selectedLocation, selectedCommitment, selectedServerType, selectedDedicatedSpec, additionalStakePackages, isDedicated, rentAccessEnabled]);
+
+  // Calculate pubkeys extra cost for display
+  const pubkeysExtraCost = Math.round(((pubkeys - 20) / (2000 - 20)) * 50);
 
   return (
     <section id="pricing" className="py-24 relative overflow-hidden">
@@ -433,25 +441,55 @@ const PricingSection = () => {
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.3 }}
                   >
-                    {/* RPS Slider */}
-                    <div className="mb-8">
-                      <div className="flex justify-between items-center mb-3">
-                        <label className="text-sm font-medium text-foreground">
-                          Requests per Second (RPS)
-                        </label>
-                        <span className="text-sm font-mono font-semibold text-primary">{rps.toLocaleString()} RPS</span>
+                    {/* RPS and PubKeys Row */}
+                    <div className="grid grid-cols-2 gap-6 mb-8">
+                      {/* RPS Slider */}
+                      <div>
+                        <div className="flex justify-between items-center mb-3">
+                          <label className="text-sm font-medium text-foreground">
+                            Requests per Second
+                          </label>
+                          <span className="text-sm font-mono font-semibold text-primary">{rps.toLocaleString()}</span>
+                        </div>
+                        <Slider
+                          value={[rps]}
+                          onValueChange={(value) => setRps(value[0])}
+                          min={100}
+                          max={4000}
+                          step={100}
+                          className="w-full"
+                        />
+                        <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                          <span>100</span>
+                          <span>4,000</span>
+                        </div>
                       </div>
-                      <Slider
-                        value={[rps]}
-                        onValueChange={(value) => setRps(value[0])}
-                        min={100}
-                        max={4000}
-                        step={100}
-                        className="w-full"
-                      />
-                      <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                        <span>100</span>
-                        <span>4,000</span>
+
+                      {/* PubKeys Slider */}
+                      <div>
+                        <div className="flex justify-between items-center mb-3">
+                          <label className="text-sm font-medium text-foreground">
+                            PubKeys
+                          </label>
+                          <span className="text-sm font-mono font-semibold text-primary">
+                            {pubkeys.toLocaleString()}
+                            {pubkeysExtraCost > 0 && (
+                              <span className="text-secondary ml-1">(+${pubkeysExtraCost})</span>
+                            )}
+                          </span>
+                        </div>
+                        <Slider
+                          value={[pubkeys]}
+                          onValueChange={(value) => setPubkeys(value[0])}
+                          min={20}
+                          max={2000}
+                          step={20}
+                          className="w-full"
+                        />
+                        <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                          <span>20 ($0)</span>
+                          <span>2,000 (+$50)</span>
+                        </div>
                       </div>
                     </div>
 
