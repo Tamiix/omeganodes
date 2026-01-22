@@ -68,7 +68,7 @@ serve(async (req) => {
         },
         {
           name: "📧 Customer",
-          value: `**Email:** ${orderDetails.email || "Not provided"}\n**Discord:** ${orderDetails.discordId ? `<@${orderDetails.discordId}> (${orderDetails.discordUsername || orderDetails.discordId})` : "Not connected"}`,
+          value: `**Email:** ${orderDetails.email || "Not provided"}\n**Discord:** ${orderDetails.discordId ? `<@${orderDetails.discordId}>` : "Not provided"}`,
           inline: false
         },
         {
@@ -92,10 +92,10 @@ serve(async (req) => {
       });
     }
 
-    // Build content with staff pings AND customer Discord mention if available
+    // Build content with staff pings AND customer Discord ID as plain text (for copying)
     let contentMessage = "<@404356986340114442> <@545046451219070980>";
     if (orderDetails.discordId) {
-      contentMessage += ` | Customer: <@${orderDetails.discordId}>`;
+      contentMessage += ` | Customer ID: ${orderDetails.discordId}`;
     }
 
     const discordPayload = {
