@@ -265,12 +265,16 @@ const PricingSection = () => {
                           <button
                             key={spec.id}
                             onClick={() => setSelectedDedicatedSpec(spec.id)}
-                            className={`w-full py-4 px-5 rounded-lg border text-left transition-all ${
+                            className={`relative w-full py-4 px-5 rounded-lg border text-left transition-all ${
                               selectedDedicatedSpec === spec.id
                                 ? "bg-primary/10 border-primary"
                                 : "bg-muted/30 border-border hover:border-muted-foreground/50"
                             }`}
                           >
+                            {/* Discount Badge */}
+                            <span className="absolute -top-2 -right-2 px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground text-xs font-bold shadow-lg">
+                              -20% OFF
+                            </span>
                             <div className="flex items-center justify-between">
                               <div>
                                 <p className={`font-medium ${selectedDedicatedSpec === spec.id ? "text-primary" : "text-foreground"}`}>
@@ -279,14 +283,12 @@ const PricingSection = () => {
                                 <p className="text-sm text-muted-foreground mt-0.5">{spec.memory}</p>
                               </div>
                               <div className="text-right">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm text-muted-foreground line-through">
-                                    ${spec.originalPrice.toLocaleString()}
-                                  </span>
-                                  <span className={`text-lg font-bold ${selectedDedicatedSpec === spec.id ? "text-primary" : "text-foreground"}`}>
-                                    ${spec.price.toLocaleString()}<span className="text-sm font-normal text-muted-foreground">/mo</span>
-                                  </span>
-                                </div>
+                                <span className="text-sm text-muted-foreground line-through block">
+                                  ${spec.originalPrice.toLocaleString()}/mo
+                                </span>
+                                <span className={`text-xl font-bold ${selectedDedicatedSpec === spec.id ? "text-primary" : "text-secondary"}`}>
+                                  ${spec.price.toLocaleString()}<span className="text-sm font-normal text-muted-foreground">/mo</span>
+                                </span>
                               </div>
                             </div>
                           </button>
