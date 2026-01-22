@@ -1,11 +1,11 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useState, useMemo } from "react";
-import { Check, Zap, Calendar, Cpu, Server, Plus, FlaskConical } from "lucide-react";
+import { Check, Zap, Calendar, Cpu, Server, Plus, FlaskConical, HelpCircle, ChevronDown, ChevronUp } from "lucide-react";
 import CryptoPaymentModal from "./CryptoPaymentModal";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useAuth } from "@/hooks/useAuth";
-import { Lock } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 const endpoints = [
   { id: "mainnet", name: "Mainnet", priceModifier: 1.0 },
@@ -72,9 +72,14 @@ const PricingSection = () => {
   const [rentAccessEnabled, setRentAccessEnabled] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isTestMode, setIsTestMode] = useState(false);
+  const [discordUserId, setDiscordUserId] = useState("");
+  const [showDiscordGuide, setShowDiscordGuide] = useState(false);
 
   const { formatPrice } = useCurrency();
-  const { isAdmin, profile, signInWithDiscord, user } = useAuth();
+  const { isAdmin } = useAuth();
+
+  // Validate Discord User ID (should be 17-19 digit number)
+  const isValidDiscordId = /^\d{17,19}$/.test(discordUserId.trim());
 
   const isDedicated = selectedServerType === "dedicated";
 
@@ -498,57 +503,98 @@ const PricingSection = () => {
                 ))}
               </div>
 
-              {/* Discord Connection Required Block */}
-              {!profile?.discord_id && (
-                <div className="mb-6 p-5 rounded-xl bg-muted/50 border border-border relative overflow-hidden">
-                  {/* Lock overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/80 pointer-events-none" />
-                  
-                  <div className="relative z-10 text-center">
-                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#5865F2]/20 flex items-center justify-center">
-                      <Lock className="w-6 h-6 text-[#5865F2]" />
-                    </div>
-                    <h3 className="font-semibold text-foreground mb-1">Connect Discord to Continue</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Link your Discord account to receive panel access and support
-                    </p>
-                    <Button
-                      onClick={() => signInWithDiscord()}
-                      className="bg-[#5865F2] hover:bg-[#4752C4] text-white gap-2"
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
-                      </svg>
-                      Connect with Discord
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Discord Connected Badge */}
-              {profile?.discord_id && (
-                <div className="mb-6 flex items-center gap-3 p-3 rounded-xl bg-secondary/10 border border-secondary/30">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-[#5865F2]">
+              {/* Discord User ID Input */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-foreground mb-3">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="inline mr-2 text-[#5865F2]">
                     <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
                   </svg>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-secondary">Discord Connected</p>
-                    <p className="text-xs text-muted-foreground">{profile.discord_username || profile.discord_id}</p>
-                  </div>
-                  <Check className="w-4 h-4 text-secondary" />
+                  Discord User ID
+                </label>
+                
+                <div className="space-y-3">
+                  <Input
+                    type="text"
+                    placeholder="e.g. 123456789012345678"
+                    value={discordUserId}
+                    onChange={(e) => setDiscordUserId(e.target.value.replace(/\D/g, ''))}
+                    className={`bg-muted/30 border ${
+                      discordUserId && !isValidDiscordId 
+                        ? "border-destructive focus-visible:ring-destructive" 
+                        : isValidDiscordId 
+                          ? "border-secondary focus-visible:ring-secondary" 
+                          : "border-border"
+                    }`}
+                  />
+                  
+                  {discordUserId && !isValidDiscordId && (
+                    <p className="text-xs text-destructive">
+                      Please enter a valid Discord User ID (17-19 digits)
+                    </p>
+                  )}
+                  
+                  {isValidDiscordId && (
+                    <div className="flex items-center gap-2 text-secondary text-sm">
+                      <Check className="w-4 h-4" />
+                      <span>Valid Discord User ID</span>
+                    </div>
+                  )}
+
+                  {/* How to find Discord ID guide */}
+                  <button
+                    type="button"
+                    onClick={() => setShowDiscordGuide(!showDiscordGuide)}
+                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                    <span>How do I find my Discord User ID?</span>
+                    {showDiscordGuide ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
+                  </button>
+
+                  <AnimatePresence>
+                    {showDiscordGuide && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="p-4 rounded-lg bg-muted/50 border border-border space-y-3">
+                          <p className="text-sm font-medium text-foreground">Steps to find your Discord User ID:</p>
+                          <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
+                            <li>Open Discord and go to <span className="text-foreground font-medium">User Settings</span> (gear icon)</li>
+                            <li>Scroll down to <span className="text-foreground font-medium">Advanced</span> in the left sidebar</li>
+                            <li>Enable <span className="text-foreground font-medium">Developer Mode</span></li>
+                            <li>Close settings and click on your profile picture or username</li>
+                            <li>Click <span className="text-foreground font-medium">"Copy User ID"</span></li>
+                          </ol>
+                          <div className="pt-2 border-t border-border">
+                            <p className="text-xs text-muted-foreground">
+                              💡 Your Discord User ID is a unique 17-19 digit number, not your username or tag.
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-              )}
+              </div>
 
               {/* CTA Button */}
               <Button 
                 variant="omega" 
                 size="lg" 
                 className="w-full gap-2"
-                disabled={!profile?.discord_id}
+                disabled={!isValidDiscordId}
                 onClick={() => setIsPaymentOpen(true)}
               >
                 <Zap className="w-4 h-4" />
-                {profile?.discord_id ? "Subscribe Now" : "Connect Discord First"}
+                {isValidDiscordId ? "Subscribe Now" : "Enter Discord ID to Continue"}
               </Button>
 
 
@@ -568,6 +614,7 @@ const PricingSection = () => {
           serverType={selectedServerType}
           rentAccessEnabled={rentAccessEnabled}
           isTestMode={isTestMode}
+          discordUserId={discordUserId.trim()}
         />
 
         {/* Discord CTA */}
