@@ -182,19 +182,84 @@ serve(async (req) => {
             );
 
             if (recentTxs.length > 0) {
-              const mostRecent = recentTxs[0];
-              console.log(`Found ${recentTxs.length} recent token transactions within ${TX_TIME_WINDOW_SECONDS}s`);
+              // Get full transaction details to check the amount
+              let totalReceived = 0;
+              const signatures: string[] = [];
               
-              return new Response(
-                JSON.stringify({ 
-                  success: true, 
-                  detected: true,
-                  signature: mostRecent.signature,
-                  blockTime: mostRecent.blockTime,
-                  message: "Token payment detected"
-                }),
-                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-              );
+              for (const sig of recentTxs) {
+                const txResponse = await fetch(rpcUrl, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    jsonrpc: "2.0",
+                    id: 1,
+                    method: "getTransaction",
+                    params: [sig.signature, { encoding: "jsonParsed", maxSupportedTransactionVersion: 0 }]
+                  })
+                });
+
+                const txData = await txResponse.json();
+                
+                if (txData.result?.meta && !txData.result.meta.err) {
+                  // Look for token transfer in inner instructions
+                  const preTokenBalances = txData.result.meta.preTokenBalances || [];
+                  const postTokenBalances = txData.result.meta.postTokenBalances || [];
+                  
+                  // Find our token account balance changes
+                  for (const postBalance of postTokenBalances) {
+                    if (postBalance.mint === tokenMint) {
+                      const preBalance = preTokenBalances.find(
+                        (pre: { accountIndex: number }) => pre.accountIndex === postBalance.accountIndex
+                      );
+                      const preAmount = preBalance ? parseFloat(preBalance.uiTokenAmount?.uiAmountString || "0") : 0;
+                      const postAmount = parseFloat(postBalance.uiTokenAmount?.uiAmountString || "0");
+                      const received = postAmount - preAmount;
+                      
+                      if (received > 0) {
+                        totalReceived += received;
+                        signatures.push(sig.signature);
+                        console.log(`Token transfer found: +${received} ${tokenType.toUpperCase()}`);
+                      }
+                    }
+                  }
+                }
+              }
+              
+              if (totalReceived > 0) {
+                console.log(`Total received: ${totalReceived} ${tokenType.toUpperCase()}, expected: ${expectedAmount}`);
+                
+                // Check if amount is sufficient (with small tolerance)
+                const tolerance = expectedAmount * 0.01; // 1% tolerance
+                if (totalReceived >= expectedAmount - tolerance) {
+                  return new Response(
+                    JSON.stringify({ 
+                      success: true, 
+                      detected: true,
+                      signature: signatures[0],
+                      amount: totalReceived,
+                      expectedAmount: expectedAmount,
+                      message: "Payment detected and verified"
+                    }),
+                    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                  );
+                } else {
+                  // Partial payment detected
+                  const remaining = expectedAmount - totalReceived;
+                  return new Response(
+                    JSON.stringify({ 
+                      success: true, 
+                      detected: true,
+                      partial: true,
+                      signature: signatures[0],
+                      amount: totalReceived,
+                      expectedAmount: expectedAmount,
+                      remaining: remaining,
+                      message: `Partial payment received. Please send ${remaining.toFixed(2)} more ${tokenType.toUpperCase()} to complete your order.`
+                    }),
+                    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                  );
+                }
+              }
             }
           }
         }
