@@ -1,5 +1,10 @@
 project_id = "mmkornqvbafkricqixgk"
 
+[auth.external.discord]
+enabled = true
+client_id = "env(DISCORD_CLIENT_ID)"
+secret = "env(DISCORD_CLIENT_SECRET)"
+
 [functions.verify-solana-payment]
 verify_jwt = false
 
