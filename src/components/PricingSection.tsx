@@ -27,14 +27,14 @@ const dedicatedSpecs = [
     cpu: "AMD EPYC 9354p", 
     memory: "1024GB RAM", 
     originalPrice: 2700,
-    price: Math.round(2700 * 0.8) // 20% off
+    price: Math.round(2700 * 0.9) // 10% off
   },
   { 
     id: "epyc-9374f", 
     cpu: "AMD EPYC 9374F", 
     memory: "1024GB RAM", 
     originalPrice: 2900,
-    price: Math.round(2900 * 0.8) // 20% off
+    price: Math.round(2900 * 0.9) // 10% off
   },
 ];
 
@@ -239,7 +239,7 @@ const PricingSection = () => {
                     {/* Promo Banner */}
                     <div className="mb-6 p-4 rounded-xl bg-secondary/10 border border-secondary/30">
                       <p className="text-sm text-secondary font-semibold flex items-center gap-2">
-                        🎉 Limited Time Offer: Save 20% on your first dedicated server!
+                        🎉 Limited Time Offer: Save 10% on your first dedicated server!
                       </p>
                     </div>
 
@@ -273,7 +273,7 @@ const PricingSection = () => {
                           >
                             {/* Discount Badge */}
                             <span className="absolute -top-2 -right-2 px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground text-xs font-bold shadow-lg">
-                              -20% OFF
+                              -10% OFF
                             </span>
                             <div className="flex items-center justify-between">
                               <div>
