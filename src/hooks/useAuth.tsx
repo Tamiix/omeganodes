@@ -7,6 +7,8 @@ interface Profile {
   user_id: string;
   username: string;
   email: string;
+  discord_id: string | null;
+  discord_username: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -28,6 +30,7 @@ interface AuthContextType {
   isLoading: boolean;
   signUp: (email: string, password: string, username: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signInWithDiscord: () => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -69,6 +72,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    // Function to update Discord info from OAuth provider
+    const updateDiscordInfo = async (user: User) => {
+      const provider = user.app_metadata?.provider;
+      const identities = user.identities;
+      
+      if (provider === 'discord' && identities) {
+        const discordIdentity = identities.find(i => i.provider === 'discord');
+        if (discordIdentity?.identity_data) {
+          const discordId = discordIdentity.identity_data.provider_id || discordIdentity.id;
+          const discordUsername = discordIdentity.identity_data.full_name || 
+                                   discordIdentity.identity_data.name ||
+                                   discordIdentity.identity_data.custom_claims?.global_name;
+          
+          // Update profile with Discord info - use type assertion since types may be out of sync
+          await supabase
+            .from('profiles')
+            .update({ 
+              discord_id: discordId,
+              discord_username: discordUsername
+            } as any)
+            .eq('user_id', user.id);
+        }
+      }
+    };
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -78,6 +106,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Defer fetching user data to avoid deadlock
         if (session?.user) {
           setTimeout(() => {
+            // Update Discord info if signing in with Discord
+            if (event === 'SIGNED_IN') {
+              updateDiscordInfo(session.user);
+            }
             fetchUserData(session.user.id);
           }, 0);
         } else {
@@ -127,6 +159,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error: error as Error | null };
   };
 
+  const signInWithDiscord = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'discord',
+      options: {
+        redirectTo: `${window.location.origin}/`,
+        scopes: 'identify'
+      }
+    });
+    
+    return { error: error as Error | null };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setProfile(null);
@@ -153,6 +197,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isLoading,
       signUp,
       signIn,
+      signInWithDiscord,
       signOut,
       refreshProfile
     }}>
