@@ -26,13 +26,15 @@ const dedicatedSpecs = [
     id: "epyc-9354p", 
     cpu: "AMD EPYC 9354p", 
     memory: "1024GB RAM", 
-    price: 2700 
+    originalPrice: 2700,
+    price: Math.round(2700 * 0.8) // 20% off
   },
   { 
     id: "epyc-9374f", 
     cpu: "AMD EPYC 9374F", 
     memory: "1024GB RAM", 
-    price: 2900 
+    originalPrice: 2900,
+    price: Math.round(2900 * 0.8) // 20% off
   },
 ];
 
@@ -234,6 +236,13 @@ const PricingSection = () => {
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.3 }}
                   >
+                    {/* Promo Banner */}
+                    <div className="mb-6 p-4 rounded-xl bg-secondary/10 border border-secondary/30">
+                      <p className="text-sm text-secondary font-semibold flex items-center gap-2">
+                        🎉 Limited Time Offer: Save 20% on your first dedicated server!
+                      </p>
+                    </div>
+
                     {/* Warning/Info Note */}
                     <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
                       <p className="text-sm text-amber-400 font-medium mb-2">⚠️ Important Notice</p>
@@ -269,8 +278,15 @@ const PricingSection = () => {
                                 </p>
                                 <p className="text-sm text-muted-foreground mt-0.5">{spec.memory}</p>
                               </div>
-                              <div className={`text-lg font-bold ${selectedDedicatedSpec === spec.id ? "text-primary" : "text-foreground"}`}>
-                                ${spec.price.toLocaleString()}<span className="text-sm font-normal text-muted-foreground">/mo</span>
+                              <div className="text-right">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-muted-foreground line-through">
+                                    ${spec.originalPrice.toLocaleString()}
+                                  </span>
+                                  <span className={`text-lg font-bold ${selectedDedicatedSpec === spec.id ? "text-primary" : "text-foreground"}`}>
+                                    ${spec.price.toLocaleString()}<span className="text-sm font-normal text-muted-foreground">/mo</span>
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </button>
