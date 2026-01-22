@@ -46,7 +46,7 @@ const SWQOS_TIERS = [
 
 const SHREDS_PRICE = 5435; // USD per month (~5000 EUR)
 
-type PaymentStep = "select" | "processing" | "success" | "failed";
+type PaymentStep = "select" | "processing" | "success" | "failed" | "partial";
 
 const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tps = 50, serverType = "shared", rentAccessEnabled = false, isTestMode = false, discordUserId = "" }: CryptoPaymentModalProps) => {
   const [selectedCrypto, setSelectedCrypto] = useState<string | null>(null);
@@ -55,6 +55,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
   const [transactionRef, setTransactionRef] = useState<string>("");
   const [includeShreds, setIncludeShreds] = useState(false);
   const [swqosTier, setSwqosTier] = useState<number | null>(null);
+  const [partialPaymentInfo, setPartialPaymentInfo] = useState<{ received: number; remaining: number } | null>(null);
 
   const { formatPrice } = useCurrency();
   const { user } = useAuth();
@@ -113,6 +114,17 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
       }
 
       if (data?.detected) {
+        // Check if this is a partial payment
+        if (data.partial) {
+          setTransactionRef(data.signature || "");
+          setPartialPaymentInfo({
+            received: data.amount,
+            remaining: data.remaining
+          });
+          setPaymentStep("partial");
+          return;
+        }
+        
         const signature = data.signature || `OMG-${Date.now().toString(36).toUpperCase()}`;
         setTransactionRef(signature);
         
@@ -200,7 +212,14 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
     setTransactionRef("");
     setIncludeShreds(false);
     setSwqosTier(null);
+    setPartialPaymentInfo(null);
     onClose();
+  };
+
+  const handleRetryPartial = () => {
+    setPaymentStep("processing");
+    // Re-verify after user sends remaining amount
+    handlePaymentSent();
   };
 
   const getCommitmentLabel = () => {
@@ -253,6 +272,54 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
           </div>
         )}
 
+        {paymentStep === "partial" && partialPaymentInfo && (
+          <div className="py-12 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/20 flex items-center justify-center">
+              <CheckCircle className="w-8 h-8 text-yellow-500" />
+            </div>
+            <h3 className="text-xl font-bold mb-2">Partial Payment Received</h3>
+            <p className="text-muted-foreground mb-6">
+              We received your payment, but it was less than the required amount.
+            </p>
+            <div className="p-4 rounded-lg bg-muted/30 border border-border mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-muted-foreground">Amount Received:</span>
+                <span className="text-sm font-medium text-secondary">${partialPaymentInfo.received.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-sm text-muted-foreground">Remaining Balance:</span>
+                <span className="text-lg font-bold text-primary">${partialPaymentInfo.remaining.toFixed(2)}</span>
+              </div>
+              <div className="pt-3 border-t border-border">
+                <p className="text-sm text-center">
+                  Please send <span className="font-bold text-primary">${partialPaymentInfo.remaining.toFixed(2)} {selectedCrypto?.toUpperCase()}</span> to complete your order.
+                </p>
+              </div>
+            </div>
+            {transactionRef && (
+              <a
+                href={`https://solscan.io/tx/${transactionRef}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-primary hover:underline mb-6"
+              >
+                View Transaction on Solscan <ExternalLink className="w-4 h-4" />
+              </a>
+            )}
+            <div className="flex gap-3 mt-4">
+              <Button variant="outline" onClick={handleClose} className="flex-1">
+                Cancel
+              </Button>
+              <Button variant="omega" onClick={handleRetryPartial} className="flex-1">
+                I've Sent the Rest
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-4">
+              Need help? Join our <a href="https://discord.gg/omeganode" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Discord</a> for support.
+            </p>
+          </div>
+        )}
+
         {paymentStep === "failed" && (
           <div className="py-12 text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-destructive/20 flex items-center justify-center">
@@ -260,8 +327,8 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
             </div>
             <h3 className="text-xl font-bold mb-2">Payment Not Detected</h3>
             <p className="text-muted-foreground mb-6">
-              We couldn't detect your payment on the Solana blockchain. 
-              Please ensure you've sent the correct amount to the correct address.
+              We couldn't detect any payment on the Solana blockchain. 
+              Please ensure you've sent the payment to the correct address.
             </p>
             <div className="p-4 rounded-lg bg-muted/30 border border-border mb-6 text-left">
               <div className="text-sm font-medium mb-2">Troubleshooting tips:</div>
