@@ -121,6 +121,8 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          discord_id: string | null
+          discord_username: string | null
           email: string
           id: string
           updated_at: string
@@ -129,6 +131,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          discord_id?: string | null
+          discord_username?: string | null
           email: string
           id?: string
           updated_at?: string
@@ -137,6 +141,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          discord_id?: string | null
+          discord_username?: string | null
           email?: string
           id?: string
           updated_at?: string

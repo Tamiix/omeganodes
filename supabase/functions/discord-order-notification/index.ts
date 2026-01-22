@@ -13,6 +13,8 @@ interface OrderDetails {
   commitment: string;
   serverType: string;
   email: string;
+  discordId: string | null;
+  discordUsername: string | null;
   rps: number;
   tps: number;
   includeShreds: boolean;
@@ -66,7 +68,7 @@ serve(async (req) => {
         },
         {
           name: "📧 Customer",
-          value: orderDetails.email || "Not provided",
+          value: `**Email:** ${orderDetails.email || "Not provided"}\n**Discord:** ${orderDetails.discordId ? `<@${orderDetails.discordId}> (${orderDetails.discordUsername || orderDetails.discordId})` : "Not connected"}`,
           inline: false
         },
         {
@@ -90,8 +92,14 @@ serve(async (req) => {
       });
     }
 
+    // Build content with staff pings AND customer Discord mention if available
+    let contentMessage = "<@404356986340114442> <@545046451219070980>";
+    if (orderDetails.discordId) {
+      contentMessage += ` | Customer: <@${orderDetails.discordId}>`;
+    }
+
     const discordPayload = {
-      content: "<@404356986340114442> <@545046451219070980>",
+      content: contentMessage,
       embeds: [embed]
     };
 
