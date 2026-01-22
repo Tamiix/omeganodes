@@ -25,7 +25,6 @@ const TEST_WALLET = "vpVbwh9bWRJcur5xSfpEHnAzQ74XeTpG9XDWVvzzSR8";
 const getCryptoOptions = (isTestMode: boolean) => {
   const wallet = isTestMode ? TEST_WALLET : PRODUCTION_WALLET;
   return [
-    { id: "sol", name: "Solana", symbol: "SOL", icon: "◎", address: wallet },
     { id: "usdc", name: "USDC", symbol: "USDC", icon: "$", address: wallet, subtext: "SPL Token" },
     { id: "usdt", name: "USDT", symbol: "USDT", icon: "₮", address: wallet, subtext: "SPL Token" },
   ];
