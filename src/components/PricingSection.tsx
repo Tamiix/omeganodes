@@ -1,7 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useState, useMemo } from "react";
-import { Slider } from "@/components/ui/slider";
 import { Check, Zap, Calendar, Cpu, Server, Plus, FlaskConical } from "lucide-react";
 import CryptoPaymentModal from "./CryptoPaymentModal";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -62,11 +61,7 @@ const sharedFeatures = [
 ];
 
 const PricingSection = () => {
-  const [rps, setRps] = useState(100);
-  const [tps, setTps] = useState(50);
-  const [pubkeys, setPubkeys] = useState(20);
   const [selectedEndpoint, setSelectedEndpoint] = useState("mainnet");
-  const [selectedLocation, setSelectedLocation] = useState("newyork");
   const [selectedCommitment, setSelectedCommitment] = useState("monthly");
   const [selectedServerType, setSelectedServerType] = useState("shared");
   const [selectedDedicatedSpec, setSelectedDedicatedSpec] = useState("epyc-9354p");
@@ -105,28 +100,14 @@ const PricingSection = () => {
       baseTotal = Math.round(discountedServerPrice + stakeAddition);
       beforeDiscount = basePrice + (additionalStakePackages * 350);
     } else {
-      // Shared server pricing - flat 30% markup, all locations same price
-      const basePrice = 125 * 1.30; // 30% increase
-      const maxPrice = 950 * 1.30; // 30% increase
-      
-      const rpsPercent = (rps - 100) / (4000 - 100);
-      const tpsPercent = (tps - 50) / (2000 - 50);
-      const combinedPercent = (rpsPercent * 0.55) + (tpsPercent * 0.45);
-      
-      const endpoint = endpoints.find(e => e.id === selectedEndpoint);
-      const endpointModifier = endpoint?.priceModifier || 1;
+      // Shared server pricing - fixed $350/month
+      const basePrice = 350;
       
       const commitment = commitments.find(c => c.id === selectedCommitment);
       discountPercent = commitment?.discount || 0;
       
-      const calculatedPrice = basePrice + (combinedPercent * (maxPrice - basePrice));
-      const baseWithModifiers = Math.round(calculatedPrice * endpointModifier);
-      
-      // PubKeys extra cost: $0 at 20, $50 at 2000 (linear scale)
-      const pubkeysExtra = Math.round(((pubkeys - 20) / (2000 - 20)) * 50);
-      
-      baseTotal = Math.round((baseWithModifiers + pubkeysExtra) * (1 - discountPercent));
-      beforeDiscount = baseWithModifiers + pubkeysExtra;
+      baseTotal = Math.round(basePrice * (1 - discountPercent));
+      beforeDiscount = basePrice;
     }
 
     // Apply Rent Access 15% premium
@@ -140,10 +121,7 @@ const PricingSection = () => {
       discount: discountPercent,
       rentAccessCost: rentCost
     };
-  }, [rps, tps, pubkeys, selectedEndpoint, selectedLocation, selectedCommitment, selectedServerType, selectedDedicatedSpec, additionalStakePackages, isDedicated, rentAccessEnabled]);
-
-  // Calculate pubkeys extra cost for display
-  const pubkeysExtraCost = Math.round(((pubkeys - 20) / (2000 - 20)) * 50);
+  }, [selectedCommitment, selectedServerType, selectedDedicatedSpec, additionalStakePackages, isDedicated, rentAccessEnabled]);
 
   return (
     <section id="pricing" className="py-24 relative overflow-hidden">
@@ -432,126 +410,40 @@ const PricingSection = () => {
                 )}
               </div>
 
-              {/* RPS/TPS Sliders - only show for shared */}
-              <AnimatePresence>
-                {!isDedicated && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
+              {/* Admin Test Mode Toggle - only show for shared */}
+              {!isDedicated && isAdmin && (
+                <div className="mb-8">
+                  <button
+                    onClick={() => setIsTestMode(!isTestMode)}
+                    className={`w-full flex items-center justify-between p-4 rounded-lg border transition-all ${
+                      isTestMode
+                        ? "bg-yellow-500/10 border-yellow-500/50"
+                        : "bg-muted/30 border-border hover:border-muted-foreground/50"
+                    }`}
                   >
-                    {/* RPS and PubKeys Row */}
-                    <div className="grid grid-cols-2 gap-6 mb-8">
-                      {/* RPS Slider */}
-                      <div>
-                        <div className="flex justify-between items-center mb-3">
-                          <label className="text-sm font-medium text-foreground">
-                            Requests per Second
-                          </label>
-                          <span className="text-sm font-mono font-semibold text-primary">{rps.toLocaleString()}</span>
-                        </div>
-                        <Slider
-                          value={[rps]}
-                          onValueChange={(value) => setRps(value[0])}
-                          min={100}
-                          max={4000}
-                          step={100}
-                          className="w-full"
-                        />
-                        <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                          <span>100</span>
-                          <span>4,000</span>
-                        </div>
-                      </div>
-
-                      {/* PubKeys Slider */}
-                      <div>
-                        <div className="flex justify-between items-center mb-3">
-                          <label className="text-sm font-medium text-foreground">
-                            PubKeys
-                          </label>
-                          <span className="text-sm font-mono font-semibold text-primary">
-                            {pubkeys.toLocaleString()}
-                            {pubkeysExtraCost > 0 && (
-                              <span className="text-secondary ml-1">(+${pubkeysExtraCost})</span>
-                            )}
-                          </span>
-                        </div>
-                        <Slider
-                          value={[pubkeys]}
-                          onValueChange={(value) => setPubkeys(value[0])}
-                          min={20}
-                          max={2000}
-                          step={20}
-                          className="w-full"
-                        />
-                        <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                          <span>20 ($0)</span>
-                          <span>2,000 (+$50)</span>
-                        </div>
+                    <div className="flex items-center gap-3">
+                      <FlaskConical className={`w-5 h-5 ${isTestMode ? "text-yellow-500" : "text-muted-foreground"}`} />
+                      <div className="text-left">
+                        <p className={`font-medium ${isTestMode ? "text-yellow-500" : "text-foreground"}`}>
+                          Test Mode (Admin Only)
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Create test orders at $0.10 for verification testing
+                        </p>
                       </div>
                     </div>
-
-                    {/* TPS Slider */}
-                    <div className="mb-8">
-                      <div className="flex justify-between items-center mb-3">
-                        <label className="text-sm font-medium text-foreground">
-                          Transactions per Second (TPS)
-                        </label>
-                        <span className="text-sm font-mono font-semibold text-primary">{tps.toLocaleString()} TPS</span>
-                      </div>
-                      <Slider
-                        value={[tps]}
-                        onValueChange={(value) => setTps(value[0])}
-                        min={50}
-                        max={2000}
-                        step={50}
-                        className="w-full"
+                    <div className={`relative w-11 h-6 rounded-full transition-colors ${
+                      isTestMode ? "bg-yellow-500" : "bg-muted"
+                    }`}>
+                      <span
+                        className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${
+                          isTestMode ? "translate-x-5" : "translate-x-0"
+                        }`}
                       />
-                      <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                        <span>50</span>
-                        <span>2,000</span>
-                      </div>
                     </div>
-
-                    {/* Admin Test Mode Toggle */}
-                    {isAdmin && (
-                      <div className="mb-10">
-                        <button
-                          onClick={() => setIsTestMode(!isTestMode)}
-                          className={`w-full flex items-center justify-between p-4 rounded-lg border transition-all ${
-                            isTestMode
-                              ? "bg-yellow-500/10 border-yellow-500/50"
-                              : "bg-muted/30 border-border hover:border-muted-foreground/50"
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <FlaskConical className={`w-5 h-5 ${isTestMode ? "text-yellow-500" : "text-muted-foreground"}`} />
-                            <div className="text-left">
-                              <p className={`font-medium ${isTestMode ? "text-yellow-500" : "text-foreground"}`}>
-                                Test Mode (Admin Only)
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Create test orders at $0.10 for verification testing
-                              </p>
-                            </div>
-                          </div>
-                          <div className={`relative w-11 h-6 rounded-full transition-colors ${
-                            isTestMode ? "bg-yellow-500" : "bg-muted"
-                          }`}>
-                            <span
-                              className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${
-                                isTestMode ? "translate-x-5" : "translate-x-0"
-                              }`}
-                            />
-                          </div>
-                        </button>
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                  </button>
+                </div>
+              )}
 
               {/* Divider */}
               <div className="border-t border-border my-8" />
@@ -611,8 +503,6 @@ const PricingSection = () => {
           onClose={() => setIsPaymentOpen(false)}
           amount={price}
           commitment={selectedCommitment}
-          rps={rps}
-          tps={tps}
           serverType={selectedServerType}
           rentAccessEnabled={rentAccessEnabled}
           isTestMode={isTestMode}
