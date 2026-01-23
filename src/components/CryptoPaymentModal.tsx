@@ -6,10 +6,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useAuth } from "@/hooks/useAuth";
 
+interface AppliedDiscount {
+  code: string;
+  discount_type: 'percentage' | 'flat';
+  discount_value: number;
+}
+
 interface CryptoPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  amount: number; // Amount in USD
+  amount: number; // Amount in USD (already has discount applied)
   commitment: string;
   rps?: number;
   tps?: number;
@@ -17,6 +23,7 @@ interface CryptoPaymentModalProps {
   rentAccessEnabled?: boolean;
   isTestMode?: boolean;
   discordUserId?: string;
+  appliedDiscount?: AppliedDiscount | null;
 }
 
 const PRODUCTION_WALLET = "8b6cCUhEYL2B7UMC15phYkf9y9GEs3cUV2UQ4zECHroA";
@@ -48,7 +55,7 @@ const SHREDS_PRICE = 5435; // USD per month (~5000 EUR)
 
 type PaymentStep = "select" | "processing" | "success" | "failed" | "partial";
 
-const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tps = 50, serverType = "shared", rentAccessEnabled = false, isTestMode = false, discordUserId = "" }: CryptoPaymentModalProps) => {
+const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tps = 50, serverType = "shared", rentAccessEnabled = false, isTestMode = false, discordUserId = "", appliedDiscount = null }: CryptoPaymentModalProps) => {
   const [selectedCrypto, setSelectedCrypto] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [paymentStep, setPaymentStep] = useState<PaymentStep>("select");
@@ -510,6 +517,19 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-muted-foreground">swQoS ({SWQOS_TIERS[swqosTier].label} stake)</span>
                     <span className="text-sm font-medium">+{formatPrice(SWQOS_TIERS[swqosTier].price)}</span>
+                  </div>
+                )}
+                {appliedDiscount && (
+                  <div className="flex justify-between items-center mb-2 text-secondary">
+                    <span className="text-sm flex items-center gap-1">
+                      <Check className="w-3 h-3" />
+                      Discount ({appliedDiscount.code})
+                    </span>
+                    <span className="text-sm font-medium">
+                      {appliedDiscount.discount_type === 'percentage' 
+                        ? `-${appliedDiscount.discount_value}%` 
+                        : `-$${appliedDiscount.discount_value}`}
+                    </span>
                   </div>
                 )}
                 <div className="border-t border-border my-3" />
