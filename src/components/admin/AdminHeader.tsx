@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Shield, Users, UserCheck } from 'lucide-react';
+import { ArrowLeft, Shield, Users, UserCheck, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const AdminHeader = () => {
@@ -7,6 +7,7 @@ const AdminHeader = () => {
   const location = useLocation();
 
   const isCustomersPage = location.pathname === '/admin/customers';
+  const isDiscountCodesPage = location.pathname === '/admin/discount-codes';
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
@@ -27,7 +28,7 @@ const AdminHeader = () => {
                 Admin Panel
               </h1>
               <p className="text-sm text-muted-foreground">
-                Manage users and admin permissions
+                Manage users, customers, and discount codes
               </p>
             </div>
           </div>
@@ -35,7 +36,7 @@ const AdminHeader = () => {
           {/* Navigation Tabs */}
           <div className="flex items-center gap-2">
             <Button
-              variant={!isCustomersPage ? "default" : "ghost"}
+              variant={!isCustomersPage && !isDiscountCodesPage ? "default" : "ghost"}
               size="sm"
               onClick={() => navigate('/admin')}
               className="gap-2"
@@ -51,6 +52,15 @@ const AdminHeader = () => {
             >
               <UserCheck className="w-4 h-4" />
               Customers
+            </Button>
+            <Button
+              variant={isDiscountCodesPage ? "default" : "ghost"}
+              size="sm"
+              onClick={() => navigate('/admin/discount-codes')}
+              className="gap-2"
+            >
+              <Tag className="w-4 h-4" />
+              Discounts
             </Button>
           </div>
         </div>

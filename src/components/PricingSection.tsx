@@ -1,11 +1,12 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useState, useMemo } from "react";
-import { Check, Zap, Calendar, Cpu, Server, Plus, FlaskConical, HelpCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, Zap, Calendar, Cpu, Server, Plus, FlaskConical, HelpCircle, ChevronDown, ChevronUp, Tag, Loader2 } from "lucide-react";
 import CryptoPaymentModal from "./CryptoPaymentModal";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 
 const endpoints = [
   { id: "mainnet", name: "Mainnet", priceModifier: 1.0 },
@@ -63,6 +64,12 @@ const sharedFeatures = [
   "Dedicated endpoint",
 ];
 
+interface AppliedDiscount {
+  code: string;
+  discount_type: 'percentage' | 'flat';
+  discount_value: number;
+}
+
 const PricingSection = () => {
   const [selectedEndpoint, setSelectedEndpoint] = useState("mainnet");
   const [selectedCommitment, setSelectedCommitment] = useState("monthly");
@@ -74,6 +81,12 @@ const PricingSection = () => {
   const [isTestMode, setIsTestMode] = useState(false);
   const [discordUserId, setDiscordUserId] = useState("");
   const [showDiscordGuide, setShowDiscordGuide] = useState(false);
+  
+  // Discount code state
+  const [discountCode, setDiscountCode] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null);
+  const [discountError, setDiscountError] = useState("");
+  const [isValidatingCode, setIsValidatingCode] = useState(false);
 
   const { formatPrice } = useCurrency();
   const { isAdmin } = useAuth();
@@ -83,7 +96,7 @@ const PricingSection = () => {
 
   const isDedicated = selectedServerType === "dedicated";
 
-  const { price, originalPrice, discount, rentAccessCost } = useMemo(() => {
+  const { price, originalPrice, discount, rentAccessCost, discountAmount, priceBeforeDiscount } = useMemo(() => {
     let baseTotal = 0;
     let beforeDiscount = 0;
     let discountPercent = 0;
@@ -120,16 +133,89 @@ const PricingSection = () => {
 
     // Apply Rent Access 15% premium
     const rentCost = rentAccessEnabled ? Math.round(baseTotal * 0.15) : 0;
-    const finalPrice = baseTotal + rentCost;
+    let finalPrice = baseTotal + rentCost;
+    const priceBeforeCodeDiscount = finalPrice;
     const finalOriginal = rentAccessEnabled ? Math.round(beforeDiscount * 1.15) : beforeDiscount;
+
+    // Apply discount code
+    let codeDiscountAmount = 0;
+    if (appliedDiscount) {
+      if (appliedDiscount.discount_type === 'percentage') {
+        codeDiscountAmount = Math.round(finalPrice * (appliedDiscount.discount_value / 100));
+      } else {
+        codeDiscountAmount = Math.min(appliedDiscount.discount_value, finalPrice);
+      }
+      finalPrice = Math.max(0, finalPrice - codeDiscountAmount);
+    }
 
     return { 
       price: finalPrice, 
       originalPrice: finalOriginal, 
       discount: discountPercent,
-      rentAccessCost: rentCost
+      rentAccessCost: rentCost,
+      discountAmount: codeDiscountAmount,
+      priceBeforeDiscount: priceBeforeCodeDiscount
     };
-  }, [selectedCommitment, selectedServerType, selectedDedicatedSpec, additionalStakePackages, isDedicated, rentAccessEnabled]);
+  }, [selectedCommitment, selectedServerType, selectedDedicatedSpec, additionalStakePackages, isDedicated, rentAccessEnabled, appliedDiscount]);
+
+  const validateDiscountCode = async () => {
+    if (!discountCode.trim()) return;
+    
+    setIsValidatingCode(true);
+    setDiscountError("");
+    
+    try {
+      const { data, error } = await supabase
+        .from('discount_codes')
+        .select('*')
+        .eq('code', discountCode.trim().toUpperCase())
+        .eq('is_active', true)
+        .single();
+
+      if (error || !data) {
+        setDiscountError("Invalid discount code");
+        setAppliedDiscount(null);
+        setIsValidatingCode(false);
+        return;
+      }
+
+      // Check if expired
+      if (data.expires_at && new Date(data.expires_at) < new Date()) {
+        setDiscountError("This discount code has expired");
+        setAppliedDiscount(null);
+        setIsValidatingCode(false);
+        return;
+      }
+
+      // Check max uses
+      if (data.max_uses && data.current_uses >= data.max_uses) {
+        setDiscountError("This discount code has reached its maximum uses");
+        setAppliedDiscount(null);
+        setIsValidatingCode(false);
+        return;
+      }
+
+      // Apply the discount
+      setAppliedDiscount({
+        code: data.code,
+        discount_type: data.discount_type as 'percentage' | 'flat',
+        discount_value: data.discount_value
+      });
+      setDiscountError("");
+    } catch (err) {
+      console.error("Error validating discount code:", err);
+      setDiscountError("Failed to validate discount code");
+      setAppliedDiscount(null);
+    } finally {
+      setIsValidatingCode(false);
+    }
+  };
+
+  const removeDiscount = () => {
+    setAppliedDiscount(null);
+    setDiscountCode("");
+    setDiscountError("");
+  };
 
   return (
     <section id="pricing" className="py-24 relative overflow-hidden">
@@ -469,6 +555,59 @@ const PricingSection = () => {
                 </div>
               )}
 
+              {/* Discount Code Input */}
+              <div className="mb-8">
+                <label className="block text-sm font-medium text-foreground mb-3">
+                  <Tag className="w-4 h-4 inline mr-2" />
+                  Discount Code
+                </label>
+                {appliedDiscount ? (
+                  <div className="p-4 rounded-lg bg-secondary/10 border border-secondary/30">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-secondary" />
+                        <span className="font-mono font-bold text-secondary">{appliedDiscount.code}</span>
+                        <span className="text-sm text-secondary">
+                          ({appliedDiscount.discount_type === 'percentage' 
+                            ? `${appliedDiscount.discount_value}% off` 
+                            : `$${appliedDiscount.discount_value} off`})
+                        </span>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={removeDiscount} className="text-muted-foreground hover:text-foreground">
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      placeholder="Enter code"
+                      value={discountCode}
+                      onChange={(e) => {
+                        setDiscountCode(e.target.value.toUpperCase());
+                        setDiscountError("");
+                      }}
+                      className="bg-muted/30 border-border font-mono"
+                    />
+                    <Button 
+                      variant="outline" 
+                      onClick={validateDiscountCode}
+                      disabled={!discountCode.trim() || isValidatingCode}
+                    >
+                      {isValidatingCode ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        "Apply"
+                      )}
+                    </Button>
+                  </div>
+                )}
+                {discountError && (
+                  <p className="text-xs text-destructive mt-2">{discountError}</p>
+                )}
+              </div>
+
               {/* Divider */}
               <div className="border-t border-border my-8" />
 
@@ -476,17 +615,25 @@ const PricingSection = () => {
               <div className="text-center mb-8">
                 <div className="text-sm text-muted-foreground mb-2">Monthly payment</div>
                 <div className="flex items-baseline justify-center gap-2">
-                  {discount > 0 && (
-                    <span className="text-2xl text-muted-foreground line-through">{formatPrice(originalPrice)}</span>
+                  {(discount > 0 || appliedDiscount) && (
+                    <span className="text-2xl text-muted-foreground line-through">
+                      {formatPrice(appliedDiscount ? priceBeforeDiscount : originalPrice)}
+                    </span>
                   )}
                   <span className="text-5xl sm:text-6xl font-bold text-gradient-omega">{formatPrice(price)}</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
-                {discount > 0 ? (
+                {appliedDiscount && (
+                  <div className="text-sm text-secondary mt-2">
+                    You save {formatPrice(discountAmount)}/mo with code <span className="font-mono font-bold">{appliedDiscount.code}</span>
+                  </div>
+                )}
+                {discount > 0 && !appliedDiscount && (
                   <div className="text-sm text-secondary mt-2">
                     You save {formatPrice(originalPrice - price)}/mo with {commitments.find(c => c.id === selectedCommitment)?.name} commitment
                   </div>
-                ) : (
+                )}
+                {discount === 0 && !appliedDiscount && (
                   <div className="text-sm text-secondary mt-2">Cancel anytime • No long-term commitment</div>
                 )}
               </div>
@@ -615,6 +762,7 @@ const PricingSection = () => {
           rentAccessEnabled={rentAccessEnabled}
           isTestMode={isTestMode}
           discordUserId={discordUserId.trim()}
+          appliedDiscount={appliedDiscount}
         />
 
         {/* Discord CTA */}
