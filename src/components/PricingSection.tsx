@@ -817,25 +817,42 @@ const PricingSection = () => {
               <div className="text-center mb-8">
                 <div className="text-sm text-muted-foreground mb-2">Monthly payment</div>
                 <div className="flex items-baseline justify-center gap-2">
-                  {(discount > 0 || appliedDiscount) && (
-                    <span className="text-2xl text-muted-foreground line-through">
-                      {formatPrice(appliedDiscount ? priceBeforeDiscount : originalPrice)}
-                    </span>
+                  {isTrialMode ? (
+                    <>
+                      <span className="text-2xl text-muted-foreground line-through">
+                        {formatPrice(300)}
+                      </span>
+                      <span className="text-5xl sm:text-6xl font-bold text-secondary">$0</span>
+                      <span className="text-muted-foreground">/month</span>
+                    </>
+                  ) : (
+                    <>
+                      {(discount > 0 || appliedDiscount) && (
+                        <span className="text-2xl text-muted-foreground line-through">
+                          {formatPrice(appliedDiscount ? priceBeforeDiscount : originalPrice)}
+                        </span>
+                      )}
+                      <span className="text-5xl sm:text-6xl font-bold text-gradient-omega">{formatPrice(price)}</span>
+                      <span className="text-muted-foreground">/month</span>
+                    </>
                   )}
-                  <span className="text-5xl sm:text-6xl font-bold text-gradient-omega">{formatPrice(price)}</span>
-                  <span className="text-muted-foreground">/month</span>
                 </div>
-                {appliedDiscount && (
+                {isTrialMode && (
+                  <div className="text-sm text-secondary mt-2">
+                    🎁 30-minute free trial • No payment required
+                  </div>
+                )}
+                {!isTrialMode && appliedDiscount && (
                   <div className="text-sm text-secondary mt-2">
                     You save {formatPrice(discountAmount)}/mo with code <span className="font-mono font-bold">{appliedDiscount.code}</span>
                   </div>
                 )}
-                {discount > 0 && !appliedDiscount && (
+                {!isTrialMode && discount > 0 && !appliedDiscount && (
                   <div className="text-sm text-secondary mt-2">
                     You save {formatPrice(originalPrice - price)}/mo with {commitments.find(c => c.id === selectedCommitment)?.name} commitment
                   </div>
                 )}
-                {discount === 0 && !appliedDiscount && (
+                {!isTrialMode && discount === 0 && !appliedDiscount && (
                   <div className="text-sm text-secondary mt-2">Cancel anytime • No long-term commitment</div>
                 )}
               </div>

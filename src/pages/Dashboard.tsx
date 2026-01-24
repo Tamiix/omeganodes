@@ -51,6 +51,25 @@ interface ConnectionUrl {
   created_at: string;
 }
 
+// Location-based endpoint URLs (static configuration)
+const locationEndpoints = {
+  "Frankfurt V2": {
+    rpc: "http://frav2.omeganetworks.io:8899",
+    ws: "ws://frav2.omeganetworks.io:8900",
+    grpc: "http://frav2.omeganetworks.io:9898"
+  },
+  "Amsterdam V2": {
+    rpc: "http://amsv2.omeganetworks.io:8899",
+    ws: "ws://amsv2.omeganetworks.io:8900",
+    grpc: "http://amsv2.omeganetworks.io:9898"
+  },
+  "New York": {
+    rpc: "http://newyork.omeganetworks.io",
+    ws: "ws://newyork.omeganetworks.io:8900",
+    grpc: "http://newyork.omeganetworks.io:10000"
+  }
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, profile, isLoading } = useAuth();
@@ -294,8 +313,8 @@ const Dashboard = () => {
 
         {/* Connections Tab */}
         {activeTab === 'connections' && (
-          <div className="space-y-4">
-            {connections.length === 0 ? (
+          <div className="space-y-6">
+            {orders.length === 0 ? (
               <Card className="bg-card border-border">
                 <CardContent className="py-12 text-center">
                   <Link2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
@@ -306,41 +325,33 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
             ) : (
-              connections.map((connection, index) => (
+              Object.entries(locationEndpoints).map(([location, endpoints], index) => (
                 <motion.div
-                  key={connection.id}
+                  key={location}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
                   <Card className="bg-card border-border">
                     <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          {connection.endpoint_type}
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                            connection.is_active
-                              ? 'bg-secondary/20 text-secondary'
-                              : 'bg-muted text-muted-foreground'
-                          }`}>
-                            {connection.is_active ? 'Active' : 'Inactive'}
-                          </span>
-                        </CardTitle>
-                      </div>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <MapPin className="w-5 h-5 text-primary" />
+                        {location}
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                      {/* Endpoint URL */}
+                    <CardContent className="space-y-4">
+                      {/* RPC Link */}
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">Endpoint URL</p>
+                        <p className="text-xs text-muted-foreground mb-1">RPC Link</p>
                         <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 border border-border">
                           <code className="flex-1 text-sm text-foreground font-mono truncate">
-                            {connection.url}
+                            {endpoints.rpc}
                           </code>
                           <button
-                            onClick={() => copyToClipboard(connection.url, `url-${connection.id}`)}
+                            onClick={() => copyToClipboard(endpoints.rpc, `rpc-${location}`)}
                             className="p-1.5 rounded-md hover:bg-muted transition-colors"
                           >
-                            {copiedId === `url-${connection.id}` ? (
+                            {copiedId === `rpc-${location}` ? (
                               <Check className="w-4 h-4 text-secondary" />
                             ) : (
                               <Copy className="w-4 h-4 text-muted-foreground" />
@@ -349,18 +360,38 @@ const Dashboard = () => {
                         </div>
                       </div>
 
-                      {/* API Key */}
+                      {/* WS Link */}
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">API Key</p>
+                        <p className="text-xs text-muted-foreground mb-1">WS Link</p>
                         <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 border border-border">
                           <code className="flex-1 text-sm text-foreground font-mono truncate">
-                            {connection.api_key}
+                            {endpoints.ws}
                           </code>
                           <button
-                            onClick={() => copyToClipboard(connection.api_key, `key-${connection.id}`)}
+                            onClick={() => copyToClipboard(endpoints.ws, `ws-${location}`)}
                             className="p-1.5 rounded-md hover:bg-muted transition-colors"
                           >
-                            {copiedId === `key-${connection.id}` ? (
+                            {copiedId === `ws-${location}` ? (
+                              <Check className="w-4 h-4 text-secondary" />
+                            ) : (
+                              <Copy className="w-4 h-4 text-muted-foreground" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* gRPC Link */}
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">gRPC Link</p>
+                        <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 border border-border">
+                          <code className="flex-1 text-sm text-foreground font-mono truncate">
+                            {endpoints.grpc}
+                          </code>
+                          <button
+                            onClick={() => copyToClipboard(endpoints.grpc, `grpc-${location}`)}
+                            className="p-1.5 rounded-md hover:bg-muted transition-colors"
+                          >
+                            {copiedId === `grpc-${location}` ? (
                               <Check className="w-4 h-4 text-secondary" />
                             ) : (
                               <Copy className="w-4 h-4 text-muted-foreground" />

@@ -13,3 +13,6 @@ verify_jwt = false
 
 [functions.validate-trial]
 verify_jwt = false
+
+[functions.discord-registration-notification]
+verify_jwt = false

@@ -3,19 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
   Globe, 
-  Radio, 
-  Server, 
-  Save, 
-  Loader2,
   Package,
   Check,
   Copy,
-  User
+  Loader2
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -55,9 +50,27 @@ interface ConnectionUrl {
   id: string;
   endpoint_type: string;
   url: string;
-  api_key: string;
   is_active: boolean;
 }
+
+// Location-based endpoint URLs (static configuration)
+const locationEndpoints = {
+  "Frankfurt V2": {
+    rpc: "http://frav2.omeganetworks.io:8899",
+    ws: "ws://frav2.omeganetworks.io:8900",
+    grpc: "http://frav2.omeganetworks.io:9898"
+  },
+  "Amsterdam V2": {
+    rpc: "http://amsv2.omeganetworks.io:8899",
+    ws: "ws://amsv2.omeganetworks.io:8900",
+    grpc: "http://amsv2.omeganetworks.io:9898"
+  },
+  "New York": {
+    rpc: "http://newyork.omeganetworks.io",
+    ws: "ws://newyork.omeganetworks.io:8900",
+    grpc: "http://newyork.omeganetworks.io:10000"
+  }
+};
 
 interface UserOverviewModalProps {
   isOpen: boolean;
@@ -71,29 +84,13 @@ const UserOverviewModal = ({ isOpen, onClose, user }: UserOverviewModalProps) =>
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [endpoints, setEndpoints] = useState<Record<string, ConnectionUrl | null>>({
-    https: null,
-    ws: null,
-    grpc: null,
-  });
-  const [formData, setFormData] = useState({
-    https: { url: '', api_key: '' },
-    ws: { url: '', api_key: '' },
-    grpc: { url: '', api_key: '' },
-  });
-  const [saving, setSaving] = useState<string | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<string>("Frankfurt V2");
 
   useEffect(() => {
     if (isOpen) {
       fetchOrders();
     }
   }, [isOpen, user.user_id]);
-
-  useEffect(() => {
-    if (selectedOrder) {
-      fetchEndpoints(selectedOrder.id);
-    }
-  }, [selectedOrder]);
 
   const fetchOrders = async () => {
     setLoadingOrders(true);
@@ -116,107 +113,13 @@ const UserOverviewModal = ({ isOpen, onClose, user }: UserOverviewModalProps) =>
     }
   };
 
-  const fetchEndpoints = async (orderId: string) => {
-    const { data, error } = await supabase
-      .from('connection_urls')
-      .select('*')
-      .eq('order_id', orderId);
-
-    if (error) {
-      console.error('Error fetching endpoints:', error);
-      return;
-    }
-
-    const endpointMap: Record<string, ConnectionUrl | null> = {
-      https: null,
-      ws: null,
-      grpc: null,
-    };
-
-    const formDataMap = {
-      https: { url: '', api_key: '' },
-      ws: { url: '', api_key: '' },
-      grpc: { url: '', api_key: '' },
-    };
-
-    data?.forEach((ep) => {
-      const type = ep.endpoint_type.toLowerCase();
-      if (type in endpointMap) {
-        endpointMap[type] = ep;
-        formDataMap[type as keyof typeof formDataMap] = {
-          url: ep.url,
-          api_key: ep.api_key,
-        };
-      }
-    });
-
-    setEndpoints(endpointMap);
-    setFormData(formDataMap);
-  };
-
-  const handleSave = async (type: 'https' | 'ws' | 'grpc') => {
-    if (!selectedOrder) return;
-    setSaving(type);
-    const existing = endpoints[type];
-    const data = formData[type];
-
-    try {
-      if (existing) {
-        const { error } = await supabase
-          .from('connection_urls')
-          .update({
-            url: data.url,
-            api_key: data.api_key,
-          })
-          .eq('id', existing.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('connection_urls')
-          .insert({
-            order_id: selectedOrder.id,
-            user_id: user.user_id,
-            endpoint_type: type.toUpperCase(),
-            url: data.url,
-            api_key: data.api_key,
-            is_active: true,
-          });
-
-        if (error) throw error;
-      }
-
-      toast({
-        title: 'Saved',
-        description: `${type.toUpperCase()} endpoint saved successfully`,
-      });
-
-      fetchEndpoints(selectedOrder.id);
-    } catch (error) {
-      console.error('Error saving endpoint:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to save endpoint',
-        variant: 'destructive',
-      });
-    } finally {
-      setSaving(null);
-    }
-  };
-
-  const updateFormData = (type: 'https' | 'ws' | 'grpc', field: 'url' | 'api_key', value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [type]: {
-        ...prev[type],
-        [field]: value,
-      },
-    }));
-  };
-
   const copyToClipboard = async (text: string, id: string) => {
     await navigator.clipboard.writeText(text);
     setCopiedId(id);
+    toast({
+      title: 'Copied',
+      description: 'Copied to clipboard',
+    });
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -233,69 +136,70 @@ const UserOverviewModal = ({ isOpen, onClose, user }: UserOverviewModalProps) =>
     }
   };
 
-  const renderEndpointTab = (type: 'https' | 'ws' | 'grpc', label: string) => (
-    <TabsContent value={type} className="mt-4 space-y-4">
+  const renderLocationEndpoints = (location: string, endpoints: { rpc: string; ws: string; grpc: string }) => (
+    <TabsContent value={location} className="mt-4 space-y-4">
       <div>
-        <Label className="text-muted-foreground text-sm mb-2 block">{label} URL</Label>
+        <Label className="text-muted-foreground text-sm mb-2 block">RPC Link</Label>
         <div className="relative">
           <Input
-            value={formData[type].url}
-            onChange={(e) => updateFormData(type, 'url', e.target.value)}
-            placeholder={`https://rpc.example.com/${type}`}
+            value={endpoints.rpc}
+            readOnly
             className="bg-background border-border pr-10 font-mono text-sm"
           />
-          {formData[type].url && (
-            <button
-              onClick={() => copyToClipboard(formData[type].url, `url-${type}`)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded hover:bg-muted transition-colors"
-            >
-              {copiedId === `url-${type}` ? (
-                <Check className="w-4 h-4 text-secondary" />
-              ) : (
-                <Copy className="w-4 h-4 text-muted-foreground" />
-              )}
-            </button>
-          )}
+          <button
+            onClick={() => copyToClipboard(endpoints.rpc, `rpc-${location}`)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded hover:bg-muted transition-colors"
+          >
+            {copiedId === `rpc-${location}` ? (
+              <Check className="w-4 h-4 text-secondary" />
+            ) : (
+              <Copy className="w-4 h-4 text-muted-foreground" />
+            )}
+          </button>
         </div>
       </div>
       
       <div>
-        <Label className="text-muted-foreground text-sm mb-2 block">API Key</Label>
+        <Label className="text-muted-foreground text-sm mb-2 block">WS Link</Label>
         <div className="relative">
           <Input
-            value={formData[type].api_key}
-            onChange={(e) => updateFormData(type, 'api_key', e.target.value)}
-            placeholder="Enter API key..."
+            value={endpoints.ws}
+            readOnly
             className="bg-background border-border pr-10 font-mono text-sm"
           />
-          {formData[type].api_key && (
-            <button
-              onClick={() => copyToClipboard(formData[type].api_key, `key-${type}`)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded hover:bg-muted transition-colors"
-            >
-              {copiedId === `key-${type}` ? (
-                <Check className="w-4 h-4 text-secondary" />
-              ) : (
-                <Copy className="w-4 h-4 text-muted-foreground" />
-              )}
-            </button>
-          )}
+          <button
+            onClick={() => copyToClipboard(endpoints.ws, `ws-${location}`)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded hover:bg-muted transition-colors"
+          >
+            {copiedId === `ws-${location}` ? (
+              <Check className="w-4 h-4 text-secondary" />
+            ) : (
+              <Copy className="w-4 h-4 text-muted-foreground" />
+            )}
+          </button>
         </div>
       </div>
 
-      <Button
-        onClick={() => handleSave(type)}
-        disabled={saving === type || (!formData[type].url && !formData[type].api_key)}
-        className="w-full"
-        variant="omega"
-      >
-        {saving === type ? (
-          <Loader2 className="w-4 h-4 animate-spin mr-2" />
-        ) : (
-          <Save className="w-4 h-4 mr-2" />
-        )}
-        Save {label}
-      </Button>
+      <div>
+        <Label className="text-muted-foreground text-sm mb-2 block">gRPC Link</Label>
+        <div className="relative">
+          <Input
+            value={endpoints.grpc}
+            readOnly
+            className="bg-background border-border pr-10 font-mono text-sm"
+          />
+          <button
+            onClick={() => copyToClipboard(endpoints.grpc, `grpc-${location}`)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded hover:bg-muted transition-colors"
+          >
+            {copiedId === `grpc-${location}` ? (
+              <Check className="w-4 h-4 text-secondary" />
+            ) : (
+              <Copy className="w-4 h-4 text-muted-foreground" />
+            )}
+          </button>
+        </div>
+      </div>
     </TabsContent>
   );
 
@@ -426,36 +330,36 @@ const UserOverviewModal = ({ isOpen, onClose, user }: UserOverviewModalProps) =>
                   </div>
 
                   <div className="bg-muted/30 rounded-xl p-5 border border-border">
-                    <h4 className="font-medium text-foreground mb-4">Endpoints</h4>
+                    <h4 className="font-medium text-foreground mb-4">Endpoints by Location</h4>
                     
-                    <Tabs defaultValue="https" className="w-full">
+                    <Tabs defaultValue="Frankfurt V2" className="w-full">
                       <TabsList className="w-full grid grid-cols-3 bg-muted/50 p-1 rounded-lg">
                         <TabsTrigger 
-                          value="https" 
-                          className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+                          value="Frankfurt V2" 
+                          className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs"
                         >
                           <Globe className="w-4 h-4" />
-                          HTTPS
+                          Frankfurt V2
                         </TabsTrigger>
                         <TabsTrigger 
-                          value="ws" 
-                          className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+                          value="Amsterdam V2" 
+                          className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs"
                         >
-                          <Radio className="w-4 h-4" />
-                          WS
+                          <Globe className="w-4 h-4" />
+                          Amsterdam V2
                         </TabsTrigger>
                         <TabsTrigger 
-                          value="grpc" 
-                          className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+                          value="New York" 
+                          className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs"
                         >
-                          <Server className="w-4 h-4" />
-                          gRPC
+                          <Globe className="w-4 h-4" />
+                          New York
                         </TabsTrigger>
                       </TabsList>
                       
-                      {renderEndpointTab('https', 'HTTPS')}
-                      {renderEndpointTab('ws', 'WebSocket')}
-                      {renderEndpointTab('grpc', 'gRPC')}
+                      {renderLocationEndpoints('Frankfurt V2', locationEndpoints['Frankfurt V2'])}
+                      {renderLocationEndpoints('Amsterdam V2', locationEndpoints['Amsterdam V2'])}
+                      {renderLocationEndpoints('New York', locationEndpoints['New York'])}
                     </Tabs>
                   </div>
                 </>

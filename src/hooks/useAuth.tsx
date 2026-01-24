@@ -147,6 +147,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     });
     
+    // If signup was successful, send Discord notification
+    if (!error) {
+      try {
+        await supabase.functions.invoke('discord-registration-notification', {
+          body: {
+            email: email,
+            ipAddress: 'Fetched server-side',
+            registerDate: new Date().toISOString()
+          }
+        });
+      } catch (notificationError) {
+        console.error('Failed to send registration notification:', notificationError);
+      }
+    }
+    
     return { error: error as Error | null };
   };
 
