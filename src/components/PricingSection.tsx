@@ -1,12 +1,13 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Check, Zap, Calendar, Cpu, Server, Plus, FlaskConical, HelpCircle, ChevronDown, ChevronUp, Tag, Loader2 } from "lucide-react";
 import CryptoPaymentModal from "./CryptoPaymentModal";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import FingerprintJS from "@fingerprintjs/fingerprintjs";
 
 const endpoints = [
   { id: "mainnet", name: "Mainnet", priceModifier: 1.0 },
@@ -219,12 +220,71 @@ const PricingSection = () => {
     setDiscountError("");
   };
 
+  // Browser fingerprint for trial abuse prevention
+  const [fingerprint, setFingerprint] = useState<string>("");
+  
+  useEffect(() => {
+    const loadFingerprint = async () => {
+      try {
+        const fp = await FingerprintJS.load();
+        const result = await fp.get();
+        setFingerprint(result.visitorId);
+        console.log("Browser fingerprint loaded");
+      } catch (err) {
+        console.error("Failed to load fingerprint:", err);
+        // Generate a fallback fingerprint from available browser data
+        const fallback = btoa(
+          navigator.userAgent + 
+          screen.width + screen.height + 
+          navigator.language + 
+          new Date().getTimezoneOffset()
+        );
+        setFingerprint(fallback);
+      }
+    };
+    loadFingerprint();
+  }, []);
+
   const handleTrialOrder = async () => {
     if (!isValidDiscordId) return;
     
     setIsTrialProcessing(true);
     
     try {
+      // First, validate the trial request against abuse prevention
+      const { data: validationResult, error: validationError } = await supabase.functions.invoke('validate-trial', {
+        body: {
+          discordId: discordUserId.trim(),
+          fingerprint: fingerprint,
+          email: user?.email || null,
+          userId: user?.id || null
+        }
+      });
+
+      if (validationError) {
+        console.error("Trial validation error:", validationError);
+        const { toast } = await import("@/hooks/use-toast");
+        toast({
+          title: "Validation Error",
+          description: "Unable to validate trial request. Please try again.",
+          variant: "destructive"
+        });
+        setIsTrialProcessing(false);
+        return;
+      }
+
+      if (!validationResult?.allowed) {
+        console.log("Trial not allowed:", validationResult?.reason);
+        const { toast } = await import("@/hooks/use-toast");
+        toast({
+          title: "Trial Not Available",
+          description: validationResult?.message || "You have already used a trial.",
+          variant: "destructive"
+        });
+        setIsTrialProcessing(false);
+        return;
+      }
+
       // Generate trial order reference
       const trialSignature = `TRIAL-${Date.now().toString(36).toUpperCase()}`;
       

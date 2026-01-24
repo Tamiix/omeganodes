@@ -193,6 +193,36 @@ export type Database = {
         }
         Relationships: []
       }
+      trial_usage: {
+        Row: {
+          created_at: string
+          discord_id: string
+          email: string | null
+          fingerprint: string
+          id: string
+          ip_address: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          discord_id: string
+          email?: string | null
+          fingerprint: string
+          id?: string
+          ip_address: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          discord_id?: string
+          email?: string | null
+          fingerprint?: string
+          id?: string
+          ip_address?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           granted_at: string

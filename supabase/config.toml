@@ -10,3 +10,6 @@ verify_jwt = false
 
 [functions.discord-order-notification]
 verify_jwt = false
+
+[functions.validate-trial]
+verify_jwt = false
