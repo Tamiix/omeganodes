@@ -6,7 +6,8 @@ import {
   Package,
   Check,
   Copy,
-  Loader2
+  Loader2,
+  Trash2
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -55,17 +56,17 @@ interface ConnectionUrl {
 
 // Location-based endpoint URLs (static configuration)
 const locationEndpoints = {
-  "Frankfurt V2": {
+  "🇩🇪 Frankfurt V2": {
     rpc: "http://frav2.omeganetworks.io:8899",
     ws: "ws://frav2.omeganetworks.io:8900",
     grpc: "http://frav2.omeganetworks.io:9898"
   },
-  "Amsterdam V2": {
+  "🇳🇱 Amsterdam V2": {
     rpc: "http://amsv2.omeganetworks.io:8899",
     ws: "ws://amsv2.omeganetworks.io:8900",
     grpc: "http://amsv2.omeganetworks.io:9898"
   },
-  "New York": {
+  "🇺🇸 New York": {
     rpc: "http://newyork.omeganetworks.io",
     ws: "ws://newyork.omeganetworks.io:8900",
     grpc: "http://newyork.omeganetworks.io:10000"
@@ -84,7 +85,8 @@ const UserOverviewModal = ({ isOpen, onClose, user }: UserOverviewModalProps) =>
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [selectedLocation, setSelectedLocation] = useState<string>("Frankfurt V2");
+  const [selectedLocation, setSelectedLocation] = useState<string>("🇩🇪 Frankfurt V2");
+  const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -110,6 +112,42 @@ const UserOverviewModal = ({ isOpen, onClose, user }: UserOverviewModalProps) =>
       console.error('Error fetching orders:', error);
     } finally {
       setLoadingOrders(false);
+    }
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+      return;
+    }
+    
+    setDeletingOrderId(orderId);
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Order deleted',
+        description: 'The order has been successfully deleted.',
+      });
+
+      // Refresh orders list
+      setOrders(orders.filter(o => o.id !== orderId));
+      if (selectedOrder?.id === orderId) {
+        setSelectedOrder(orders.find(o => o.id !== orderId) || null);
+      }
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete order',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeletingOrderId(null);
     }
   };
 
@@ -279,26 +317,45 @@ const UserOverviewModal = ({ isOpen, onClose, user }: UserOverviewModalProps) =>
                 ) : (
                   <div className="space-y-2">
                     {orders.map(order => (
-                      <button
+                      <div
                         key={order.id}
-                        onClick={() => setSelectedOrder(order)}
-                        className={`w-full p-3 rounded-lg text-left transition-all ${
+                        className={`relative p-3 rounded-lg transition-all ${
                           selectedOrder?.id === order.id
                             ? 'bg-primary/10 border border-primary/30'
                             : 'bg-card border border-border hover:border-primary/20'
                         }`}
                       >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium text-foreground text-sm">{order.plan_name}</span>
-                          <Badge className={`text-xs ${getStatusBadge(order.status)}`}>
-                            {order.status}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground">#{order.order_number}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {order.server_type} · {order.location}
-                        </p>
-                      </button>
+                        <button
+                          onClick={() => setSelectedOrder(order)}
+                          className="w-full text-left"
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-medium text-foreground text-sm">{order.plan_name}</span>
+                            <Badge className={`text-xs ${getStatusBadge(order.status)}`}>
+                              {order.status}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">#{order.order_number}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {order.server_type} · {order.location}
+                          </p>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteOrder(order.id);
+                          }}
+                          disabled={deletingOrderId === order.id}
+                          className="absolute top-2 right-2 p-1.5 rounded-md text-destructive hover:bg-destructive/10 transition-colors"
+                          title="Delete order"
+                        >
+                          {deletingOrderId === order.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -330,36 +387,33 @@ const UserOverviewModal = ({ isOpen, onClose, user }: UserOverviewModalProps) =>
                   </div>
 
                   <div className="bg-muted/30 rounded-xl p-5 border border-border">
-                    <h4 className="font-medium text-foreground mb-4">Endpoints by Location</h4>
+                    <h4 className="font-medium text-foreground mb-4">🔗 Endpoints by Location</h4>
                     
-                    <Tabs defaultValue="Frankfurt V2" className="w-full">
+                    <Tabs defaultValue="🇩🇪 Frankfurt V2" className="w-full">
                       <TabsList className="w-full grid grid-cols-3 bg-muted/50 p-1 rounded-lg">
                         <TabsTrigger 
-                          value="Frankfurt V2" 
+                          value="🇩🇪 Frankfurt V2" 
                           className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs"
                         >
-                          <Globe className="w-4 h-4" />
-                          Frankfurt V2
+                          🇩🇪 Frankfurt V2
                         </TabsTrigger>
                         <TabsTrigger 
-                          value="Amsterdam V2" 
+                          value="🇳🇱 Amsterdam V2" 
                           className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs"
                         >
-                          <Globe className="w-4 h-4" />
-                          Amsterdam V2
+                          🇳🇱 Amsterdam V2
                         </TabsTrigger>
                         <TabsTrigger 
-                          value="New York" 
+                          value="🇺🇸 New York" 
                           className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs"
                         >
-                          <Globe className="w-4 h-4" />
-                          New York
+                          🇺🇸 New York
                         </TabsTrigger>
                       </TabsList>
                       
-                      {renderLocationEndpoints('Frankfurt V2', locationEndpoints['Frankfurt V2'])}
-                      {renderLocationEndpoints('Amsterdam V2', locationEndpoints['Amsterdam V2'])}
-                      {renderLocationEndpoints('New York', locationEndpoints['New York'])}
+                      {renderLocationEndpoints('🇩🇪 Frankfurt V2', locationEndpoints['🇩🇪 Frankfurt V2'])}
+                      {renderLocationEndpoints('🇳🇱 Amsterdam V2', locationEndpoints['🇳🇱 Amsterdam V2'])}
+                      {renderLocationEndpoints('🇺🇸 New York', locationEndpoints['🇺🇸 New York'])}
                     </Tabs>
                   </div>
                 </>
