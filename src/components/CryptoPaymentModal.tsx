@@ -250,15 +250,17 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
         )}
 
         {paymentStep === "success" && (
-          <div className="py-12 text-center">
+          <div className="py-8 text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-secondary/20 flex items-center justify-center">
               <CheckCircle className="w-8 h-8 text-secondary" />
             </div>
             <h3 className="text-xl font-bold mb-2">Payment Confirmed!</h3>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-muted-foreground mb-4">
               Your payment has been verified on-chain. Your subscription is now active!
             </p>
-            <div className="p-4 rounded-lg bg-muted/30 border border-border mb-4">
+            
+            {/* Transaction Details */}
+            <div className="p-3 rounded-lg bg-muted/30 border border-border mb-4">
               <div className="text-sm text-muted-foreground mb-1">Transaction Signature</div>
               <code className="text-xs font-mono text-primary break-all">{transactionRef}</code>
             </div>
@@ -270,12 +272,31 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
             >
               View on Solscan <ExternalLink className="w-4 h-4" />
             </a>
+
+            {/* Next Steps */}
+            <div className="text-left p-4 rounded-lg bg-primary/5 border border-primary/20 mb-4">
+              <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                🚀 Next Steps to Get Started
+              </h4>
+              <ol className="text-sm text-muted-foreground space-y-3">
+                <li className="flex items-start gap-2">
+                  <span className="font-bold text-primary shrink-0">1.</span>
+                  <span><strong>Authenticate Your IP:</strong> Join our <a href="https://discord.gg/omeganode" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Discord server</a> and open a ticket to whitelist your IP address for the endpoints.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold text-primary shrink-0">2.</span>
+                  <span><strong>Find Your Endpoints:</strong> Go to your <a href="/dashboard" className="text-primary hover:underline">Dashboard</a> → 🔗 Endpoints tab to view all available RPC, WebSocket, and gRPC URLs.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold text-primary shrink-0">3.</span>
+                  <span><strong>Need Help?</strong> Open a ticket in our Discord and our team will assist you with setup.</span>
+                </li>
+              </ol>
+            </div>
+
             <Button variant="omega" onClick={handleClose} className="w-full">
-              Done
+              Go to Dashboard
             </Button>
-            <p className="text-xs text-muted-foreground mt-4">
-              Check your email for subscription details.
-            </p>
           </div>
         )}
 
