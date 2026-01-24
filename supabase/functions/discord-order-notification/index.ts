@@ -26,6 +26,7 @@ interface OrderDetails {
   transactionSignature: string;
   isTestMode: boolean;
   rentAccessEnabled?: boolean;
+  isTrial?: boolean;
 }
 
 serve(async (req) => {
@@ -42,28 +43,40 @@ serve(async (req) => {
     const checkMark = "✅";
     const crossMark = "❌";
 
+    // Determine title and color based on order type
+    let title = "🎉 New Order Received";
+    let color = 5763719; // Green
+    
+    if (orderDetails.isTrial) {
+      title = "🎁 New Trial Request";
+      color = 3447003; // Blue
+    } else if (orderDetails.isTestMode) {
+      title = "🧪 Test Order Received";
+      color = 16776960; // Yellow
+    }
+
     const embed = {
-      title: orderDetails.isTestMode ? "🧪 Test Order Received" : "🎉 New Order Received",
-      color: orderDetails.isTestMode ? 16776960 : 5763719, // Yellow for test, Green for real
+      title,
+      color,
       fields: [
         {
           name: "📦 Plan Details",
-          value: `**Server Type:** ${orderDetails.serverType}\n**Commitment:** ${orderDetails.commitment}\n**Plan:** ${orderDetails.plan}`,
+          value: `**Server Type:** ${orderDetails.serverType}\n**Commitment:** ${orderDetails.isTrial ? "Trial (30 min)" : orderDetails.commitment}\n**Plan:** ${orderDetails.plan}`,
           inline: false
         },
-        {
+        ...(orderDetails.isTrial ? [] : [{
           name: "📊 Specifications",
           value: `**RPS:** ${orderDetails.rps.toLocaleString()}\n**TPS:** ${orderDetails.tps.toLocaleString()}`,
           inline: true
-        },
-        {
+        }]),
+        ...(orderDetails.isTrial ? [] : [{
           name: "➕ Add-ons",
           value: `**Private Shreds:** ${orderDetails.includeShreds ? checkMark : crossMark}\n**swQoS Stake:** ${orderDetails.swqosTier !== null ? `${checkMark} ${orderDetails.swqosLabel} (${orderDetails.swqosStakeAmount?.toLocaleString()} SOL) - $${orderDetails.swqosPrice?.toLocaleString()}` : crossMark}`,
           inline: true
-        },
+        }]),
         {
           name: "💰 Payment",
-          value: `**Total:** $${orderDetails.totalAmount.toLocaleString()}`,
+          value: orderDetails.isTrial ? "**FREE TRIAL**" : `**Total:** $${orderDetails.totalAmount.toLocaleString()}`,
           inline: true
         },
         {
@@ -71,14 +84,14 @@ serve(async (req) => {
           value: `**Email:** ${orderDetails.email || "Not provided"}\n**Discord:** ${orderDetails.discordId ? `<@${orderDetails.discordId}>` : "Not provided"}`,
           inline: false
         },
-        {
+        ...(orderDetails.isTrial ? [] : [{
           name: "🔗 Transaction",
           value: `[View on Solscan](https://solscan.io/tx/${orderDetails.transactionSignature})`,
           inline: false
-        }
+        }])
       ],
       footer: {
-        text: orderDetails.isTestMode ? "Test Mode - Not a real order" : "OmegaNode Order System"
+        text: orderDetails.isTrial ? "Trial Request - 30 min access" : (orderDetails.isTestMode ? "Test Mode - Not a real order" : "OmegaNode Order System")
       },
       timestamp: new Date().toISOString()
     };

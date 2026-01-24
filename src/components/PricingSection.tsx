@@ -19,7 +19,7 @@ const locations = [
 ];
 
 const serverTypes = [
-  { id: "shared", name: "Shared", baseAddition: 0, description: "Shared with members" },
+  { id: "shared", name: "Shared", baseAddition: 0, description: "Shared with other Users" },
   { id: "dedicated", name: "Dedicated", baseAddition: 0, description: "Full control & custom limits" },
 ];
 
@@ -81,6 +81,8 @@ const PricingSection = () => {
   const [isTestMode, setIsTestMode] = useState(false);
   const [discordUserId, setDiscordUserId] = useState("");
   const [showDiscordGuide, setShowDiscordGuide] = useState(false);
+  const [isTrialMode, setIsTrialMode] = useState(false);
+  const [isTrialProcessing, setIsTrialProcessing] = useState(false);
   
   // Discount code state
   const [discountCode, setDiscountCode] = useState("");
@@ -89,7 +91,7 @@ const PricingSection = () => {
   const [isValidatingCode, setIsValidatingCode] = useState(false);
 
   const { formatPrice } = useCurrency();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
 
   // Validate Discord User ID (should be 17-19 digit number)
   const isValidDiscordId = /^\d{17,19}$/.test(discordUserId.trim());
@@ -121,8 +123,8 @@ const PricingSection = () => {
       baseTotal = Math.round(discountedServerPrice + stakeAddition);
       beforeDiscount = basePrice + (additionalStakePackages * 350);
     } else {
-      // Shared server pricing - fixed $350/month
-      const basePrice = 350;
+      // Shared server pricing - fixed $300/month
+      const basePrice = 300;
       
       const commitment = commitments.find(c => c.id === selectedCommitment);
       discountPercent = commitment?.discount || 0;
@@ -217,6 +219,97 @@ const PricingSection = () => {
     setDiscountError("");
   };
 
+  const handleTrialOrder = async () => {
+    if (!isValidDiscordId) return;
+    
+    setIsTrialProcessing(true);
+    
+    try {
+      // Generate trial order reference
+      const trialSignature = `TRIAL-${Date.now().toString(36).toUpperCase()}`;
+      
+      // Calculate expiration (30 minutes from now)
+      const expiresAt = new Date();
+      expiresAt.setMinutes(expiresAt.getMinutes() + 30);
+
+      // Save trial order to database if user is logged in
+      if (user) {
+        try {
+          const { error: orderError } = await supabase.from('orders').insert({
+            user_id: user.id,
+            order_number: "TEMP", // Will be overwritten by trigger
+            plan_name: "Trial (30 min)",
+            commitment: "trial",
+            server_type: "shared",
+            location: "all",
+            rps: 100,
+            tps: 50,
+            amount_usd: 0,
+            currency_code: "FREE",
+            currency_amount: 0,
+            payment_method: "trial",
+            transaction_signature: trialSignature,
+            status: "active",
+            expires_at: expiresAt.toISOString(),
+            is_test_order: false
+          });
+          
+          if (orderError) {
+            console.error("Failed to save trial order:", orderError);
+          }
+        } catch (dbErr) {
+          console.error("Failed to save trial order to database:", dbErr);
+        }
+      }
+      
+      // Send Discord notification for trial
+      try {
+        await supabase.functions.invoke('discord-order-notification', {
+          body: {
+            plan: "Trial (30 min)",
+            commitment: "trial",
+            serverType: "Shared",
+            email: user?.email || "Not logged in",
+            discordId: discordUserId.trim() || null,
+            discordUsername: null,
+            rps: 100,
+            tps: 50,
+            includeShreds: false,
+            swqosTier: null,
+            swqosLabel: null,
+            swqosStakeAmount: null,
+            swqosPrice: null,
+            totalAmount: 0,
+            transactionSignature: trialSignature,
+            isTestMode: false,
+            isTrial: true
+          }
+        });
+      } catch (discordErr) {
+        console.error("Failed to send Discord notification:", discordErr);
+      }
+      
+      // Show success toast
+      const { toast } = await import("@/hooks/use-toast");
+      toast({
+        title: "Trial Activated! 🎉",
+        description: "Your 30-minute trial has been activated. Check Discord for access details.",
+      });
+      
+    } catch (err) {
+      console.error("Error creating trial order:", err);
+      const { toast } = await import("@/hooks/use-toast");
+      toast({
+        title: "Error",
+        description: "Failed to activate trial. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsTrialProcessing(false);
+      setIsTrialMode(false);
+    }
+  };
+
   return (
     <section id="pricing" className="py-24 relative overflow-hidden">
       {/* Background glow */}
@@ -302,7 +395,13 @@ const PricingSection = () => {
                   {serverTypes.map((serverType) => (
                     <button
                       key={serverType.id}
-                      onClick={() => setSelectedServerType(serverType.id)}
+                      onClick={() => {
+                        setSelectedServerType(serverType.id);
+                        // Reset trial mode when switching to dedicated
+                        if (serverType.id === "dedicated") {
+                          setIsTrialMode(false);
+                        }
+                      }}
                       className={`py-3 px-4 rounded-lg border text-sm font-medium transition-all ${
                         selectedServerType === serverType.id
                           ? "bg-primary/10 border-primary text-primary"
@@ -318,6 +417,49 @@ const PricingSection = () => {
                   ))}
                 </div>
               </div>
+
+              {/* Trial Usage Option - Only for Shared */}
+              {!isDedicated && (
+                <div className="mb-6">
+                  <button
+                    onClick={() => setIsTrialMode(!isTrialMode)}
+                    className={`w-full py-4 px-5 rounded-lg border text-left transition-all ${
+                      isTrialMode
+                        ? "bg-secondary/10 border-secondary"
+                        : "bg-muted/30 border-border hover:border-muted-foreground/50"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                          isTrialMode ? "bg-secondary border-secondary" : "border-muted-foreground"
+                        }`}>
+                          {isTrialMode && <Check className="w-3 h-3 text-secondary-foreground" />}
+                        </div>
+                        <div>
+                          <p className={`font-medium ${isTrialMode ? "text-secondary" : "text-foreground"}`}>
+                            🎁 Trial Usage
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            30 minutes free trial • No payment required
+                          </p>
+                        </div>
+                      </div>
+                      <span className={`text-sm font-semibold ${isTrialMode ? "text-secondary" : "text-muted-foreground"}`}>
+                        FREE
+                      </span>
+                    </div>
+                  </button>
+                  {isTrialMode && (
+                    <div className="mt-3 p-3 rounded-lg bg-secondary/10 border border-secondary/30">
+                      <p className="text-xs text-secondary">
+                        🎉 Get 30 minutes of free access to test our Shared RPC service. No credit card or payment required. 
+                        Custom stake packages and Private Shreds are not available during trial.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Dedicated Server Options */}
               <AnimatePresence>
@@ -732,21 +874,44 @@ const PricingSection = () => {
                 </div>
               </div>
 
-              {/* CTA Button */}
-              <Button 
-                variant="omega" 
-                size="lg" 
-                className="w-full gap-2"
-                disabled={!isValidDiscordId}
-                onClick={() => setIsPaymentOpen(true)}
-              >
-                <Zap className="w-4 h-4" />
-                {isValidDiscordId ? "Subscribe Now" : "Enter Discord ID to Continue"}
-              </Button>
-
+              {/* CTA Buttons */}
+              {isTrialMode ? (
+                <Button 
+                  variant="omega" 
+                  size="lg" 
+                  className="w-full gap-2 bg-gradient-to-r from-secondary to-secondary/80"
+                  disabled={!isValidDiscordId || isTrialProcessing}
+                  onClick={handleTrialOrder}
+                >
+                  {isTrialProcessing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Activating Trial...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-4 h-4" />
+                      {isValidDiscordId ? "Start Free Trial" : "Enter Discord ID to Continue"}
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <Button 
+                  variant="omega" 
+                  size="lg" 
+                  className="w-full gap-2"
+                  disabled={!isValidDiscordId}
+                  onClick={() => setIsPaymentOpen(true)}
+                >
+                  <Zap className="w-4 h-4" />
+                  {isValidDiscordId ? "Subscribe Now" : "Enter Discord ID to Continue"}
+                </Button>
+              )}
 
               <p className="text-center text-xs text-muted-foreground mt-4">
-                Secure payment via crypto • Instant activation
+                {isTrialMode 
+                  ? "No payment required • Instant activation" 
+                  : "Secure payment via crypto • Instant activation"}
               </p>
             </div>
           </div>
