@@ -1,3 +1,5 @@
+import omegaLogo from "@/assets/omega-logo-new.png";
+
 const Footer = () => {
   return (
     <footer className="py-12 border-t border-border">
@@ -5,8 +7,12 @@ const Footer = () => {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
           {/* Logo */}
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-gradient-omega flex items-center justify-center">
-              <span className="text-base font-bold text-primary-foreground">Ω</span>
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+              <img 
+                src={omegaLogo} 
+                alt="Omega Logo" 
+                className="w-5 h-5 object-contain"
+              />
             </div>
             <span className="text-base font-semibold text-foreground">
               Omega
