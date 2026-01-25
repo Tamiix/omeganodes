@@ -84,6 +84,18 @@ const PricingSection = () => {
 
   const isValidDiscordId = /^\d{17,19}$/.test(discordUserId.trim());
   const isDedicated = selectedServerType === "dedicated";
+  
+  // Check if commitment discount is active (any commitment other than monthly)
+  const hasCommitmentDiscount = selectedCommitment !== "monthly";
+
+  // Clear discount code when switching to a commitment with discount
+  useEffect(() => {
+    if (hasCommitmentDiscount && appliedDiscount) {
+      setAppliedDiscount(null);
+      setDiscountCode("");
+      setDiscountError("");
+    }
+  }, [hasCommitmentDiscount]);
 
   const { price, originalPrice, discount, discountAmount, priceBeforeDiscount } = useMemo(() => {
     let baseTotal = 0;
@@ -495,12 +507,21 @@ const PricingSection = () => {
               </div>
 
               {/* Discount Code */}
-              <div className="p-5 rounded-2xl bg-card/50 backdrop-blur border border-border">
+              <div className={`p-5 rounded-2xl bg-card/50 backdrop-blur border border-border transition-opacity ${hasCommitmentDiscount ? 'opacity-50' : ''}`}>
                 <div className="flex items-center gap-3 mb-4">
                   <Tag className="w-4 h-4 text-primary" />
                   <h3 className="font-semibold">Discount Code</h3>
+                  {hasCommitmentDiscount && (
+                    <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
+                      Not available with commitment discounts
+                    </span>
+                  )}
                 </div>
-                {appliedDiscount ? (
+                {hasCommitmentDiscount ? (
+                  <p className="text-sm text-muted-foreground">
+                    Discount codes cannot be combined with commitment discounts. Switch to monthly billing to use a code.
+                  </p>
+                ) : appliedDiscount ? (
                   <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-secondary/10 to-secondary/5 border border-secondary/20">
                     <div className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-secondary" />
