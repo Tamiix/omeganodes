@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useState, useMemo, useEffect } from "react";
-import { Check, Zap, Cpu, Server, Plus, FlaskConical, HelpCircle, ChevronDown, ChevronUp, Tag, Loader2, Gift } from "lucide-react";
+import { Check, Zap, Cpu, Server, Plus, FlaskConical, HelpCircle, ChevronDown, ChevronUp, Tag, Loader2, Gift, Clock, Shield } from "lucide-react";
 import CryptoPaymentModal from "./CryptoPaymentModal";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,8 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
 
 const serverTypes = [
-  { id: "shared", name: "Shared", description: "Shared with other users" },
-  { id: "dedicated", name: "Dedicated", description: "Full control & custom limits" },
+  { id: "shared", name: "Shared", description: "Multi-tenant infrastructure" },
+  { id: "dedicated", name: "Dedicated", description: "Your own hardware" },
 ];
 
 const dedicatedSpecs = [
@@ -32,10 +32,10 @@ const dedicatedSpecs = [
 ];
 
 const commitments = [
-  { id: "monthly", name: "Monthly", months: 1, discount: 0, label: "Flexible" },
-  { id: "3months", name: "3 Months", months: 3, discount: 0.15, label: "-15%" },
-  { id: "6months", name: "6 Months", months: 6, discount: 0.22, label: "-22%" },
-  { id: "1year", name: "1 Year", months: 12, discount: 0.30, label: "-30%" },
+  { id: "monthly", name: "Monthly", months: 1, discount: 0, label: "" },
+  { id: "3months", name: "3 Months", months: 3, discount: 0.15, label: "15% off" },
+  { id: "6months", name: "6 Months", months: 6, discount: 0.22, label: "22% off" },
+  { id: "1year", name: "1 Year", months: 12, discount: 0.30, label: "30% off" },
 ];
 
 const dedicatedFeatures = [
@@ -253,413 +253,450 @@ const PricingSection = () => {
   };
 
   return (
-    <section id="pricing" className="py-24 relative">
-      <div className="container mx-auto px-6">
+    <section id="pricing" className="py-24 relative overflow-hidden">
+      {/* Subtle background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/20 to-background" />
+      
+      <div className="container mx-auto px-6 relative z-10">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-14"
+          className="text-center mb-16"
         >
-          <h2 className="text-3xl sm:text-4xl font-bold mb-3">
-            Simple, transparent pricing
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+            Transparent Pricing
           </h2>
-          <p className="text-muted-foreground">
-            No hidden fees. Cancel anytime.
+          <p className="text-muted-foreground text-lg">
+            No hidden fees. Scale when you're ready.
           </p>
         </motion.div>
 
-        {/* Main Grid */}
-        <div className="max-w-4xl mx-auto grid lg:grid-cols-5 gap-6">
-          
-          {/* Left: Configuration */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="lg:col-span-3 space-y-5"
-          >
-            {/* Server Type */}
-            <div className="p-5 rounded-xl bg-card border border-border">
-              <h3 className="text-sm font-semibold mb-3">Server Type</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {serverTypes.map((type) => (
-                  <button
-                    key={type.id}
-                    onClick={() => {
-                      setSelectedServerType(type.id);
-                      if (type.id === "dedicated") setIsTrialMode(false);
-                    }}
-                    className={`p-4 rounded-lg border-2 text-left transition-all ${
-                      selectedServerType === type.id
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-muted-foreground/30"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      {type.id === "dedicated" && <Server className="w-4 h-4 text-primary" />}
-                      <span className="font-medium">{type.name}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">{type.description}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Trial Option - Shared Only */}
-            {!isDedicated && (
+        {/* Server Type Toggle */}
+        <div className="flex justify-center mb-10">
+          <div className="inline-flex p-1 rounded-xl bg-muted/50 border border-border">
+            {serverTypes.map((type) => (
               <button
-                onClick={() => setIsTrialMode(!isTrialMode)}
-                className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
-                  isTrialMode ? "border-secondary bg-secondary/5" : "border-border hover:border-muted-foreground/30"
+                key={type.id}
+                onClick={() => {
+                  setSelectedServerType(type.id);
+                  if (type.id === "dedicated") setIsTrialMode(false);
+                }}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm transition-all ${
+                  selectedServerType === type.id
+                    ? "bg-foreground text-background shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {type.id === "shared" ? <Shield className="w-4 h-4" /> : <Server className="w-4 h-4" />}
+                {type.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="max-w-5xl mx-auto">
+          <div className="grid lg:grid-cols-5 gap-8">
+            
+            {/* Left: Options */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="lg:col-span-3 space-y-4"
+            >
+              {/* Free Trial - Shared Only */}
+              {!isDedicated && (
+                <div 
+                  onClick={() => setIsTrialMode(!isTrialMode)}
+                  className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
+                    isTrialMode 
+                      ? "border-secondary bg-secondary/5" 
+                      : "border-border bg-card hover:border-secondary/50"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        isTrialMode ? "bg-secondary text-secondary-foreground" : "bg-muted"
+                      }`}>
+                        <Gift className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">Free Trial</h3>
+                        <p className="text-sm text-muted-foreground">30 minutes, no payment required</p>
+                      </div>
+                    </div>
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                      isTrialMode ? "border-secondary bg-secondary" : "border-muted-foreground/30"
+                    }`}>
+                      {isTrialMode && <Check className="w-3.5 h-3.5 text-white" />}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Dedicated Server Options */}
+              <AnimatePresence>
+                {isDedicated && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-4"
+                  >
+                    {/* Deployment Notice */}
+                    <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3">
+                      <Clock className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                      <p className="text-sm text-amber-600 dark:text-amber-400">
+                        Dedicated servers take <strong>1-3 working days</strong> to deploy.
+                      </p>
+                    </div>
+
+                    {/* Hardware Selection */}
+                    <div className="p-5 rounded-2xl bg-card border border-border">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <Cpu className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold">Hardware</h3>
+                          <span className="text-xs text-secondary font-medium">10% launch discount</span>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        {dedicatedSpecs.map((spec) => (
+                          <button
+                            key={spec.id}
+                            onClick={() => setSelectedDedicatedSpec(spec.id)}
+                            className={`w-full p-4 rounded-xl border-2 flex items-center justify-between transition-all ${
+                              selectedDedicatedSpec === spec.id
+                                ? "border-primary bg-primary/5"
+                                : "border-transparent bg-muted/50 hover:bg-muted"
+                            }`}
+                          >
+                            <div>
+                              <p className="font-medium">{spec.cpu}</p>
+                              <p className="text-sm text-muted-foreground">{spec.memory}</p>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-xs text-muted-foreground line-through">${spec.originalPrice}</span>
+                              <span className="text-xl font-bold ml-2">${spec.price}</span>
+                              <span className="text-sm text-muted-foreground">/mo</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* SwQoS Stake */}
+                    <div className="p-5 rounded-2xl bg-card border border-border">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <Plus className="w-5 h-5 text-primary" />
+                        </div>
+                        <h3 className="font-semibold">Additional Stake</h3>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">100,000 SOL per package</p>
+                          <p className="text-sm text-muted-foreground">$350/month each</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => setAdditionalStakePackages(Math.max(0, additionalStakePackages - 1))}
+                            disabled={additionalStakePackages === 0}
+                            className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-lg font-medium hover:bg-muted/80 disabled:opacity-40 transition-colors"
+                          >−</button>
+                          <span className="w-8 text-center text-xl font-bold">{additionalStakePackages}</span>
+                          <button
+                            onClick={() => setAdditionalStakePackages(Math.min(10, additionalStakePackages + 1))}
+                            className="w-10 h-10 rounded-lg bg-foreground text-background flex items-center justify-center text-lg font-medium hover:opacity-90 transition-opacity"
+                          >+</button>
+                        </div>
+                      </div>
+                      {additionalStakePackages > 0 && (
+                        <p className="text-sm text-secondary mt-3 font-medium">
+                          Total stake: {(50000 + additionalStakePackages * 100000).toLocaleString()} SOL
+                        </p>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Billing Period */}
+              <div className="p-5 rounded-2xl bg-card border border-border">
+                <h3 className="font-semibold mb-4">Billing Period</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {commitments.map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => setSelectedCommitment(c.id)}
+                      className={`relative py-3 px-3 rounded-xl text-center transition-all ${
+                        selectedCommitment === c.id
+                          ? "bg-foreground text-background"
+                          : "bg-muted/50 hover:bg-muted text-foreground"
+                      }`}
+                    >
+                      <div className="font-medium text-sm">{c.name}</div>
+                      {c.label && (
+                        <div className={`text-xs mt-0.5 ${
+                          selectedCommitment === c.id ? "text-background/70" : "text-secondary font-medium"
+                        }`}>{c.label}</div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Rent Access */}
+              <div 
+                onClick={() => setRentAccessEnabled(!rentAccessEnabled)}
+                className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
+                  rentAccessEnabled 
+                    ? "border-primary bg-primary/5" 
+                    : "border-border bg-card hover:border-primary/30"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      isTrialMode ? "border-secondary bg-secondary" : "border-muted-foreground/40"
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                      rentAccessEnabled ? "bg-primary text-primary-foreground" : "bg-muted"
                     }`}>
-                      {isTrialMode && <Check className="w-3 h-3 text-white" />}
+                      <Zap className="w-5 h-5" />
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <Gift className="w-4 h-4 text-secondary" />
-                        <span className="font-medium">Free Trial</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">30 minutes, no payment needed</p>
+                      <h3 className="font-semibold">Rent Access</h3>
+                      <p className="text-sm text-muted-foreground">Earn by sharing unused capacity</p>
                     </div>
                   </div>
-                  <span className="text-sm font-bold text-secondary">FREE</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-muted-foreground">+15%</span>
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                      rentAccessEnabled ? "border-primary bg-primary" : "border-muted-foreground/30"
+                    }`}>
+                      {rentAccessEnabled && <Check className="w-3.5 h-3.5 text-white" />}
+                    </div>
+                  </div>
                 </div>
-              </button>
-            )}
-
-            {/* Dedicated Options */}
-            <AnimatePresence>
-              {isDedicated && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="space-y-5"
-                >
-                  {/* Deployment Notice */}
-                  <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
-                    <p className="text-sm text-amber-400">
-                      <strong>⏱ Deployment Time:</strong> Dedicated servers typically take 1-3 working days to be deployed and configured.
-                    </p>
-                  </div>
-
-                  {/* Specs */}
-                  <div className="p-5 rounded-xl bg-card border border-border">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Cpu className="w-4 h-4 text-primary" />
-                      <h3 className="text-sm font-semibold">Hardware</h3>
-                      <span className="ml-auto text-xs font-medium text-secondary bg-secondary/10 px-2 py-0.5 rounded">10% OFF</span>
-                    </div>
-                    <div className="space-y-2">
-                      {dedicatedSpecs.map((spec) => (
-                        <button
-                          key={spec.id}
-                          onClick={() => setSelectedDedicatedSpec(spec.id)}
-                          className={`w-full p-3 rounded-lg border-2 flex items-center justify-between transition-all ${
-                            selectedDedicatedSpec === spec.id
-                              ? "border-primary bg-primary/5"
-                              : "border-border hover:border-muted-foreground/30"
-                          }`}
-                        >
-                          <div>
-                            <p className="font-medium text-sm">{spec.cpu}</p>
-                            <p className="text-xs text-muted-foreground">{spec.memory}</p>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-xs text-muted-foreground line-through">${spec.originalPrice}</span>
-                            <span className="text-lg font-bold ml-2">${spec.price}</span>
-                            <span className="text-xs text-muted-foreground">/mo</span>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Stake Packages */}
-                  <div className="p-5 rounded-xl bg-card border border-border">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Plus className="w-4 h-4 text-primary" />
-                      <h3 className="text-sm font-semibold">SwQoS Stake</h3>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm">100,000 SOL per package</p>
-                        <p className="text-xs text-muted-foreground">$350/mo each</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setAdditionalStakePackages(Math.max(0, additionalStakePackages - 1))}
-                          disabled={additionalStakePackages === 0}
-                          className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center hover:bg-muted/80 disabled:opacity-40"
-                        >−</button>
-                        <span className="w-8 text-center font-bold">{additionalStakePackages}</span>
-                        <button
-                          onClick={() => setAdditionalStakePackages(Math.min(10, additionalStakePackages + 1))}
-                          className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90"
-                        >+</button>
-                      </div>
-                    </div>
-                    {additionalStakePackages > 0 && (
-                      <p className="text-xs text-secondary mt-2">
-                        Total: {(50000 + additionalStakePackages * 100000).toLocaleString()} SOL
-                      </p>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Commitment */}
-            <div className="p-5 rounded-xl bg-card border border-border">
-              <h3 className="text-sm font-semibold mb-3">Billing Period</h3>
-              <div className="grid grid-cols-4 gap-2">
-                {commitments.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => setSelectedCommitment(c.id)}
-                    className={`py-2.5 px-2 rounded-lg text-center transition-all ${
-                      selectedCommitment === c.id
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted hover:bg-muted/80"
-                    }`}
-                  >
-                    <div className="text-sm font-medium">{c.name}</div>
-                    <div className={`text-xs mt-0.5 ${
-                      c.discount > 0 
-                        ? selectedCommitment === c.id ? "text-primary-foreground/80" : "text-secondary font-semibold" 
-                        : "opacity-60"
-                    }`}>{c.label}</div>
-                  </button>
-                ))}
               </div>
-            </div>
 
-            {/* Rent Access */}
-            <button
-              onClick={() => setRentAccessEnabled(!rentAccessEnabled)}
-              className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
-                rentAccessEnabled ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30"
-              }`}
+              {/* Discount Code */}
+              <div className="p-5 rounded-2xl bg-card border border-border">
+                <div className="flex items-center gap-3 mb-4">
+                  <Tag className="w-4 h-4 text-primary" />
+                  <h3 className="font-semibold">Discount Code</h3>
+                </div>
+                {appliedDiscount ? (
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/10">
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-secondary" />
+                      <span className="font-mono font-bold text-secondary">{appliedDiscount.code}</span>
+                      <span className="text-sm text-muted-foreground">
+                        ({appliedDiscount.discount_type === 'percentage' ? `${appliedDiscount.discount_value}%` : `$${appliedDiscount.discount_value}`} off)
+                      </span>
+                    </div>
+                    <button onClick={removeDiscount} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Remove</button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Enter code"
+                      value={discountCode}
+                      onChange={(e) => { setDiscountCode(e.target.value.toUpperCase()); setDiscountError(""); }}
+                      className="font-mono bg-background"
+                    />
+                    <Button variant="outline" onClick={validateDiscountCode} disabled={!discountCode.trim() || isValidatingCode}>
+                      {isValidatingCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                    </Button>
+                  </div>
+                )}
+                {discountError && <p className="text-sm text-destructive mt-2">{discountError}</p>}
+              </div>
+
+              {/* Admin Test Mode */}
+              {!isDedicated && isAdmin && (
+                <div 
+                  onClick={() => setIsTestMode(!isTestMode)}
+                  className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
+                    isTestMode 
+                      ? "border-yellow-500 bg-yellow-500/5" 
+                      : "border-border bg-card hover:border-yellow-500/30"
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                      isTestMode ? "bg-yellow-500 text-black" : "bg-muted"
+                    }`}>
+                      <FlaskConical className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">Test Mode (Admin)</h3>
+                      <p className="text-sm text-muted-foreground">Create $0.10 test orders</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Right: Summary Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="lg:col-span-2"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                    rentAccessEnabled ? "border-primary bg-primary" : "border-muted-foreground/40"
-                  }`}>
-                    {rentAccessEnabled && <Check className="w-3 h-3 text-white" />}
-                  </div>
-                  <div>
-                    <span className="font-medium">Rent Access</span>
-                    <p className="text-xs text-muted-foreground">Earn by sharing unused capacity</p>
-                  </div>
-                </div>
-                <span className="text-sm font-medium text-muted-foreground">+15%</span>
-              </div>
-            </button>
-
-            {/* Admin Test Mode */}
-            {!isDedicated && isAdmin && (
-              <button
-                onClick={() => setIsTestMode(!isTestMode)}
-                className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
-                  isTestMode ? "border-yellow-500 bg-yellow-500/5" : "border-border hover:border-muted-foreground/30"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <FlaskConical className={`w-5 h-5 ${isTestMode ? "text-yellow-500" : "text-muted-foreground"}`} />
-                  <div>
-                    <span className={`font-medium ${isTestMode ? "text-yellow-500" : ""}`}>Test Mode (Admin)</span>
-                    <p className="text-xs text-muted-foreground">Create $0.10 test orders</p>
-                  </div>
-                </div>
-              </button>
-            )}
-
-            {/* Discount Code */}
-            <div className="p-5 rounded-xl bg-card border border-border">
-              <div className="flex items-center gap-2 mb-3">
-                <Tag className="w-4 h-4 text-primary" />
-                <h3 className="text-sm font-semibold">Discount Code</h3>
-              </div>
-              {appliedDiscount ? (
-                <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/10">
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-secondary" />
-                    <span className="font-mono font-bold text-secondary">{appliedDiscount.code}</span>
-                    <span className="text-xs text-muted-foreground">
-                      ({appliedDiscount.discount_type === 'percentage' ? `${appliedDiscount.discount_value}%` : `$${appliedDiscount.discount_value}`} off)
-                    </span>
-                  </div>
-                  <button onClick={removeDiscount} className="text-xs text-muted-foreground hover:text-foreground">Remove</button>
-                </div>
-              ) : (
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Enter code"
-                    value={discountCode}
-                    onChange={(e) => { setDiscountCode(e.target.value.toUpperCase()); setDiscountError(""); }}
-                    className="font-mono"
-                  />
-                  <Button variant="outline" onClick={validateDiscountCode} disabled={!discountCode.trim() || isValidatingCode}>
-                    {isValidatingCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
-                  </Button>
-                </div>
-              )}
-              {discountError && <p className="text-xs text-destructive mt-2">{discountError}</p>}
-            </div>
-          </motion.div>
-
-          {/* Right: Summary */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="lg:col-span-2"
-          >
-            <div className="sticky top-24 p-6 rounded-xl bg-card border border-border">
-              {/* Price */}
-              <div className="text-center mb-6 pb-6 border-b border-border">
-                {isTrialMode ? (
-                  <>
-                    <div className="text-2xl text-muted-foreground line-through mb-1">{formatPrice(300)}</div>
-                    <div className="text-5xl font-bold text-secondary">$0</div>
-                    <p className="text-sm text-muted-foreground mt-1">30-min free trial</p>
-                  </>
-                ) : (
-                  <>
-                    {(discount > 0 || appliedDiscount) && (
-                      <div className="text-xl text-muted-foreground line-through mb-1">
-                        {formatPrice(appliedDiscount ? priceBeforeDiscount : originalPrice)}
-                      </div>
-                    )}
-                    <div className="text-5xl font-bold">{formatPrice(price)}</div>
-                    <p className="text-muted-foreground mt-1">/month</p>
-                    {discount > 0 && !appliedDiscount && (
-                      <p className="text-sm text-secondary mt-2">Save {formatPrice(originalPrice - price)}/mo</p>
-                    )}
-                    {appliedDiscount && (
-                      <p className="text-sm text-secondary mt-2">Code saves {formatPrice(discountAmount)}/mo</p>
-                    )}
-                  </>
-                )}
-              </div>
-
-              {/* Features */}
-              <div className="space-y-2 mb-6">
-                {(isDedicated ? dedicatedFeatures : sharedFeatures).map((f) => (
-                  <div key={f} className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-secondary flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-muted-foreground">{f}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Regions Badge */}
-              {!isDedicated && (
-                <div className="p-3 rounded-lg bg-muted/50 mb-6">
-                  <p className="text-xs text-center">
-                    <span className="font-medium">All regions:</span>{" "}
-                    <span className="text-muted-foreground">🇺🇸 NY • 🇩🇪 Frankfurt • 🇳🇱 Amsterdam</span>
+              <div className="sticky top-24 p-6 rounded-2xl bg-card border border-border">
+                {/* Price Display */}
+                <div className="text-center pb-6 mb-6 border-b border-border">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    {isDedicated ? "Dedicated Server" : "Shared Infrastructure"}
                   </p>
-                </div>
-              )}
-
-              {/* Discord ID */}
-              <div className="mb-4">
-                <label className="text-xs font-medium text-muted-foreground flex items-center gap-1 mb-2">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#5865F2">
-                    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.36-.698.772-1.362 1.225-1.993a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.12-.098.246-.198.373-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
-                  </svg>
-                  Discord User ID
-                </label>
-                <Input
-                  placeholder="123456789012345678"
-                  value={discordUserId}
-                  onChange={(e) => setDiscordUserId(e.target.value.replace(/\D/g, ''))}
-                  className={`${discordUserId && !isValidDiscordId ? "border-destructive" : isValidDiscordId ? "border-secondary" : ""}`}
-                />
-                {isValidDiscordId && <p className="text-xs text-secondary mt-1 flex items-center gap-1"><Check className="w-3 h-3" /> Valid</p>}
-                
-                <button
-                  onClick={() => setShowDiscordGuide(!showDiscordGuide)}
-                  className="text-xs text-muted-foreground hover:text-foreground mt-2 flex items-center gap-1"
-                >
-                  <HelpCircle className="w-3 h-3" />
-                  How to find ID?
-                  {showDiscordGuide ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                </button>
-                
-                <AnimatePresence>
-                  {showDiscordGuide && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                      <div className="mt-2 p-3 rounded-lg bg-muted text-xs text-muted-foreground">
-                        <ol className="list-decimal list-inside space-y-1">
-                          <li>Discord Settings → Advanced</li>
-                          <li>Enable Developer Mode</li>
-                          <li>Click profile → Copy User ID</li>
-                        </ol>
+                  
+                  {isTrialMode ? (
+                    <>
+                      <div className="text-2xl text-muted-foreground line-through mb-1">{formatPrice(300)}</div>
+                      <div className="text-5xl font-bold text-secondary">$0</div>
+                      <p className="text-sm text-muted-foreground mt-2">30-minute free trial</p>
+                    </>
+                  ) : (
+                    <>
+                      {(discount > 0 || appliedDiscount) && (
+                        <div className="text-xl text-muted-foreground line-through mb-1">
+                          {formatPrice(appliedDiscount ? priceBeforeDiscount : originalPrice)}
+                        </div>
+                      )}
+                      <div className="flex items-baseline justify-center gap-1">
+                        <span className="text-5xl font-bold">{formatPrice(price)}</span>
+                        <span className="text-muted-foreground">/mo</span>
                       </div>
-                    </motion.div>
+                      {discount > 0 && !appliedDiscount && (
+                        <p className="text-sm text-secondary mt-2 font-medium">
+                          Saving {formatPrice(originalPrice - price)}/month
+                        </p>
+                      )}
+                      {appliedDiscount && (
+                        <p className="text-sm text-secondary mt-2 font-medium">
+                          Code saves {formatPrice(discountAmount)}/month
+                        </p>
+                      )}
+                    </>
                   )}
-                </AnimatePresence>
-              </div>
+                </div>
 
-              {/* CTA */}
-              <Button
-                size="lg"
-                className={`w-full ${isTrialMode ? "bg-secondary hover:bg-secondary/90" : ""}`}
-                variant={isTrialMode ? "default" : "omega"}
-                disabled={!isValidDiscordId || isTrialProcessing}
-                onClick={isTrialMode ? handleTrialOrder : () => setIsPaymentOpen(true)}
-              >
-                {isTrialProcessing ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Activating...</>
-                ) : (
-                  <><Zap className="w-4 h-4 mr-2" /> {isValidDiscordId ? (isTrialMode ? "Start Trial" : "Subscribe") : "Enter Discord ID"}</>
+                {/* Features */}
+                <div className="space-y-3 mb-6">
+                  {(isDedicated ? dedicatedFeatures : sharedFeatures).map((feature, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-secondary/20 flex items-center justify-center shrink-0 mt-0.5">
+                        <Check className="w-3 h-3 text-secondary" />
+                      </div>
+                      <span className="text-sm text-muted-foreground">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Regions */}
+                {!isDedicated && (
+                  <div className="p-3 rounded-xl bg-muted/50 mb-6 text-center">
+                    <span className="text-sm">🇺🇸 NY • 🇩🇪 Frankfurt • 🇳🇱 Amsterdam</span>
+                  </div>
                 )}
-              </Button>
-              
-              <p className="text-xs text-center text-muted-foreground mt-3">
-                {isTrialMode ? "No payment required" : "Crypto payment • Instant access"}
-              </p>
-            </div>
-          </motion.div>
+
+                {/* Discord ID Input */}
+                <div className="mb-5">
+                  <label className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-2">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#5865F2">
+                      <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.36-.698.772-1.362 1.225-1.993a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.12-.098.246-.198.373-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                    </svg>
+                    Discord User ID
+                  </label>
+                  <Input
+                    placeholder="123456789012345678"
+                    value={discordUserId}
+                    onChange={(e) => setDiscordUserId(e.target.value.replace(/\D/g, ''))}
+                    className={`bg-background ${discordUserId && !isValidDiscordId ? "border-destructive" : isValidDiscordId ? "border-secondary" : ""}`}
+                  />
+                  {isValidDiscordId && (
+                    <p className="text-xs text-secondary mt-1.5 flex items-center gap-1">
+                      <Check className="w-3 h-3" /> Valid Discord ID
+                    </p>
+                  )}
+                  
+                  <button
+                    onClick={() => setShowDiscordGuide(!showDiscordGuide)}
+                    className="text-xs text-muted-foreground hover:text-foreground mt-2 flex items-center gap-1 transition-colors"
+                  >
+                    <HelpCircle className="w-3 h-3" />
+                    How to find your ID?
+                    {showDiscordGuide ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  </button>
+                  
+                  <AnimatePresence>
+                    {showDiscordGuide && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }} 
+                        animate={{ opacity: 1, height: "auto" }} 
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="mt-3 p-3 rounded-xl bg-muted text-sm text-muted-foreground">
+                          <ol className="list-decimal list-inside space-y-1">
+                            <li>Open Discord Settings → Advanced</li>
+                            <li>Enable Developer Mode</li>
+                            <li>Right-click your profile → Copy User ID</li>
+                          </ol>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* CTA Button */}
+                <Button
+                  size="lg"
+                  className={`w-full text-base ${isTrialMode ? "bg-secondary hover:bg-secondary/90" : ""}`}
+                  variant={isTrialMode ? "default" : "omega"}
+                  disabled={!isValidDiscordId || isTrialProcessing}
+                  onClick={isTrialMode ? handleTrialOrder : () => setIsPaymentOpen(true)}
+                >
+                  {isTrialProcessing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Activating...
+                    </>
+                  ) : (
+                    <>
+                      {isValidDiscordId ? (isTrialMode ? "Start Free Trial" : "Continue to Payment") : "Enter Discord ID"}
+                    </>
+                  )}
+                </Button>
+                
+                <p className="text-xs text-center text-muted-foreground mt-4">
+                  {isTrialMode ? "No payment required • Instant access" : "Secure crypto payment"}
+                </p>
+              </div>
+            </motion.div>
+          </div>
         </div>
 
-        {/* Payment Modal */}
-        <CryptoPaymentModal
-          isOpen={isPaymentOpen}
-          onClose={() => setIsPaymentOpen(false)}
-          amount={price}
-          commitment={selectedCommitment}
-          serverType={selectedServerType}
-          rentAccessEnabled={rentAccessEnabled}
-          isTestMode={isTestMode}
-          discordUserId={discordUserId.trim()}
-          appliedDiscount={appliedDiscount}
-        />
-
-        {/* Discord CTA */}
+        {/* Discord Support CTA */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-center mt-12"
+          className="text-center mt-16"
         >
-          <p className="text-muted-foreground text-sm mb-3">Questions?</p>
+          <p className="text-muted-foreground mb-4">Have questions?</p>
           <a
             href="https://discord.gg/omeganode"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#5865F2] text-white text-sm font-medium hover:bg-[#4752C4] transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#5865F2] text-white font-medium hover:bg-[#4752C4] transition-colors"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.36-.698.772-1.362 1.225-1.993a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.12-.098.246-.198.373-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
@@ -668,6 +705,19 @@ const PricingSection = () => {
           </a>
         </motion.div>
       </div>
+
+      {/* Payment Modal */}
+      <CryptoPaymentModal
+        isOpen={isPaymentOpen}
+        onClose={() => setIsPaymentOpen(false)}
+        amount={price}
+        commitment={selectedCommitment}
+        serverType={selectedServerType}
+        rentAccessEnabled={rentAccessEnabled}
+        isTestMode={isTestMode}
+        discordUserId={discordUserId.trim()}
+        appliedDiscount={appliedDiscount}
+      />
     </section>
   );
 };
