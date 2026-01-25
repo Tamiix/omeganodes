@@ -7,14 +7,12 @@ const Footer = () => {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
           {/* Logo */}
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <img 
-                src={omegaLogo} 
-                alt="Omega Logo" 
-                className="w-5 h-5 object-contain"
-              />
-            </div>
-            <span className="text-base font-semibold text-foreground">
+            <img 
+              src={omegaLogo} 
+              alt="Omega Logo" 
+              className="w-10 h-10 object-contain"
+            />
+            <span className="text-lg font-semibold text-foreground">
               Omega
             </span>
           </div>
