@@ -344,6 +344,13 @@ const PricingSection = () => {
                   exit={{ opacity: 0, height: 0 }}
                   className="space-y-5"
                 >
+                  {/* Deployment Notice */}
+                  <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
+                    <p className="text-sm text-amber-400">
+                      <strong>⏱ Deployment Time:</strong> Dedicated servers typically take 1-3 working days to be deployed and configured.
+                    </p>
+                  </div>
+
                   {/* Specs */}
                   <div className="p-5 rounded-xl bg-card border border-border">
                     <div className="flex items-center gap-2 mb-3">
