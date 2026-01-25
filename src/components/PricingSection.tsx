@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useState, useMemo, useEffect } from "react";
-import { Check, Zap, Cpu, Server, Plus, FlaskConical, HelpCircle, ChevronDown, ChevronUp, Tag, Loader2, Gift, Clock, Shield } from "lucide-react";
+import { Check, Zap, Cpu, Server, Plus, FlaskConical, HelpCircle, ChevronDown, ChevronUp, Tag, Loader2, Gift, Clock, Shield, Sparkles } from "lucide-react";
 import CryptoPaymentModal from "./CryptoPaymentModal";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -254,8 +254,11 @@ const PricingSection = () => {
 
   return (
     <section id="pricing" className="py-24 relative overflow-hidden">
-      {/* Subtle background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/20 to-background" />
+      {/* Vibrant gradient background */}
+      <div className="absolute inset-0">
+        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-primary/15 blur-[150px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-secondary/10 blur-[120px]" />
+      </div>
       
       <div className="container mx-auto px-6 relative z-10">
         {/* Header */}
@@ -263,19 +266,23 @@ const PricingSection = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-12"
         >
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-            Transparent Pricing
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium text-primary">Simple & Transparent</span>
+          </div>
+          <h2 className="text-4xl sm:text-5xl font-bold mb-4">
+            Choose Your <span className="text-gradient-omega">Plan</span>
           </h2>
-          <p className="text-muted-foreground text-lg">
-            No hidden fees. Scale when you're ready.
+          <p className="text-muted-foreground text-lg max-w-md mx-auto">
+            No hidden fees. Enterprise infrastructure at your fingertips.
           </p>
         </motion.div>
 
         {/* Server Type Toggle */}
         <div className="flex justify-center mb-10">
-          <div className="inline-flex p-1 rounded-xl bg-muted/50 border border-border">
+          <div className="inline-flex p-1.5 rounded-2xl bg-card/80 backdrop-blur border border-border shadow-lg">
             {serverTypes.map((type) => (
               <button
                 key={type.id}
@@ -283,10 +290,10 @@ const PricingSection = () => {
                   setSelectedServerType(type.id);
                   if (type.id === "dedicated") setIsTrialMode(false);
                 }}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm transition-all ${
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm transition-all ${
                   selectedServerType === type.id
-                    ? "bg-foreground text-background shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-gradient-omega text-white shadow-md"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
                 {type.id === "shared" ? <Shield className="w-4 h-4" /> : <Server className="w-4 h-4" />}
@@ -311,25 +318,28 @@ const PricingSection = () => {
               {!isDedicated && (
                 <div 
                   onClick={() => setIsTrialMode(!isTrialMode)}
-                  className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
+                  className={`p-5 rounded-2xl border-2 cursor-pointer transition-all hover:shadow-lg ${
                     isTrialMode 
-                      ? "border-secondary bg-secondary/5" 
-                      : "border-border bg-card hover:border-secondary/50"
+                      ? "border-secondary bg-gradient-to-r from-secondary/10 to-secondary/5 shadow-secondary/20 shadow-lg" 
+                      : "border-border bg-card/50 backdrop-blur hover:border-secondary/50"
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        isTrialMode ? "bg-secondary text-secondary-foreground" : "bg-muted"
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
+                        isTrialMode ? "bg-secondary text-white" : "bg-secondary/10"
                       }`}>
-                        <Gift className="w-5 h-5" />
+                        <Gift className={`w-5 h-5 ${isTrialMode ? "text-white" : "text-secondary"}`} />
                       </div>
                       <div>
-                        <h3 className="font-semibold">Free Trial</h3>
+                        <h3 className="font-semibold flex items-center gap-2">
+                          Free Trial
+                          {isTrialMode && <span className="text-xs bg-secondary text-white px-2 py-0.5 rounded-full">Active</span>}
+                        </h3>
                         <p className="text-sm text-muted-foreground">30 minutes, no payment required</p>
                       </div>
                     </div>
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
                       isTrialMode ? "border-secondary bg-secondary" : "border-muted-foreground/30"
                     }`}>
                       {isTrialMode && <Check className="w-3.5 h-3.5 text-white" />}
@@ -348,22 +358,22 @@ const PricingSection = () => {
                     className="space-y-4"
                   >
                     {/* Deployment Notice */}
-                    <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3">
+                    <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 flex items-start gap-3">
                       <Clock className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                       <p className="text-sm text-amber-600 dark:text-amber-400">
-                        Dedicated servers take <strong>1-3 working days</strong> to deploy.
+                        Dedicated servers take <strong>1-3 working days</strong> to deploy and configure.
                       </p>
                     </div>
 
                     {/* Hardware Selection */}
-                    <div className="p-5 rounded-2xl bg-card border border-border">
+                    <div className="p-5 rounded-2xl bg-card/50 backdrop-blur border border-border">
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                          <Cpu className="w-5 h-5 text-primary" />
+                        <div className="w-10 h-10 rounded-xl bg-gradient-omega flex items-center justify-center">
+                          <Cpu className="w-5 h-5 text-white" />
                         </div>
                         <div>
                           <h3 className="font-semibold">Hardware</h3>
-                          <span className="text-xs text-secondary font-medium">10% launch discount</span>
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">10% launch discount</span>
                         </div>
                       </div>
                       <div className="space-y-2">
@@ -373,8 +383,8 @@ const PricingSection = () => {
                             onClick={() => setSelectedDedicatedSpec(spec.id)}
                             className={`w-full p-4 rounded-xl border-2 flex items-center justify-between transition-all ${
                               selectedDedicatedSpec === spec.id
-                                ? "border-primary bg-primary/5"
-                                : "border-transparent bg-muted/50 hover:bg-muted"
+                                ? "border-primary bg-primary/5 shadow-md"
+                                : "border-transparent bg-muted/30 hover:bg-muted/50 hover:border-border"
                             }`}
                           >
                             <div>
@@ -383,7 +393,7 @@ const PricingSection = () => {
                             </div>
                             <div className="text-right">
                               <span className="text-xs text-muted-foreground line-through">${spec.originalPrice}</span>
-                              <span className="text-xl font-bold ml-2">${spec.price}</span>
+                              <span className="text-xl font-bold text-primary ml-2">${spec.price}</span>
                               <span className="text-sm text-muted-foreground">/mo</span>
                             </div>
                           </button>
@@ -392,10 +402,10 @@ const PricingSection = () => {
                     </div>
 
                     {/* SwQoS Stake */}
-                    <div className="p-5 rounded-2xl bg-card border border-border">
+                    <div className="p-5 rounded-2xl bg-card/50 backdrop-blur border border-border">
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                          <Plus className="w-5 h-5 text-primary" />
+                        <div className="w-10 h-10 rounded-xl bg-gradient-omega flex items-center justify-center">
+                          <Plus className="w-5 h-5 text-white" />
                         </div>
                         <h3 className="font-semibold">Additional Stake</h3>
                       </div>
@@ -408,12 +418,12 @@ const PricingSection = () => {
                           <button
                             onClick={() => setAdditionalStakePackages(Math.max(0, additionalStakePackages - 1))}
                             disabled={additionalStakePackages === 0}
-                            className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-lg font-medium hover:bg-muted/80 disabled:opacity-40 transition-colors"
+                            className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-lg font-medium hover:bg-muted/80 disabled:opacity-40 transition-all"
                           >−</button>
                           <span className="w-8 text-center text-xl font-bold">{additionalStakePackages}</span>
                           <button
                             onClick={() => setAdditionalStakePackages(Math.min(10, additionalStakePackages + 1))}
-                            className="w-10 h-10 rounded-lg bg-foreground text-background flex items-center justify-center text-lg font-medium hover:opacity-90 transition-opacity"
+                            className="w-10 h-10 rounded-xl bg-gradient-omega text-white flex items-center justify-center text-lg font-medium hover:opacity-90 transition-all"
                           >+</button>
                         </div>
                       </div>
@@ -428,7 +438,7 @@ const PricingSection = () => {
               </AnimatePresence>
 
               {/* Billing Period */}
-              <div className="p-5 rounded-2xl bg-card border border-border">
+              <div className="p-5 rounded-2xl bg-card/50 backdrop-blur border border-border">
                 <h3 className="font-semibold mb-4">Billing Period</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {commitments.map((c) => (
@@ -437,14 +447,14 @@ const PricingSection = () => {
                       onClick={() => setSelectedCommitment(c.id)}
                       className={`relative py-3 px-3 rounded-xl text-center transition-all ${
                         selectedCommitment === c.id
-                          ? "bg-foreground text-background"
-                          : "bg-muted/50 hover:bg-muted text-foreground"
+                          ? "bg-gradient-omega text-white shadow-md"
+                          : "bg-muted/30 hover:bg-muted/50 text-foreground"
                       }`}
                     >
                       <div className="font-medium text-sm">{c.name}</div>
                       {c.label && (
                         <div className={`text-xs mt-0.5 ${
-                          selectedCommitment === c.id ? "text-background/70" : "text-secondary font-medium"
+                          selectedCommitment === c.id ? "text-white/80" : "text-secondary font-medium"
                         }`}>{c.label}</div>
                       )}
                     </button>
@@ -455,18 +465,18 @@ const PricingSection = () => {
               {/* Rent Access */}
               <div 
                 onClick={() => setRentAccessEnabled(!rentAccessEnabled)}
-                className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
+                className={`p-5 rounded-2xl border-2 cursor-pointer transition-all hover:shadow-lg ${
                   rentAccessEnabled 
-                    ? "border-primary bg-primary/5" 
-                    : "border-border bg-card hover:border-primary/30"
+                    ? "border-primary bg-gradient-to-r from-primary/10 to-accent/5 shadow-primary/20 shadow-lg" 
+                    : "border-border bg-card/50 backdrop-blur hover:border-primary/30"
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                      rentAccessEnabled ? "bg-primary text-primary-foreground" : "bg-muted"
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
+                      rentAccessEnabled ? "bg-gradient-omega" : "bg-primary/10"
                     }`}>
-                      <Zap className="w-5 h-5" />
+                      <Zap className={`w-5 h-5 ${rentAccessEnabled ? "text-white" : "text-primary"}`} />
                     </div>
                     <div>
                       <h3 className="font-semibold">Rent Access</h3>
@@ -474,8 +484,8 @@ const PricingSection = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-muted-foreground">+15%</span>
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                    <span className="text-sm font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">+15%</span>
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
                       rentAccessEnabled ? "border-primary bg-primary" : "border-muted-foreground/30"
                     }`}>
                       {rentAccessEnabled && <Check className="w-3.5 h-3.5 text-white" />}
@@ -485,13 +495,13 @@ const PricingSection = () => {
               </div>
 
               {/* Discount Code */}
-              <div className="p-5 rounded-2xl bg-card border border-border">
+              <div className="p-5 rounded-2xl bg-card/50 backdrop-blur border border-border">
                 <div className="flex items-center gap-3 mb-4">
                   <Tag className="w-4 h-4 text-primary" />
                   <h3 className="font-semibold">Discount Code</h3>
                 </div>
                 {appliedDiscount ? (
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/10">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-secondary/10 to-secondary/5 border border-secondary/20">
                     <div className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-secondary" />
                       <span className="font-mono font-bold text-secondary">{appliedDiscount.code}</span>
@@ -507,9 +517,9 @@ const PricingSection = () => {
                       placeholder="Enter code"
                       value={discountCode}
                       onChange={(e) => { setDiscountCode(e.target.value.toUpperCase()); setDiscountError(""); }}
-                      className="font-mono bg-background"
+                      className="font-mono bg-background/50"
                     />
-                    <Button variant="outline" onClick={validateDiscountCode} disabled={!discountCode.trim() || isValidatingCode}>
+                    <Button variant="outline" onClick={validateDiscountCode} disabled={!discountCode.trim() || isValidatingCode} className="hover:bg-primary hover:text-white hover:border-primary">
                       {isValidatingCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
                     </Button>
                   </div>
@@ -523,15 +533,15 @@ const PricingSection = () => {
                   onClick={() => setIsTestMode(!isTestMode)}
                   className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
                     isTestMode 
-                      ? "border-yellow-500 bg-yellow-500/5" 
-                      : "border-border bg-card hover:border-yellow-500/30"
+                      ? "border-yellow-500 bg-gradient-to-r from-yellow-500/10 to-orange-500/5" 
+                      : "border-border bg-card/50 backdrop-blur hover:border-yellow-500/30"
                   }`}
                 >
                   <div className="flex items-center gap-4">
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                      isTestMode ? "bg-yellow-500 text-black" : "bg-muted"
+                      isTestMode ? "bg-yellow-500 text-black" : "bg-yellow-500/10"
                     }`}>
-                      <FlaskConical className="w-5 h-5" />
+                      <FlaskConical className={`w-5 h-5 ${isTestMode ? "" : "text-yellow-500"}`} />
                     </div>
                     <div>
                       <h3 className="font-semibold">Test Mode (Admin)</h3>
@@ -550,18 +560,20 @@ const PricingSection = () => {
               transition={{ delay: 0.1 }}
               className="lg:col-span-2"
             >
-              <div className="sticky top-24 p-6 rounded-2xl bg-card border border-border">
+              <div className="sticky top-24 p-6 rounded-2xl bg-gradient-to-b from-card to-card/80 backdrop-blur border border-border shadow-xl">
                 {/* Price Display */}
                 <div className="text-center pb-6 mb-6 border-b border-border">
-                  <p className="text-sm text-muted-foreground mb-3">
-                    {isDedicated ? "Dedicated Server" : "Shared Infrastructure"}
-                  </p>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 mb-4">
+                    <span className="text-xs font-medium text-primary">
+                      {isDedicated ? "Dedicated Server" : "Shared Infrastructure"}
+                    </span>
+                  </div>
                   
                   {isTrialMode ? (
                     <>
                       <div className="text-2xl text-muted-foreground line-through mb-1">{formatPrice(300)}</div>
-                      <div className="text-5xl font-bold text-secondary">$0</div>
-                      <p className="text-sm text-muted-foreground mt-2">30-minute free trial</p>
+                      <div className="text-5xl font-bold text-gradient-omega">$0</div>
+                      <p className="text-sm text-secondary mt-2 font-medium">30-minute free trial</p>
                     </>
                   ) : (
                     <>
@@ -571,18 +583,24 @@ const PricingSection = () => {
                         </div>
                       )}
                       <div className="flex items-baseline justify-center gap-1">
-                        <span className="text-5xl font-bold">{formatPrice(price)}</span>
+                        <span className="text-5xl font-bold text-gradient-omega">{formatPrice(price)}</span>
                         <span className="text-muted-foreground">/mo</span>
                       </div>
                       {discount > 0 && !appliedDiscount && (
-                        <p className="text-sm text-secondary mt-2 font-medium">
-                          Saving {formatPrice(originalPrice - price)}/month
-                        </p>
+                        <div className="inline-flex items-center gap-1 mt-3 px-3 py-1 rounded-full bg-secondary/10">
+                          <Sparkles className="w-3 h-3 text-secondary" />
+                          <span className="text-sm text-secondary font-medium">
+                            Saving {formatPrice(originalPrice - price)}/month
+                          </span>
+                        </div>
                       )}
                       {appliedDiscount && (
-                        <p className="text-sm text-secondary mt-2 font-medium">
-                          Code saves {formatPrice(discountAmount)}/month
-                        </p>
+                        <div className="inline-flex items-center gap-1 mt-3 px-3 py-1 rounded-full bg-secondary/10">
+                          <Tag className="w-3 h-3 text-secondary" />
+                          <span className="text-sm text-secondary font-medium">
+                            Code saves {formatPrice(discountAmount)}/month
+                          </span>
+                        </div>
                       )}
                     </>
                   )}
@@ -592,8 +610,8 @@ const PricingSection = () => {
                 <div className="space-y-3 mb-6">
                   {(isDedicated ? dedicatedFeatures : sharedFeatures).map((feature, i) => (
                     <div key={i} className="flex items-start gap-3">
-                      <div className="w-5 h-5 rounded-full bg-secondary/20 flex items-center justify-center shrink-0 mt-0.5">
-                        <Check className="w-3 h-3 text-secondary" />
+                      <div className="w-5 h-5 rounded-full bg-gradient-omega flex items-center justify-center shrink-0 mt-0.5">
+                        <Check className="w-3 h-3 text-white" />
                       </div>
                       <span className="text-sm text-muted-foreground">{feature}</span>
                     </div>
@@ -602,8 +620,8 @@ const PricingSection = () => {
 
                 {/* Regions */}
                 {!isDedicated && (
-                  <div className="p-3 rounded-xl bg-muted/50 mb-6 text-center">
-                    <span className="text-sm">🇺🇸 NY • 🇩🇪 Frankfurt • 🇳🇱 Amsterdam</span>
+                  <div className="p-3 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/10 mb-6 text-center">
+                    <span className="text-sm font-medium">🇺🇸 NY • 🇩🇪 Frankfurt • 🇳🇱 Amsterdam</span>
                   </div>
                 )}
 
@@ -619,17 +637,17 @@ const PricingSection = () => {
                     placeholder="123456789012345678"
                     value={discordUserId}
                     onChange={(e) => setDiscordUserId(e.target.value.replace(/\D/g, ''))}
-                    className={`bg-background ${discordUserId && !isValidDiscordId ? "border-destructive" : isValidDiscordId ? "border-secondary" : ""}`}
+                    className={`bg-background/50 ${discordUserId && !isValidDiscordId ? "border-destructive" : isValidDiscordId ? "border-secondary" : ""}`}
                   />
                   {isValidDiscordId && (
-                    <p className="text-xs text-secondary mt-1.5 flex items-center gap-1">
+                    <p className="text-xs text-secondary mt-1.5 flex items-center gap-1 font-medium">
                       <Check className="w-3 h-3" /> Valid Discord ID
                     </p>
                   )}
                   
                   <button
                     onClick={() => setShowDiscordGuide(!showDiscordGuide)}
-                    className="text-xs text-muted-foreground hover:text-foreground mt-2 flex items-center gap-1 transition-colors"
+                    className="text-xs text-muted-foreground hover:text-primary mt-2 flex items-center gap-1 transition-colors"
                   >
                     <HelpCircle className="w-3 h-3" />
                     How to find your ID?
@@ -644,7 +662,7 @@ const PricingSection = () => {
                         exit={{ opacity: 0, height: 0 }}
                         className="overflow-hidden"
                       >
-                        <div className="mt-3 p-3 rounded-xl bg-muted text-sm text-muted-foreground">
+                        <div className="mt-3 p-3 rounded-xl bg-muted/50 text-sm text-muted-foreground">
                           <ol className="list-decimal list-inside space-y-1">
                             <li>Open Discord Settings → Advanced</li>
                             <li>Enable Developer Mode</li>
@@ -659,8 +677,11 @@ const PricingSection = () => {
                 {/* CTA Button */}
                 <Button
                   size="lg"
-                  className={`w-full text-base ${isTrialMode ? "bg-secondary hover:bg-secondary/90" : ""}`}
-                  variant={isTrialMode ? "default" : "omega"}
+                  className={`w-full text-base font-semibold ${
+                    isTrialMode 
+                      ? "bg-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/25" 
+                      : "bg-gradient-omega hover:opacity-90 shadow-lg shadow-primary/25"
+                  }`}
                   disabled={!isValidDiscordId || isTrialProcessing}
                   onClick={isTrialMode ? handleTrialOrder : () => setIsPaymentOpen(true)}
                 >
@@ -677,7 +698,7 @@ const PricingSection = () => {
                 </Button>
                 
                 <p className="text-xs text-center text-muted-foreground mt-4">
-                  {isTrialMode ? "No payment required • Instant access" : "Secure crypto payment"}
+                  {isTrialMode ? "No payment required • Instant access" : "Secure crypto payment • USDC/USDT"}
                 </p>
               </div>
             </motion.div>
@@ -691,12 +712,12 @@ const PricingSection = () => {
           viewport={{ once: true }}
           className="text-center mt-16"
         >
-          <p className="text-muted-foreground mb-4">Have questions?</p>
+          <p className="text-muted-foreground mb-4">Have questions? We're here to help.</p>
           <a
             href="https://discord.gg/omeganode"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#5865F2] text-white font-medium hover:bg-[#4752C4] transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#5865F2] text-white font-medium hover:bg-[#4752C4] transition-all shadow-lg shadow-[#5865F2]/25"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.36-.698.772-1.362 1.225-1.993a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.12-.098.246-.198.373-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
