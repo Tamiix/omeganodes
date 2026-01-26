@@ -387,11 +387,22 @@ const PricingSection = () => {
                     className="space-y-4"
                   >
                     {/* Deployment Notice */}
-                    <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 flex items-start gap-3">
-                      <Clock className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                      <p className="text-sm text-amber-600 dark:text-amber-400">
-                        Dedicated servers take <strong>1-3 working days</strong> to deploy and configure.
-                      </p>
+                    <div className="p-4 rounded-xl bg-muted/50 border border-border space-y-2">
+                      <div className="flex items-start gap-3">
+                        <Clock className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                        <p className="text-sm text-muted-foreground">
+                          Dedicated servers take <strong className="text-foreground">1-3 working days</strong> to deploy and configure.
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 text-primary shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <p className="text-sm text-muted-foreground">
+                          Need a specific location? We can deploy in <strong className="text-foreground">almost any region</strong> on request.
+                        </p>
+                      </div>
                     </div>
 
                     {/* Hardware Selection */}
