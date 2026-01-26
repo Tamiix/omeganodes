@@ -73,6 +73,7 @@ const PricingSection = () => {
   const [showDiscordGuide, setShowDiscordGuide] = useState(false);
   const [isTrialMode, setIsTrialMode] = useState(false);
   const [isTrialProcessing, setIsTrialProcessing] = useState(false);
+  const [trialsEnabled, setTrialsEnabled] = useState(false);
   
   const [discountCode, setDiscountCode] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null);
@@ -87,6 +88,22 @@ const PricingSection = () => {
   
   // Check if commitment discount is active (any commitment other than monthly)
   const hasCommitmentDiscount = selectedCommitment !== "monthly";
+
+  // Fetch trials enabled setting from database
+  useEffect(() => {
+    const fetchTrialSetting = async () => {
+      const { data } = await supabase
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'trials_enabled')
+        .maybeSingle();
+      
+      if (data?.value && typeof data.value === 'object' && 'enabled' in data.value) {
+        setTrialsEnabled((data.value as { enabled: boolean }).enabled);
+      }
+    };
+    fetchTrialSetting();
+  }, []);
 
   // Clear discount code when switching to a commitment with discount
   useEffect(() => {
@@ -326,8 +343,8 @@ const PricingSection = () => {
               viewport={{ once: true }}
               className="lg:col-span-3 space-y-4"
             >
-              {/* Free Trial - Shared Only */}
-              {!isDedicated && (
+              {/* Free Trial - Shared Only (only show if trials are enabled) */}
+              {!isDedicated && trialsEnabled && (
                 <div 
                   onClick={() => setIsTrialMode(!isTrialMode)}
                   className={`p-5 rounded-2xl border-2 cursor-pointer transition-all hover:shadow-lg ${
