@@ -8,84 +8,84 @@
 
 @layer base {
   :root {
-    /* Core palette - more vibrant */
-    --background: 250 25% 7%;
+    /* Core palette - Solana-inspired */
+    --background: 270 30% 6%;
     --foreground: 0 0% 98%;
 
-    --card: 250 25% 10%;
+    --card: 270 25% 9%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 250 25% 10%;
+    --popover: 270 25% 9%;
     --popover-foreground: 0 0% 98%;
 
-    /* Omega Purple - More vibrant */
-    --primary: 265 85% 60%;
+    /* Solana Purple */
+    --primary: 270 100% 65%;
     --primary-foreground: 0 0% 100%;
 
-    /* Teal accent */
-    --secondary: 165 80% 45%;
-    --secondary-foreground: 0 0% 100%;
+    /* Solana Green */
+    --secondary: 160 100% 50%;
+    --secondary-foreground: 0 0% 0%;
 
-    --muted: 250 20% 15%;
-    --muted-foreground: 250 15% 60%;
+    --muted: 270 20% 14%;
+    --muted-foreground: 270 15% 55%;
 
-    /* Accent - Bright violet */
-    --accent: 275 80% 65%;
+    /* Accent - Solana gradient midpoint */
+    --accent: 200 80% 55%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 250 20% 18%;
-    --input: 250 20% 18%;
-    --ring: 265 85% 60%;
+    --border: 270 20% 16%;
+    --input: 270 20% 16%;
+    --ring: 270 100% 65%;
 
     --radius: 0.625rem;
 
-    /* Custom Omega tokens */
-    --omega-purple: 265 85% 60%;
-    --omega-violet: 280 75% 65%;
-    --omega-teal: 165 80% 45%;
-    --omega-pink: 320 80% 60%;
+    /* Custom Omega tokens - Solana palette */
+    --omega-purple: 270 100% 65%;
+    --omega-violet: 280 90% 60%;
+    --omega-teal: 160 100% 50%;
+    --omega-green: 160 100% 50%;
 
-    --sidebar-background: 250 25% 7%;
+    --sidebar-background: 270 30% 6%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 265 85% 60%;
+    --sidebar-primary: 270 100% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 250 25% 12%;
+    --sidebar-accent: 270 25% 11%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 250 20% 18%;
-    --sidebar-ring: 265 85% 60%;
+    --sidebar-border: 270 20% 16%;
+    --sidebar-ring: 270 100% 65%;
   }
 
   .dark {
-    --background: 250 25% 7%;
+    --background: 270 30% 6%;
     --foreground: 0 0% 98%;
-    --card: 250 25% 10%;
+    --card: 270 25% 9%;
     --card-foreground: 0 0% 98%;
-    --popover: 250 25% 10%;
+    --popover: 270 25% 9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 265 85% 60%;
+    --primary: 270 100% 65%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 165 80% 45%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 250 20% 15%;
-    --muted-foreground: 250 15% 60%;
-    --accent: 275 80% 65%;
+    --secondary: 160 100% 50%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 270 20% 14%;
+    --muted-foreground: 270 15% 55%;
+    --accent: 200 80% 55%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border: 250 20% 18%;
-    --input: 250 20% 18%;
-    --ring: 265 85% 60%;
-    --sidebar-background: 250 25% 7%;
+    --border: 270 20% 16%;
+    --input: 270 20% 16%;
+    --ring: 270 100% 65%;
+    --sidebar-background: 270 30% 6%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 265 85% 60%;
+    --sidebar-primary: 270 100% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 250 25% 12%;
+    --sidebar-accent: 270 25% 11%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 250 20% 18%;
-    --sidebar-ring: 265 85% 60%;
+    --sidebar-border: 270 20% 16%;
+    --sidebar-ring: 270 100% 65%;
   }
 }
 
@@ -111,19 +111,19 @@
 
   .text-gradient-omega {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(265 85% 60%) 0%, hsl(320 80% 60%) 100%);
+    background-image: linear-gradient(135deg, hsl(270 100% 65%) 0%, hsl(160 100% 50%) 100%);
   }
 
   .text-gradient-teal {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(165 80% 45%) 0%, hsl(180 80% 50%) 100%);
+    background-image: linear-gradient(135deg, hsl(160 100% 50%) 0%, hsl(180 100% 55%) 100%);
   }
 
   .bg-gradient-omega {
-    background: linear-gradient(135deg, hsl(265 85% 60%) 0%, hsl(280 75% 65%) 100%);
+    background: linear-gradient(135deg, hsl(270 100% 65%) 0%, hsl(160 100% 50%) 100%);
   }
 
   .bg-gradient-vibrant {
-    background: linear-gradient(135deg, hsl(265 85% 60%) 0%, hsl(320 80% 60%) 100%);
+    background: linear-gradient(135deg, hsl(270 100% 65%) 0%, hsl(200 80% 55%) 100%);
   }
 }
