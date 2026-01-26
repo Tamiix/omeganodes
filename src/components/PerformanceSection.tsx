@@ -1,78 +1,96 @@
 import { motion } from "framer-motion";
+import { Check, TrendingUp } from "lucide-react";
 
-const metrics = [
-  { value: "<1ms", label: "Response time" },
-  { value: "4000", label: "Requests/second" },
-  { value: "2000", label: "Transactions/second" },
-  { value: "99.9%", label: "Uptime guarantee" },
+const stats = [
+  { value: "<1ms", label: "Response Time", description: "Average latency across all regions" },
+  { value: "4000", label: "Requests/sec", description: "Maximum throughput per endpoint" },
+  { value: "2000", label: "TPS Capacity", description: "Transactions per second supported" },
+  { value: "99.9%", label: "Uptime SLA", description: "Guaranteed availability" },
+];
+
+const highlights = [
+  "Instant automatic failover protection",
+  "Smart load balancing across nodes",
+  "Real-time health monitoring 24/7",
+  "DDoS protection included",
+  "Dedicated staked connections",
+  "Priority Discord support",
 ];
 
 const PerformanceSection = () => {
   return (
-    <section id="performance" className="py-24 bg-card border-y border-border">
-      <div className="container mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* Left: Content */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <p className="text-primary font-mono text-sm tracking-wide mb-4">PERFORMANCE</p>
-            <h2 className="text-3xl sm:text-4xl font-bold mb-6">
-              Infrastructure that scales with you
-            </h2>
-            <p className="text-muted-foreground leading-relaxed mb-8 max-w-md">
-              Our globally distributed network spans 3 strategic locations with 700k+ SOL in stake. 
-              Whether you're running a trading bot or building the next DeFi protocol, 
-              we have the capacity you need.
-            </p>
-            
-            {/* Highlights */}
-            <div className="space-y-4">
-              <div className="flex items-start gap-4">
-                <div className="w-1 h-full bg-primary rounded-full" />
-                <div>
-                  <p className="font-medium">Instant failover protection</p>
-                  <p className="text-sm text-muted-foreground">Automatic routing to healthy nodes</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="w-1 h-full bg-primary rounded-full" />
-                <div>
-                  <p className="font-medium">Smart load balancing</p>
-                  <p className="text-sm text-muted-foreground">Requests distributed for optimal performance</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="w-1 h-full bg-primary rounded-full" />
-                <div>
-                  <p className="font-medium">Real-time monitoring</p>
-                  <p className="text-sm text-muted-foreground">24/7 infrastructure health tracking</p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
+    <section id="performance" className="py-24 relative overflow-hidden">
+      {/* Gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-card to-background" />
+      
+      {/* Glowing orbs */}
+      <div className="absolute top-1/3 right-0 w-[500px] h-[500px] rounded-full bg-[#14F195]/15 blur-[120px]" />
+      <div className="absolute bottom-1/3 left-0 w-[400px] h-[400px] rounded-full bg-[#9945FF]/15 blur-[100px]" />
 
-          {/* Right: Metrics grid */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="grid grid-cols-2 gap-4"
-          >
-            {metrics.map((metric, index) => (
-              <div 
-                key={metric.label}
-                className="p-6 rounded-xl bg-background border border-border"
-              >
-                <p className="text-3xl sm:text-4xl font-bold mb-1">{metric.value}</p>
-                <p className="text-sm text-muted-foreground">{metric.label}</p>
+      <div className="container mx-auto px-6 relative z-10">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
+        >
+          <span className="inline-block px-4 py-1.5 rounded-full bg-secondary/10 border border-secondary/20 text-secondary text-sm font-medium mb-4">
+            Performance Metrics
+          </span>
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-black mb-4">
+            <span className="text-gradient-teal">Numbers</span> Don't Lie
+          </h2>
+          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+            Real metrics from our production infrastructure. No asterisks, no exceptions.
+          </p>
+        </motion.div>
+
+        {/* Stats grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-16"
+        >
+          {stats.map((stat, index) => (
+            <div 
+              key={stat.label}
+              className="glass-card rounded-2xl p-6 text-center hover:border-secondary/30 transition-all"
+            >
+              <p className="text-4xl sm:text-5xl font-black text-gradient-omega mb-2">{stat.value}</p>
+              <p className="font-semibold text-foreground mb-1">{stat.label}</p>
+              <p className="text-sm text-muted-foreground">{stat.description}</p>
+            </div>
+          ))}
+        </motion.div>
+
+        {/* Features list */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.2 }}
+          className="glass-card rounded-2xl p-8 max-w-4xl mx-auto glow-omega"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-lg bg-gradient-omega flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-white" />
+            </div>
+            <h3 className="text-xl font-bold">What You Get</h3>
+          </div>
+          
+          <div className="grid sm:grid-cols-2 gap-4">
+            {highlights.map((item) => (
+              <div key={item} className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0">
+                  <Check className="w-4 h-4 text-secondary" />
+                </div>
+                <span className="text-foreground">{item}</span>
               </div>
             ))}
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );
