@@ -14,15 +14,15 @@ const HeroSection = () => {
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
       {/* Animated gradient orbs - signature web3 look */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-[#9945FF]/30 blur-[120px] animate-pulse-glow" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-[#14F195]/20 blur-[100px] animate-pulse-glow" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-[#9945FF]/10 blur-[150px]" />
+        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-[#5B4EE4]/20 blur-[120px] animate-pulse-glow" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-[#F5B5B5]/15 blur-[100px] animate-pulse-glow" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-[#5B4EE4]/8 blur-[150px]" />
       </div>
 
       {/* Grid overlay */}
-      <div className="absolute inset-0 opacity-[0.03]" style={{
-        backgroundImage: `linear-gradient(rgba(153, 69, 255, 0.5) 1px, transparent 1px),
-                         linear-gradient(90deg, rgba(153, 69, 255, 0.5) 1px, transparent 1px)`,
+      <div className="absolute inset-0 opacity-[0.02]" style={{
+        backgroundImage: `linear-gradient(rgba(91, 78, 228, 0.4) 1px, transparent 1px),
+                         linear-gradient(90deg, rgba(91, 78, 228, 0.4) 1px, transparent 1px)`,
         backgroundSize: '50px 50px'
       }} />
 
