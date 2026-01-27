@@ -5,37 +5,37 @@ const features = [
   {
     icon: Zap,
     title: "Sub-Millisecond Speed",
-    description: "Industry-leading response times with optimized routing. Your requests hit the network faster than the competition.",
+    description: "Optimized routing that actually delivers. Fast enough for the bots, reliable enough for production.",
     gradient: "from-[#5B4EE4] to-[#7B6FE8]",
   },
   {
     icon: Shield,
     title: "99.9% Uptime SLA",
-    description: "Enterprise-grade reliability with automatic failover. Your applications stay online when it matters most.",
+    description: "Automatic failover keeps you online. We've been through the worst congestion — still standing.",
     gradient: "from-[#E8A5A5] to-[#D89595]",
   },
   {
     icon: Clock,
     title: "2-Minute Setup",
-    description: "Join Discord, add your IP, start building. No complex configuration, no waiting. Just pure speed.",
+    description: "Join Discord, whitelist your IP, done. No config files, no waiting on approvals.",
     gradient: "from-[#8B7EE8] to-[#A89AEC]",
   },
   {
     icon: Server,
     title: "Dedicated Hardware",
-    description: "Get your own AMD EPYC servers with JITO Shredstream and Yellowstone gRPC. Built for high-frequency trading.",
+    description: "AMD EPYC servers with JITO Shredstream and Yellowstone gRPC. Your own box, your own rules.",
     gradient: "from-[#5B4EE4] to-[#E8A5A5]",
   },
   {
     icon: Globe,
     title: "Global Network",
-    description: "Strategic presence in New York, Frankfurt, and Amsterdam. Smart routing ensures optimal latency worldwide.",
+    description: "Nodes in NYC, Frankfurt, and Amsterdam. Pick the closest, or use all three.",
     gradient: "from-[#9B8FEC] to-[#5B4EE4]",
   },
   {
     icon: Cpu,
     title: "700k+ SOL Staked",
-    description: "Massive stake weight for priority transaction landing. Your transactions get the attention they deserve.",
+    description: "High stake weight = better transaction priority. Land more, miss less.",
     gradient: "from-[#E8A5A5] to-[#8B7EE8]",
   },
 ];
