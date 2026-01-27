@@ -3,8 +3,8 @@ import { Check, TrendingUp } from "lucide-react";
 
 const stats = [
   { value: "<1ms", label: "Response Time", description: "Average latency across all regions" },
-  { value: "4000", label: "Requests/sec", description: "Maximum throughput per endpoint" },
-  { value: "2000", label: "TPS Capacity", description: "Transactions per second supported" },
+  { value: "1000", label: "Requests/sec", description: "Shared server throughput" },
+  { value: "300", label: "TPS Capacity", description: "Transactions per second" },
   { value: "99.9%", label: "Uptime SLA", description: "Guaranteed availability" },
 ];
 
@@ -39,10 +39,13 @@ const PerformanceSection = () => {
             Performance Metrics
           </span>
           <h2 className="text-4xl sm:text-5xl md:text-6xl font-black mb-4">
-            <span className="text-gradient-omega">Numbers</span> Don't Lie
+            <span className="text-gradient-omega">Production</span> Ready
           </h2>
-          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+          <p className="text-muted-foreground text-lg max-w-xl mx-auto mb-2">
             Real metrics from our production infrastructure. No asterisks, no exceptions.
+          </p>
+          <p className="text-sm text-muted-foreground/70">
+            Need higher limits? Dedicated servers offer fully customizable RPS & TPS.
           </p>
         </motion.div>
 
