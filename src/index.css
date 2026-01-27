@@ -8,84 +8,84 @@
 
 @layer base {
   :root {
-    /* Deep dark base like Phantom/Jupiter */
-    --background: 240 15% 3%;
+    /* Softer dark base - not too dark */
+    --background: 240 10% 8%;
     --foreground: 0 0% 98%;
 
-    --card: 240 12% 6%;
+    --card: 240 8% 12%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 240 12% 6%;
+    --popover: 240 8% 12%;
     --popover-foreground: 0 0% 98%;
 
-    /* Solana signature purple */
-    --primary: 270 95% 60%;
+    /* Logo purple - softer, less saturated */
+    --primary: 248 65% 55%;
     --primary-foreground: 0 0% 100%;
 
-    /* Solana signature green/teal */
-    --secondary: 165 100% 45%;
-    --secondary-foreground: 0 0% 0%;
+    /* Logo rose/coral - soft pink accent */
+    --secondary: 10 70% 78%;
+    --secondary-foreground: 0 0% 10%;
 
-    --muted: 240 10% 10%;
-    --muted-foreground: 240 5% 55%;
+    --muted: 240 8% 16%;
+    --muted-foreground: 240 5% 60%;
 
-    /* Accent - electric cyan */
-    --accent: 190 100% 50%;
-    --accent-foreground: 0 0% 0%;
+    /* Accent - soft lavender */
+    --accent: 260 50% 65%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 65% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 10% 12%;
-    --input: 240 10% 12%;
-    --ring: 270 95% 60%;
+    --border: 240 8% 18%;
+    --input: 240 8% 18%;
+    --ring: 248 65% 55%;
 
     --radius: 0.75rem;
 
-    /* Omega brand tokens */
-    --omega-purple: 270 95% 60%;
-    --omega-violet: 280 90% 65%;
-    --omega-teal: 165 100% 45%;
-    --omega-cyan: 190 100% 50%;
+    /* Omega brand tokens - matching logo */
+    --omega-purple: 248 65% 55%;
+    --omega-violet: 260 55% 60%;
+    --omega-rose: 10 70% 78%;
+    --omega-coral: 15 65% 72%;
 
-    --sidebar-background: 240 15% 3%;
+    --sidebar-background: 240 10% 8%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 270 95% 60%;
+    --sidebar-primary: 248 65% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 12% 8%;
+    --sidebar-accent: 240 8% 14%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 240 10% 12%;
-    --sidebar-ring: 270 95% 60%;
+    --sidebar-border: 240 8% 18%;
+    --sidebar-ring: 248 65% 55%;
   }
 
   .dark {
-    --background: 240 15% 3%;
+    --background: 240 10% 8%;
     --foreground: 0 0% 98%;
-    --card: 240 12% 6%;
+    --card: 240 8% 12%;
     --card-foreground: 0 0% 98%;
-    --popover: 240 12% 6%;
+    --popover: 240 8% 12%;
     --popover-foreground: 0 0% 98%;
-    --primary: 270 95% 60%;
+    --primary: 248 65% 55%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 165 100% 45%;
-    --secondary-foreground: 0 0% 0%;
-    --muted: 240 10% 10%;
-    --muted-foreground: 240 5% 55%;
-    --accent: 190 100% 50%;
-    --accent-foreground: 0 0% 0%;
-    --destructive: 0 72% 51%;
+    --secondary: 10 70% 78%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 240 8% 16%;
+    --muted-foreground: 240 5% 60%;
+    --accent: 260 50% 65%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 65% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 10% 12%;
-    --input: 240 10% 12%;
-    --ring: 270 95% 60%;
-    --sidebar-background: 240 15% 3%;
+    --border: 240 8% 18%;
+    --input: 240 8% 18%;
+    --ring: 248 65% 55%;
+    --sidebar-background: 240 10% 8%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 270 95% 60%;
+    --sidebar-primary: 248 65% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 12% 8%;
+    --sidebar-accent: 240 8% 14%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 240 10% 12%;
-    --sidebar-ring: 270 95% 60%;
+    --sidebar-border: 240 8% 18%;
+    --sidebar-ring: 248 65% 55%;
   }
 }
 
@@ -109,36 +109,36 @@
     font-family: 'JetBrains Mono', monospace;
   }
 
-  /* Solana gradient - purple to green */
+  /* Logo gradient - purple to rose */
   .text-gradient-omega {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #9945FF 0%, #14F195 100%);
+    background-image: linear-gradient(135deg, #5B4EE4 0%, #F5B5B5 100%);
   }
 
-  .text-gradient-teal {
+  .text-gradient-rose {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #14F195 0%, #00D4AA 100%);
+    background-image: linear-gradient(135deg, #E8A5A5 0%, #F5C5C5 100%);
   }
 
   .bg-gradient-omega {
-    background: linear-gradient(135deg, #9945FF 0%, #14F195 100%);
+    background: linear-gradient(135deg, #5B4EE4 0%, #E8A5A5 100%);
   }
 
-  .bg-gradient-vibrant {
-    background: linear-gradient(135deg, #9945FF 0%, #19FB9B 50%, #00D4FF 100%);
+  .bg-gradient-soft {
+    background: linear-gradient(135deg, #5B4EE4 0%, #8B7EE8 50%, #F5B5B5 100%);
   }
 
-  /* Glow effects */
+  /* Glow effects - softer */
   .glow-omega {
-    box-shadow: 0 0 40px rgba(153, 69, 255, 0.4), 0 0 80px rgba(20, 241, 149, 0.2);
+    box-shadow: 0 0 40px rgba(91, 78, 228, 0.25), 0 0 80px rgba(245, 181, 181, 0.15);
   }
 
   .glow-omega-sm {
-    box-shadow: 0 0 20px rgba(153, 69, 255, 0.3);
+    box-shadow: 0 0 20px rgba(91, 78, 228, 0.2);
   }
 
-  .glow-teal {
-    box-shadow: 0 0 30px rgba(20, 241, 149, 0.4);
+  .glow-rose {
+    box-shadow: 0 0 30px rgba(245, 181, 181, 0.3);
   }
 
   /* Glass card effect */
@@ -150,7 +150,7 @@
   .gradient-border {
     position: relative;
     background: linear-gradient(var(--background), var(--background)) padding-box,
-                linear-gradient(135deg, #9945FF, #14F195) border-box;
+                linear-gradient(135deg, #5B4EE4, #F5B5B5) border-box;
     border: 1px solid transparent;
   }
 }

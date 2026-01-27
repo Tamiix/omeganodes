@@ -6,37 +6,37 @@ const features = [
     icon: Zap,
     title: "Sub-Millisecond Speed",
     description: "Industry-leading response times with optimized routing. Your requests hit the network faster than the competition.",
-    gradient: "from-[#9945FF] to-[#7B3FE4]",
+    gradient: "from-[#5B4EE4] to-[#7B6FE8]",
   },
   {
     icon: Shield,
     title: "99.9% Uptime SLA",
     description: "Enterprise-grade reliability with automatic failover. Your applications stay online when it matters most.",
-    gradient: "from-[#14F195] to-[#0AC77B]",
+    gradient: "from-[#E8A5A5] to-[#D89595]",
   },
   {
     icon: Clock,
     title: "2-Minute Setup",
     description: "Join Discord, add your IP, start building. No complex configuration, no waiting. Just pure speed.",
-    gradient: "from-[#00D4FF] to-[#0099CC]",
+    gradient: "from-[#8B7EE8] to-[#A89AEC]",
   },
   {
     icon: Server,
     title: "Dedicated Hardware",
     description: "Get your own AMD EPYC servers with JITO Shredstream and Yellowstone gRPC. Built for high-frequency trading.",
-    gradient: "from-[#9945FF] to-[#14F195]",
+    gradient: "from-[#5B4EE4] to-[#E8A5A5]",
   },
   {
     icon: Globe,
     title: "Global Network",
     description: "Strategic presence in New York, Frankfurt, and Amsterdam. Smart routing ensures optimal latency worldwide.",
-    gradient: "from-[#FF6B6B] to-[#9945FF]",
+    gradient: "from-[#9B8FEC] to-[#5B4EE4]",
   },
   {
     icon: Cpu,
     title: "700k+ SOL Staked",
     description: "Massive stake weight for priority transaction landing. Your transactions get the attention they deserve.",
-    gradient: "from-[#14F195] to-[#00D4FF]",
+    gradient: "from-[#E8A5A5] to-[#8B7EE8]",
   },
 ];
 
@@ -44,8 +44,8 @@ const FeaturesSection = () => {
   return (
     <section id="features" className="py-24 relative overflow-hidden">
       {/* Background glow */}
-      <div className="absolute top-1/2 left-0 w-[400px] h-[400px] rounded-full bg-[#9945FF]/10 blur-[120px]" />
-      <div className="absolute bottom-0 right-0 w-[300px] h-[300px] rounded-full bg-[#14F195]/10 blur-[100px]" />
+      <div className="absolute top-1/2 left-0 w-[400px] h-[400px] rounded-full bg-[#5B4EE4]/8 blur-[120px]" />
+      <div className="absolute bottom-0 right-0 w-[300px] h-[300px] rounded-full bg-[#F5B5B5]/8 blur-[100px]" />
 
       <div className="container mx-auto px-6 relative z-10">
         {/* Header */}
