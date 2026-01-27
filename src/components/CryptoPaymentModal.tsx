@@ -467,7 +467,10 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
                         <span className="font-semibold">⚡ swQoS Service</span>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        $350 per 100K stake (up to 1M)
+                        $350/mo per 100K stake (up to 1M)
+                      </p>
+                      <p className="text-xs text-muted-foreground/70 mt-0.5">
+                        Want a longer term? Open a ticket for discounts.
                       </p>
                     </div>
                     <div className="group relative">
@@ -510,7 +513,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
                   </div>
                   {swqosTier !== null && (
                     <div className="mt-3 text-sm text-center text-secondary font-medium">
-                      +${SWQOS_TIERS[swqosTier].price.toLocaleString()} one-time
+                      +${SWQOS_TIERS[swqosTier].price.toLocaleString()}/mo
                     </div>
                   )}
                 </div>
@@ -537,7 +540,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
                 {swqosTier !== null && (
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-muted-foreground">swQoS ({SWQOS_TIERS[swqosTier].label} stake)</span>
-                    <span className="text-sm font-medium">+{formatPrice(SWQOS_TIERS[swqosTier].price)}</span>
+                    <span className="text-sm font-medium">+{formatPrice(SWQOS_TIERS[swqosTier].price)}/mo</span>
                   </div>
                 )}
                 {appliedDiscount && (
