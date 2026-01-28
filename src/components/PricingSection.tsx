@@ -520,7 +520,7 @@ const PricingSection = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold">Rent Access</h3>
-                      <p className="text-sm text-muted-foreground">Earn by sharing unused capacity</p>
+                      <p className="text-sm text-muted-foreground">Earn by sharing unused endpoints</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
