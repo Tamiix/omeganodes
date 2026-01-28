@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_codes: {
+        Row: {
+          access_expires_at: string | null
+          code: string
+          created_at: string
+          created_by: string
+          duration_hours: number
+          duration_type: string
+          id: string
+          is_redeemed: boolean
+          redeemed_at: string | null
+          redeemed_by: string | null
+        }
+        Insert: {
+          access_expires_at?: string | null
+          code: string
+          created_at?: string
+          created_by: string
+          duration_hours: number
+          duration_type: string
+          id?: string
+          is_redeemed?: boolean
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+        }
+        Update: {
+          access_expires_at?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string
+          duration_hours?: number
+          duration_type?: string
+          id?: string
+          is_redeemed?: boolean
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           id: string
