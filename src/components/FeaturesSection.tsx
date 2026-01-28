@@ -62,7 +62,7 @@ const FeaturesSection = () => {
             Built for <span className="text-gradient-omega">Builders</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-            Enterprise infrastructure that scales from your first dApp to millions of users.
+            We offer top tier gRPC & txs service. Enterprise infrastructure that scales.
           </p>
         </motion.div>
 
