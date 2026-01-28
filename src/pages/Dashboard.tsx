@@ -21,6 +21,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import CurrencySelector from '@/components/CurrencySelector';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import RedeemAccessCode from '@/components/RedeemAccessCode';
 
 interface Order {
   id: string;
@@ -165,6 +166,7 @@ const Dashboard = () => {
                 </p>
               </div>
             </div>
+            <RedeemAccessCode />
           </div>
         </div>
       </header>
