@@ -566,7 +566,7 @@ const PricingSection = () => {
                     <div className="p-5 rounded-2xl bg-card/50 backdrop-blur border border-border">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 rounded-xl bg-gradient-omega flex items-center justify-center">
-                          <span className="text-lg">🔥</span>
+                          <Zap className="w-5 h-5 text-white" />
                         </div>
                         <h3 className="font-semibold">Private Shreds</h3>
                       </div>
