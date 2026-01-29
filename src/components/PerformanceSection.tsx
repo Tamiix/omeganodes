@@ -76,11 +76,13 @@ const PerformanceSection = () => {
           transition={{ delay: 0.2 }}
           className="glass-card rounded-2xl p-8 max-w-4xl mx-auto glow-omega"
         >
-          <div className="flex items-center gap-3 mb-6 ml-2">
-            <div className="w-10 h-10 rounded-lg bg-gradient-omega flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-white" />
+          <div className="flex justify-center mb-6">
+            <div className="flex items-center gap-3 -translate-x-8">
+              <div className="w-10 h-10 rounded-lg bg-gradient-omega flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="text-xl font-bold">What You Get</h3>
             </div>
-            <h3 className="text-xl font-bold">What You Get</h3>
           </div>
           
           <div className="grid sm:grid-cols-2 gap-4">

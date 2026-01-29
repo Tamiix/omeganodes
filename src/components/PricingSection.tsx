@@ -387,27 +387,28 @@ const PricingSection = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="mb-16"
         >
-          <div className="relative inline-block">
-            {/* Decorative elements */}
-            <div className="absolute -top-4 -left-8 w-16 h-16 rounded-full bg-gradient-omega opacity-20 blur-xl" />
-            <div className="absolute -bottom-2 -right-6 w-12 h-12 rounded-full bg-secondary/30 blur-lg" />
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8 max-w-4xl mx-auto">
+            {/* Left side - Main heading */}
+            <div className="text-center md:text-left">
+              <h2 className="text-4xl sm:text-5xl md:text-6xl font-black">
+                Choose Your <span className="text-gradient-omega">Plan</span>
+              </h2>
+            </div>
             
-            {/* Main heading */}
-            <h2 className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight relative">
-              <span className="block text-foreground">Choose Your</span>
-              <span className="block text-gradient-omega mt-1">Plan</span>
-            </h2>
-          </div>
-          
-          {/* Subtitle with decorative line */}
-          <div className="mt-8 flex items-center justify-center gap-4">
-            <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary/50" />
-            <p className="text-muted-foreground text-lg">
-              No hidden fees • Enterprise infrastructure
-            </p>
-            <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary/50" />
+            {/* Right side - Description card */}
+            <div className="glass-card px-6 py-4 rounded-2xl max-w-xs">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-omega flex items-center justify-center flex-shrink-0">
+                  <Check className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">No hidden fees</p>
+                  <p className="text-sm text-muted-foreground">Enterprise infrastructure at your fingertips</p>
+                </div>
+              </div>
+            </div>
           </div>
         </motion.div>
 
