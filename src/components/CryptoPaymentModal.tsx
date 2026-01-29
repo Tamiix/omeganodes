@@ -51,7 +51,7 @@ const SWQOS_TIERS = [
   { stake: 1000000, label: "1M", price: 3800 },
 ];
 
-const SHREDS_PRICE = 5435; // USD per month (~5000 EUR)
+const SHREDS_PRICE = 800; // USD per month
 
 type PaymentStep = "select" | "processing" | "success" | "failed" | "partial";
 
@@ -415,7 +415,8 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
                 </div>
               )}
 
-              {/* Add-ons Section - Show in both normal and test mode */}
+              {/* Add-ons Section - Only show for dedicated servers */}
+              {serverType === "dedicated" && (
               <div className="space-y-4">
                 <label className="text-sm font-medium">Add-ons (Optional)</label>
                 
@@ -518,6 +519,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
                   )}
                 </div>
               </div>
+              )}
 
               {/* Order Summary */}
               <div className="p-4 rounded-lg bg-muted/30 border border-border">
