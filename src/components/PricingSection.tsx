@@ -387,28 +387,40 @@ const PricingSection = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-16"
+          className="text-center mb-16"
         >
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8 max-w-4xl mx-auto">
-            {/* Left side - Main heading */}
-            <div className="text-center md:text-left">
-              <h2 className="text-4xl sm:text-5xl md:text-6xl font-black">
-                Choose Your <span className="text-gradient-omega">Plan</span>
-              </h2>
-            </div>
-            
-            {/* Right side - Description card */}
-            <div className="glass-card px-6 py-4 rounded-2xl max-w-xs">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-omega flex items-center justify-center flex-shrink-0">
-                  <Check className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground">No hidden fees</p>
-                  <p className="text-sm text-muted-foreground">Enterprise infrastructure at your fingertips</p>
-                </div>
+          {/* Icon cluster */}
+          <div className="flex justify-center mb-6">
+            <div className="relative">
+              <motion.div 
+                className="w-16 h-16 rounded-2xl bg-gradient-omega flex items-center justify-center"
+                animate={{ rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Cpu className="w-8 h-8 text-white" />
+              </motion.div>
+              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-secondary flex items-center justify-center">
+                <Check className="w-3 h-3 text-secondary-foreground" />
               </div>
             </div>
+          </div>
+          
+          {/* Heading */}
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-black mb-4">
+            Choose Your <span className="text-gradient-omega">Plan</span>
+          </h2>
+          
+          {/* Subtitle pills */}
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <span className="px-4 py-1.5 rounded-full bg-card border border-border text-sm text-muted-foreground">
+              No hidden fees
+            </span>
+            <span className="px-4 py-1.5 rounded-full bg-card border border-border text-sm text-muted-foreground">
+              Cancel anytime
+            </span>
+            <span className="px-4 py-1.5 rounded-full bg-card border border-border text-sm text-muted-foreground">
+              Enterprise ready
+            </span>
           </div>
         </motion.div>
 
