@@ -120,6 +120,7 @@ export type Database = {
       }
       discount_codes: {
         Row: {
+          applicable_to: string
           code: string
           created_at: string
           created_by: string
@@ -133,6 +134,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          applicable_to?: string
           code: string
           created_at?: string
           created_by: string
@@ -146,6 +148,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          applicable_to?: string
           code?: string
           created_at?: string
           created_by?: string

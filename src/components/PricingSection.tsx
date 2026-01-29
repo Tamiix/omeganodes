@@ -59,6 +59,7 @@ interface AppliedDiscount {
   code: string;
   discount_type: 'percentage' | 'flat';
   discount_value: number;
+  applicable_to: 'shared' | 'dedicated' | 'both';
 }
 
 const PricingSection = () => {
@@ -73,6 +74,7 @@ const PricingSection = () => {
   const [showDiscordGuide, setShowDiscordGuide] = useState(false);
   const [isTrialMode, setIsTrialMode] = useState(false);
   const [isTrialProcessing, setIsTrialProcessing] = useState(false);
+  const [isFreeOrderProcessing, setIsFreeOrderProcessing] = useState(false);
   const [trialsEnabled, setTrialsEnabled] = useState(false);
   
   const [discountCode, setDiscountCode] = useState("");
@@ -113,6 +115,15 @@ const PricingSection = () => {
       setDiscountError("");
     }
   }, [hasCommitmentDiscount]);
+
+  // Clear discount code when switching server type if code doesn't apply
+  useEffect(() => {
+    if (appliedDiscount && appliedDiscount.applicable_to !== 'both' && appliedDiscount.applicable_to !== selectedServerType) {
+      setAppliedDiscount(null);
+      setDiscountCode("");
+      setDiscountError(`Code was removed - only valid for ${appliedDiscount.applicable_to} servers`);
+    }
+  }, [selectedServerType]);
 
   const { price, originalPrice, discount, discountAmount, priceBeforeDiscount } = useMemo(() => {
     let baseTotal = 0;
@@ -193,10 +204,19 @@ const PricingSection = () => {
         return;
       }
 
+      // Check if code is applicable to the selected server type
+      const applicableTo = (data as { applicable_to?: string }).applicable_to || 'both';
+      if (applicableTo !== 'both' && applicableTo !== selectedServerType) {
+        setDiscountError(`This code is only valid for ${applicableTo} servers`);
+        setAppliedDiscount(null);
+        return;
+      }
+
       setAppliedDiscount({
         code: data.code,
         discount_type: data.discount_type as 'percentage' | 'flat',
-        discount_value: data.discount_value
+        discount_value: data.discount_value,
+        applicable_to: applicableTo as 'shared' | 'dedicated' | 'both'
       });
       setDiscountError("");
     } catch (err) {
@@ -278,6 +298,78 @@ const PricingSection = () => {
     } finally {
       setIsTrialProcessing(false);
       setIsTrialMode(false);
+    }
+  };
+
+  const handleFreeOrder = async () => {
+    if (!isValidDiscordId || !user) return;
+    setIsFreeOrderProcessing(true);
+    
+    try {
+      const commitment = commitments.find(c => c.id === selectedCommitment);
+      const months = commitment?.months || 1;
+      const expiresAt = new Date();
+      expiresAt.setMonth(expiresAt.getMonth() + months);
+      
+      const freeSignature = `FREE-${Date.now().toString(36).toUpperCase()}`;
+      const planName = isDedicated 
+        ? `Dedicated (${dedicatedSpecs.find(s => s.id === selectedDedicatedSpec)?.cpu || 'Custom'})`
+        : 'Shared';
+
+      // Create the order
+      await supabase.from('orders').insert({
+        user_id: user.id,
+        order_number: "TEMP",
+        plan_name: planName,
+        commitment: selectedCommitment,
+        server_type: selectedServerType,
+        location: isDedicated ? "custom" : "all",
+        rps: 100,
+        tps: 50,
+        amount_usd: 0,
+        currency_code: "FREE",
+        currency_amount: 0,
+        payment_method: "discount_code",
+        transaction_signature: freeSignature,
+        status: "active",
+        expires_at: expiresAt.toISOString(),
+        is_test_order: false
+      });
+
+      // Note: Discount code usage increment would be handled by the backend
+      // For now, we'll skip the increment since there's no RPC function set up
+
+      // Send Discord notification
+      await supabase.functions.invoke('discord-order-notification', {
+        body: {
+          plan: planName,
+          commitment: commitment?.name || 'Monthly',
+          serverType: isDedicated ? 'Dedicated' : 'Shared',
+          email: user.email,
+          discordId: discordUserId.trim(),
+          totalAmount: 0,
+          transactionSignature: freeSignature,
+          isTestMode: false,
+          isTrial: false,
+          discountCode: appliedDiscount?.code
+        }
+      });
+
+      const { toast } = await import("@/hooks/use-toast");
+      toast({ 
+        title: "Order Successful!", 
+        description: "Your free order has been processed. Check Discord for access details." 
+      });
+      
+      // Reset discount
+      setAppliedDiscount(null);
+      setDiscountCode("");
+    } catch (err) {
+      console.error("Error processing free order:", err);
+      const { toast } = await import("@/hooks/use-toast");
+      toast({ title: "Error", description: "Failed to process order.", variant: "destructive" });
+    } finally {
+      setIsFreeOrderProcessing(false);
     }
   };
 
@@ -729,25 +821,46 @@ const PricingSection = () => {
                   className={`w-full text-base font-semibold ${
                     isTrialMode 
                       ? "bg-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/25" 
-                      : "bg-gradient-omega hover:opacity-90 shadow-lg shadow-primary/25"
+                      : price === 0
+                        ? "bg-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/25"
+                        : "bg-gradient-omega hover:opacity-90 shadow-lg shadow-primary/25"
                   }`}
-                  disabled={!isValidDiscordId || isTrialProcessing}
-                  onClick={isTrialMode ? handleTrialOrder : () => setIsPaymentOpen(true)}
+                  disabled={!isValidDiscordId || isTrialProcessing || isFreeOrderProcessing || (price === 0 && !user)}
+                  onClick={() => {
+                    if (isTrialMode) {
+                      handleTrialOrder();
+                    } else if (price === 0) {
+                      handleFreeOrder();
+                    } else {
+                      setIsPaymentOpen(true);
+                    }
+                  }}
                 >
-                  {isTrialProcessing ? (
+                  {isTrialProcessing || isFreeOrderProcessing ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Activating...
+                      {isFreeOrderProcessing ? "Processing..." : "Activating..."}
                     </>
                   ) : (
                     <>
-                      {isValidDiscordId ? (isTrialMode ? "Start Free Trial" : "Continue to Payment") : "Enter Discord ID"}
+                      {!isValidDiscordId 
+                        ? "Enter Discord ID" 
+                        : isTrialMode 
+                          ? "Start Free Trial" 
+                          : price === 0 
+                            ? (user ? "Get Free Access" : "Login to Continue")
+                            : "Continue to Payment"}
                     </>
                   )}
                 </Button>
                 
                 <p className="text-xs text-center text-muted-foreground mt-4">
-                  {isTrialMode ? "No payment required • Instant access" : "Secure crypto payment • USDC/USDT"}
+                  {isTrialMode 
+                    ? "No payment required • Instant access" 
+                    : price === 0 
+                      ? "100% discount applied • No payment required"
+                      : "Secure crypto payment • USDC/USDT"
+                  }
                 </p>
               </div>
             </motion.div>

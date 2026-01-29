@@ -31,6 +31,7 @@ interface DiscountCode {
   current_uses: number;
   is_active: boolean;
   created_at: string;
+  applicable_to: 'shared' | 'dedicated' | 'both';
 }
 
 const DiscountCodeManager = () => {
@@ -47,6 +48,7 @@ const DiscountCodeManager = () => {
   const [formDiscountValue, setFormDiscountValue] = useState('');
   const [formExpiresAt, setFormExpiresAt] = useState('');
   const [formMaxUses, setFormMaxUses] = useState('');
+  const [formApplicableTo, setFormApplicableTo] = useState<'shared' | 'dedicated' | 'both'>('both');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -81,6 +83,7 @@ const DiscountCodeManager = () => {
     setFormDiscountValue('');
     setFormExpiresAt('');
     setFormMaxUses('');
+    setFormApplicableTo('both');
     setEditingCode(null);
   };
 
@@ -96,6 +99,7 @@ const DiscountCodeManager = () => {
     setFormDiscountValue(code.discount_value.toString());
     setFormExpiresAt(code.expires_at ? new Date(code.expires_at).toISOString().split('T')[0] : '');
     setFormMaxUses(code.max_uses?.toString() || '');
+    setFormApplicableTo(code.applicable_to || 'both');
     setIsDialogOpen(true);
   };
 
@@ -136,6 +140,7 @@ const DiscountCodeManager = () => {
         discount_value: discountValue,
         expires_at: formExpiresAt ? new Date(formExpiresAt).toISOString() : null,
         max_uses: formMaxUses ? parseInt(formMaxUses) : null,
+        applicable_to: formApplicableTo,
       };
 
       if (editingCode) {
@@ -327,6 +332,17 @@ const DiscountCodeManager = () => {
                         )}
                       </div>
 
+                      {/* Plan Badge */}
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        code.applicable_to === 'shared' 
+                          ? 'bg-blue-500/10 text-blue-500' 
+                          : code.applicable_to === 'dedicated' 
+                            ? 'bg-purple-500/10 text-purple-500'
+                            : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {code.applicable_to === 'shared' ? 'Shared Only' : code.applicable_to === 'dedicated' ? 'Dedicated Only' : 'All Plans'}
+                      </span>
+
                       {/* Status Badges */}
                       <div className="flex items-center gap-2">
                         {!code.is_active && (
@@ -503,6 +519,32 @@ const DiscountCodeManager = () => {
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Leave empty for unlimited uses
+              </p>
+            </div>
+
+            {/* Applicable To */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Applicable To *
+              </label>
+              <Select value={formApplicableTo} onValueChange={(v) => setFormApplicableTo(v as 'shared' | 'dedicated' | 'both')}>
+                <SelectTrigger className="bg-muted/30 border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="both">
+                    All Plans (Shared & Dedicated)
+                  </SelectItem>
+                  <SelectItem value="shared">
+                    Shared Only
+                  </SelectItem>
+                  <SelectItem value="dedicated">
+                    Dedicated Only
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Which server types can use this code
               </p>
             </div>
           </div>
