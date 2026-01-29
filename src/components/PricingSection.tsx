@@ -447,16 +447,83 @@ const PricingSection = () => {
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="max-w-5xl mx-auto">
-          <div className="grid lg:grid-cols-5 gap-8">
+        {/* Main Content - New unified design */}
+        <div className="max-w-6xl mx-auto">
+          {/* Top row: Billing + Price side by side */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="glass-card rounded-3xl p-8 mb-6 glow-omega"
+          >
+            <div className="grid lg:grid-cols-2 gap-8 items-center">
+              {/* Left: Billing Period */}
+              <div>
+                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-primary" />
+                  Billing Period
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {commitments.map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => setSelectedCommitment(c.id)}
+                      className={`relative py-4 px-4 rounded-xl text-center transition-all ${
+                        selectedCommitment === c.id
+                          ? "bg-gradient-omega text-white shadow-lg shadow-primary/25"
+                          : "bg-card border border-border hover:border-primary/30"
+                      }`}
+                    >
+                      <div className="font-semibold">{c.name}</div>
+                      {c.label && (
+                        <div className={`text-xs mt-1 ${
+                          selectedCommitment === c.id ? "text-white/80" : "text-secondary font-semibold"
+                        }`}>{c.label}</div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Right: Price Display */}
+              <div className="text-center lg:text-right">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 mb-3">
+                  <span className="text-xs font-semibold text-primary uppercase tracking-wider">
+                    {isDedicated ? "Dedicated Server" : "Shared Infrastructure"}
+                  </span>
+                </div>
+                {isTrialMode ? (
+                  <div>
+                    <div className="text-xl text-muted-foreground line-through">{formatPrice(300)}</div>
+                    <div className="text-6xl font-black text-gradient-omega">$0</div>
+                    <p className="text-secondary font-semibold mt-1">30-minute free trial</p>
+                  </div>
+                ) : (
+                  <div>
+                    {(discount > 0 || appliedDiscount) && (
+                      <div className="text-xl text-muted-foreground line-through">
+                        {formatPrice(appliedDiscount ? priceBeforeDiscount : originalPrice)}
+                      </div>
+                    )}
+                    <div className="flex items-baseline justify-center lg:justify-end gap-1">
+                      <span className="text-6xl font-black text-gradient-omega">{formatPrice(price)}</span>
+                      <span className="text-xl text-muted-foreground">/mo</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Bottom grid: Options + Features + Action */}
+          <div className="grid lg:grid-cols-3 gap-6">
             
-            {/* Left: Options */}
+            {/* Left Column: Options */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="lg:col-span-3 space-y-4"
+              className="lg:col-span-2 space-y-4"
             >
               {/* Free Trial - Shared Only (only show if trials are enabled) */}
               {!isDedicated && trialsEnabled && (
@@ -614,32 +681,6 @@ const PricingSection = () => {
                 )}
               </AnimatePresence>
 
-              {/* Billing Period */}
-              <div className="p-5 rounded-2xl bg-card/50 backdrop-blur border border-border">
-                <h3 className="font-semibold mb-4">Billing Period</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {commitments.map((c) => (
-                    <button
-                      key={c.id}
-                      onClick={() => setSelectedCommitment(c.id)}
-                      className={`relative py-3 px-3 rounded-xl text-center transition-all ${
-                        selectedCommitment === c.id
-                          ? "bg-gradient-omega text-white shadow-md"
-                          : "bg-muted/30 hover:bg-muted/50 text-foreground"
-                      }`}
-                    >
-                      <div className="font-medium text-sm">{c.name}</div>
-                      {c.label && (
-                        <div className={`text-xs mt-0.5 ${
-                          selectedCommitment === c.id ? "text-white/80" : "text-secondary font-medium"
-                        }`}>{c.label}</div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Rent Access */}
               <div 
                 onClick={() => setRentAccessEnabled(!rentAccessEnabled)}
                 className={`p-5 rounded-2xl border-2 cursor-pointer transition-all hover:shadow-lg ${
@@ -738,81 +779,37 @@ const PricingSection = () => {
               )}
             </motion.div>
 
-            {/* Right: Summary Card */}
+            {/* Right: Action Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="lg:col-span-2"
+              className="lg:col-span-1"
             >
-              <div className="sticky top-24 p-6 rounded-2xl bg-gradient-to-b from-card to-card/80 backdrop-blur border border-border shadow-xl">
-                {/* Price Display */}
-                <div className="text-center pb-6 mb-6 border-b border-border">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 mb-4">
-                    <span className="text-xs font-medium text-primary">
-                      {isDedicated ? "Dedicated Server" : "Shared Infrastructure"}
-                    </span>
+              <div className="sticky top-24 space-y-4">
+                {/* Features Card */}
+                <div className="p-5 rounded-2xl bg-card border border-border">
+                  <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">What's Included</h4>
+                  <div className="space-y-3">
+                    {(isDedicated ? dedicatedFeatures : sharedFeatures).map((feature, i) => (
+                      <div key={i} className="flex items-start gap-3">
+                        <Check className="w-4 h-4 text-secondary shrink-0 mt-0.5" />
+                        <span className="text-sm">{feature}</span>
+                      </div>
+                    ))}
                   </div>
-                  
-                  {isTrialMode ? (
-                    <>
-                      <div className="text-2xl text-muted-foreground line-through mb-1">{formatPrice(300)}</div>
-                      <div className="text-5xl font-bold text-gradient-omega">$0</div>
-                      <p className="text-sm text-secondary mt-2 font-medium">30-minute free trial</p>
-                    </>
-                  ) : (
-                    <>
-                      {(discount > 0 || appliedDiscount) && (
-                        <div className="text-xl text-muted-foreground line-through mb-1">
-                          {formatPrice(appliedDiscount ? priceBeforeDiscount : originalPrice)}
-                        </div>
-                      )}
-                      <div className="flex items-baseline justify-center gap-1">
-                        <span className="text-5xl font-bold text-gradient-omega">{formatPrice(price)}</span>
-                        <span className="text-muted-foreground">/mo</span>
-                      </div>
-                      {discount > 0 && !appliedDiscount && (
-                        <div className="inline-flex items-center gap-1 mt-3 px-3 py-1 rounded-full bg-secondary/10">
-                          <Sparkles className="w-3 h-3 text-secondary" />
-                          <span className="text-sm text-secondary font-medium">
-                            Saving {formatPrice(originalPrice - price)}/month
-                          </span>
-                        </div>
-                      )}
-                      {appliedDiscount && (
-                        <div className="inline-flex items-center gap-1 mt-3 px-3 py-1 rounded-full bg-secondary/10">
-                          <Tag className="w-3 h-3 text-secondary" />
-                          <span className="text-sm text-secondary font-medium">
-                            Code saves {formatPrice(discountAmount)}/month
-                          </span>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-
-                {/* Features */}
-                <div className="space-y-3 mb-6">
-                  {(isDedicated ? dedicatedFeatures : sharedFeatures).map((feature, i) => (
-                    <div key={i} className="flex items-start gap-3">
-                      <div className="w-5 h-5 rounded-full bg-gradient-omega flex items-center justify-center shrink-0 mt-0.5">
-                        <Check className="w-3 h-3 text-white" />
-                      </div>
-                      <span className="text-sm text-muted-foreground">{feature}</span>
-                    </div>
-                  ))}
                 </div>
 
                 {/* Regions */}
                 {!isDedicated && (
-                  <div className="p-3 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/10 mb-6 text-center">
+                  <div className="p-3 rounded-xl bg-muted/30 border border-border mt-4 text-center">
                     <span className="text-sm font-medium">🇺🇸 NY • 🇩🇪 Frankfurt • 🇳🇱 Amsterdam</span>
                   </div>
                 )}
 
-                {/* Discord ID Input */}
-                <div className="mb-5">
+                {/* Discord ID Input Card */}
+                <div className="p-5 rounded-2xl bg-card border border-border mt-4">
                   <label className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-2">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="#5865F2">
                       <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.36-.698.772-1.362 1.225-1.993a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.12-.098.246-.198.373-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
@@ -863,7 +860,7 @@ const PricingSection = () => {
                 {/* CTA Button */}
                 <Button
                   size="lg"
-                  className={`w-full text-base font-semibold ${
+                  className={`w-full text-base font-semibold mt-4 ${
                     isTrialMode 
                       ? "bg-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/25" 
                       : price === 0
@@ -899,7 +896,7 @@ const PricingSection = () => {
                   )}
                 </Button>
                 
-                <p className="text-xs text-center text-muted-foreground mt-4">
+                <p className="text-xs text-center text-muted-foreground mt-3">
                   {isTrialMode 
                     ? "No payment required • Instant access" 
                     : price === 0 
