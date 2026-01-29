@@ -19,15 +19,13 @@ const dedicatedSpecs = [
     id: "epyc-9354p", 
     cpu: "AMD EPYC 9354p", 
     memory: "1024GB RAM", 
-    originalPrice: 2700,
-    price: Math.round(2700 * 0.9)
+    price: 2700
   },
   { 
     id: "epyc-9374f", 
     cpu: "AMD EPYC 9374F", 
     memory: "1024GB RAM", 
-    originalPrice: 2900,
-    price: Math.round(2900 * 0.9)
+    price: 2900
   },
 ];
 
@@ -503,10 +501,7 @@ const PricingSection = () => {
                         <div className="w-10 h-10 rounded-xl bg-gradient-omega flex items-center justify-center">
                           <Cpu className="w-5 h-5 text-white" />
                         </div>
-                        <div>
-                          <h3 className="font-semibold">Hardware</h3>
-                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">10% launch discount</span>
-                        </div>
+                        <h3 className="font-semibold">Hardware</h3>
                       </div>
                       <div className="space-y-2">
                         {dedicatedSpecs.map((spec) => (
@@ -524,8 +519,7 @@ const PricingSection = () => {
                               <p className="text-sm text-muted-foreground">{spec.memory}</p>
                             </div>
                             <div className="text-right">
-                              <span className="text-xs text-muted-foreground line-through">${spec.originalPrice}</span>
-                              <span className="text-xl font-bold text-primary ml-2">${spec.price}</span>
+                              <span className="text-xl font-bold text-primary">${spec.price}</span>
                               <span className="text-sm text-muted-foreground">/mo</span>
                             </div>
                           </button>
