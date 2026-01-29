@@ -325,6 +325,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      validate_discount_code: {
+        Args: { code_to_validate: string; server_type: string }
+        Returns: {
+          applicable_to: string
+          code: string
+          discount_type: string
+          discount_value: number
+          error_message: string
+          is_valid: boolean
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
