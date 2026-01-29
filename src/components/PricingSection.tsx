@@ -154,13 +154,14 @@ const PricingSection = () => {
       beforeDiscount = basePrice;
     }
 
-    const rentCost = rentAccessEnabled ? Math.round((serverPrice + addOnsPrice) * 0.10) : 0;
+    const rentPercent = isDedicated ? 0.20 : 0.10;
+    const rentCost = rentAccessEnabled ? Math.round((serverPrice + addOnsPrice) * rentPercent) : 0;
     const totalBeforeCodeDiscount = serverPrice + addOnsPrice + rentCost;
-    const finalOriginal = rentAccessEnabled ? Math.round(beforeDiscount * 1.10) : beforeDiscount;
+    const finalOriginal = rentAccessEnabled ? Math.round(beforeDiscount * (1 + rentPercent)) : beforeDiscount;
 
     // Discount codes only apply to server price, not add-ons
     let codeDiscountAmount = 0;
-    let discountableAmount = serverPrice + (rentAccessEnabled ? Math.round(serverPrice * 0.10) : 0);
+    let discountableAmount = serverPrice + (rentAccessEnabled ? Math.round(serverPrice * rentPercent) : 0);
     
     if (appliedDiscount) {
       if (appliedDiscount.discount_type === 'percentage') {
@@ -697,12 +698,16 @@ const PricingSection = () => {
                       <Zap className={`w-5 h-5 ${rentAccessEnabled ? "text-white" : "text-primary"}`} />
                     </div>
                     <div>
-                      <h3 className="font-semibold">Rent Access</h3>
-                      <p className="text-sm text-muted-foreground">Earn by sharing unused endpoints</p>
+                      <h3 className="font-semibold">{isDedicated ? "Earn By Sharing" : "Rent Access"}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {isDedicated ? "Your Endpoint" : "Earn by sharing unused endpoints"}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">+10%</span>
+                    <span className="text-sm font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                      +{isDedicated ? "20" : "10"}%
+                    </span>
                     <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
                       rentAccessEnabled ? "border-primary bg-primary" : "border-muted-foreground/30"
                     }`}>
