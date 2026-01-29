@@ -125,7 +125,8 @@ const PricingSection = () => {
   }, [selectedServerType]);
 
   const { price, originalPrice, discount, discountAmount, priceBeforeDiscount } = useMemo(() => {
-    let baseTotal = 0;
+    let serverPrice = 0;
+    let addOnsPrice = 0;
     let beforeDiscount = 0;
     let discountPercent = 0;
 
@@ -138,38 +139,45 @@ const PricingSection = () => {
       const shredsAddition = privateShredsEnabled ? 800 : 0;
       const commitment = commitments.find(c => c.id === selectedCommitment);
       discountPercent = commitment?.discount || 0;
-      const discountedServerPrice = Math.round(basePrice * (1 - discountPercent));
-      baseTotal = Math.round(discountedServerPrice + stakeAddition + shredsAddition);
+      
+      // Server price with commitment discount
+      serverPrice = Math.round(basePrice * (1 - discountPercent));
+      // Add-ons are NOT discounted by commitment or discount codes
+      addOnsPrice = stakeAddition + shredsAddition;
       beforeDiscount = basePrice + (additionalStakePackages * 350) + shredsAddition;
     } else {
       const basePrice = 300;
       const commitment = commitments.find(c => c.id === selectedCommitment);
       discountPercent = commitment?.discount || 0;
-      baseTotal = Math.round(basePrice * (1 - discountPercent));
+      serverPrice = Math.round(basePrice * (1 - discountPercent));
+      addOnsPrice = 0;
       beforeDiscount = basePrice;
     }
 
-    const rentCost = rentAccessEnabled ? Math.round(baseTotal * 0.15) : 0;
-    let finalPrice = baseTotal + rentCost;
-    const priceBeforeCodeDiscount = finalPrice;
+    const rentCost = rentAccessEnabled ? Math.round((serverPrice + addOnsPrice) * 0.15) : 0;
+    const totalBeforeCodeDiscount = serverPrice + addOnsPrice + rentCost;
     const finalOriginal = rentAccessEnabled ? Math.round(beforeDiscount * 1.15) : beforeDiscount;
 
+    // Discount codes only apply to server price, not add-ons
     let codeDiscountAmount = 0;
+    let discountableAmount = serverPrice + (rentAccessEnabled ? Math.round(serverPrice * 0.15) : 0);
+    
     if (appliedDiscount) {
       if (appliedDiscount.discount_type === 'percentage') {
-        codeDiscountAmount = Math.round(finalPrice * (appliedDiscount.discount_value / 100));
+        codeDiscountAmount = Math.round(discountableAmount * (appliedDiscount.discount_value / 100));
       } else {
-        codeDiscountAmount = Math.min(appliedDiscount.discount_value, finalPrice);
+        codeDiscountAmount = Math.min(appliedDiscount.discount_value, discountableAmount);
       }
-      finalPrice = Math.max(0, finalPrice - codeDiscountAmount);
     }
+    
+    const finalPrice = Math.max(0, totalBeforeCodeDiscount - codeDiscountAmount);
 
     return { 
       price: finalPrice, 
       originalPrice: finalOriginal, 
       discount: discountPercent,
       discountAmount: codeDiscountAmount,
-      priceBeforeDiscount: priceBeforeCodeDiscount
+      priceBeforeDiscount: totalBeforeCodeDiscount
     };
   }, [selectedCommitment, selectedServerType, selectedDedicatedSpec, additionalStakePackages, privateShredsEnabled, isDedicated, rentAccessEnabled, appliedDiscount]);
 
