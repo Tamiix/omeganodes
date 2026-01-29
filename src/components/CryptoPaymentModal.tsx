@@ -24,6 +24,8 @@ interface CryptoPaymentModalProps {
   isTestMode?: boolean;
   discordUserId?: string;
   appliedDiscount?: AppliedDiscount | null;
+  includeShredsFromPricing?: boolean;
+  additionalStakePackages?: number;
 }
 
 const PRODUCTION_WALLET = "8b6cCUhEYL2B7UMC15phYkf9y9GEs3cUV2UQ4zECHroA";
@@ -55,12 +57,13 @@ const SHREDS_PRICE = 800; // USD per month
 
 type PaymentStep = "select" | "processing" | "success" | "failed" | "partial";
 
-const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tps = 50, serverType = "shared", rentAccessEnabled = false, isTestMode = false, discordUserId = "", appliedDiscount = null }: CryptoPaymentModalProps) => {
+const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tps = 50, serverType = "shared", rentAccessEnabled = false, isTestMode = false, discordUserId = "", appliedDiscount = null, includeShredsFromPricing = false, additionalStakePackages = 0 }: CryptoPaymentModalProps) => {
   const [selectedCrypto, setSelectedCrypto] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [paymentStep, setPaymentStep] = useState<PaymentStep>("select");
   const [transactionRef, setTransactionRef] = useState<string>("");
-  const [includeShreds, setIncludeShreds] = useState(false);
+  // Use the pre-selected value from pricing page for dedicated servers
+  const [includeShreds, setIncludeShreds] = useState(includeShredsFromPricing);
   const [swqosTier, setSwqosTier] = useState<number | null>(null);
   const [partialPaymentInfo, setPartialPaymentInfo] = useState<{ received: number; remaining: number } | null>(null);
 
@@ -90,10 +93,11 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
     
     const months = getTotalMonths();
     const baseTotal = amount * months;
-    const shredsTotal = includeShreds ? SHREDS_PRICE * months : 0;
-    const swqosTotal = swqosTier !== null ? SWQOS_TIERS[swqosTier].price : 0;
+    // For dedicated servers, shreds are already included in amount from pricing page
+    // swqosTier is also pre-selected on pricing page for dedicated, so we don't add it here
+    // The amount prop already contains the full price with all add-ons
     
-    return baseTotal + shredsTotal + swqosTotal;
+    return baseTotal;
   };
 
   const handlePaymentSent = async () => {

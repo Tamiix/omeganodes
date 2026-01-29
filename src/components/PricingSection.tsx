@@ -65,6 +65,7 @@ const PricingSection = () => {
   const [selectedServerType, setSelectedServerType] = useState("shared");
   const [selectedDedicatedSpec, setSelectedDedicatedSpec] = useState("epyc-9354p");
   const [additionalStakePackages, setAdditionalStakePackages] = useState(0);
+  const [privateShredsEnabled, setPrivateShredsEnabled] = useState(false);
   const [rentAccessEnabled, setRentAccessEnabled] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isTestMode, setIsTestMode] = useState(false);
@@ -134,11 +135,12 @@ const PricingSection = () => {
       const stakeDiscountPercent = selectedCommitment === "3months" ? 0.10 : 0;
       const stakePerPackage = 350 * (1 - stakeDiscountPercent);
       const stakeAddition = additionalStakePackages * stakePerPackage;
+      const shredsAddition = privateShredsEnabled ? 800 : 0;
       const commitment = commitments.find(c => c.id === selectedCommitment);
       discountPercent = commitment?.discount || 0;
       const discountedServerPrice = Math.round(basePrice * (1 - discountPercent));
-      baseTotal = Math.round(discountedServerPrice + stakeAddition);
-      beforeDiscount = basePrice + (additionalStakePackages * 350);
+      baseTotal = Math.round(discountedServerPrice + stakeAddition + shredsAddition);
+      beforeDiscount = basePrice + (additionalStakePackages * 350) + shredsAddition;
     } else {
       const basePrice = 300;
       const commitment = commitments.find(c => c.id === selectedCommitment);
@@ -169,7 +171,7 @@ const PricingSection = () => {
       discountAmount: codeDiscountAmount,
       priceBeforeDiscount: priceBeforeCodeDiscount
     };
-  }, [selectedCommitment, selectedServerType, selectedDedicatedSpec, additionalStakePackages, isDedicated, rentAccessEnabled, appliedDiscount]);
+  }, [selectedCommitment, selectedServerType, selectedDedicatedSpec, additionalStakePackages, privateShredsEnabled, isDedicated, rentAccessEnabled, appliedDiscount]);
 
   const validateDiscountCode = async () => {
     if (!discountCode.trim()) return;
@@ -559,6 +561,41 @@ const PricingSection = () => {
                         </p>
                       )}
                     </div>
+
+                    {/* Private Shreds */}
+                    <div 
+                      onClick={() => setPrivateShredsEnabled(!privateShredsEnabled)}
+                      className={`p-5 rounded-2xl border-2 cursor-pointer transition-all hover:shadow-lg ${
+                        privateShredsEnabled 
+                          ? "border-orange-500 bg-gradient-to-r from-orange-500/10 to-red-500/5 shadow-orange-500/20 shadow-lg" 
+                          : "border-border bg-card/50 backdrop-blur hover:border-orange-500/30"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
+                            privateShredsEnabled ? "bg-gradient-to-r from-orange-500 to-red-500" : "bg-orange-500/10"
+                          }`}>
+                            <span className="text-xl">{privateShredsEnabled ? "🔥" : "🔥"}</span>
+                          </div>
+                          <div>
+                            <h3 className="font-semibold flex items-center gap-2">
+                              Private Shreds
+                              {privateShredsEnabled && <span className="text-xs bg-orange-500 text-white px-2 py-0.5 rounded-full">Active</span>}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">Faster gRPC & transaction landing</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium bg-orange-500/10 text-orange-500 px-2 py-0.5 rounded-full">+$800/mo</span>
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                            privateShredsEnabled ? "border-orange-500 bg-orange-500" : "border-muted-foreground/30"
+                          }`}>
+                            {privateShredsEnabled && <Check className="w-3.5 h-3.5 text-white" />}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -894,6 +931,8 @@ const PricingSection = () => {
         isTestMode={isTestMode}
         discordUserId={discordUserId.trim()}
         appliedDiscount={appliedDiscount}
+        includeShredsFromPricing={privateShredsEnabled}
+        additionalStakePackages={additionalStakePackages}
       />
     </section>
   );
