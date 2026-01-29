@@ -126,14 +126,17 @@ serve(async (req) => {
       paymentLines.push(`> **Discount Code:** None used`);
     }
 
-    // Transaction link
+    // Transaction link - add Solscan link for real crypto payments
     if (!orderDetails.isTrial && orderDetails.transactionSignature) {
       if (orderDetails.transactionSignature.startsWith("FREE-")) {
         paymentLines.push(`> **Reference:** \`${orderDetails.transactionSignature}\``);
       } else if (orderDetails.transactionSignature.startsWith("TEST-") || orderDetails.transactionSignature.startsWith("TRIAL-")) {
         paymentLines.push(`> **Reference:** \`${orderDetails.transactionSignature}\``);
       } else {
-        paymentLines.push(`> **Transaction:** [View on Solscan](https://solscan.io/tx/${orderDetails.transactionSignature})`);
+        // Real crypto payment - add prominent Solscan link
+        const solscanUrl = `https://solscan.io/tx/${orderDetails.transactionSignature}`;
+        paymentLines.push(`> **Transaction:** [\`${orderDetails.transactionSignature.slice(0, 8)}...${orderDetails.transactionSignature.slice(-8)}\`](${solscanUrl})`);
+        paymentLines.push(`> 🔗 **[Verify on Solscan](${solscanUrl})**`);
       }
     }
 
