@@ -563,37 +563,28 @@ const PricingSection = () => {
                     </div>
 
                     {/* Private Shreds */}
-                    <div 
-                      onClick={() => setPrivateShredsEnabled(!privateShredsEnabled)}
-                      className={`p-5 rounded-2xl border-2 cursor-pointer transition-all hover:shadow-lg ${
-                        privateShredsEnabled 
-                          ? "border-orange-500 bg-gradient-to-r from-orange-500/10 to-red-500/5 shadow-orange-500/20 shadow-lg" 
-                          : "border-border bg-card/50 backdrop-blur hover:border-orange-500/30"
-                      }`}
-                    >
+                    <div className="p-5 rounded-2xl bg-card/50 backdrop-blur border border-border">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-omega flex items-center justify-center">
+                          <span className="text-lg">🔥</span>
+                        </div>
+                        <h3 className="font-semibold">Private Shreds</h3>
+                      </div>
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-                            privateShredsEnabled ? "bg-gradient-to-r from-orange-500 to-red-500" : "bg-orange-500/10"
-                          }`}>
-                            <span className="text-xl">{privateShredsEnabled ? "🔥" : "🔥"}</span>
-                          </div>
-                          <div>
-                            <h3 className="font-semibold flex items-center gap-2">
-                              Private Shreds
-                              {privateShredsEnabled && <span className="text-xs bg-orange-500 text-white px-2 py-0.5 rounded-full">Active</span>}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">Faster gRPC & transaction landing</p>
-                          </div>
+                        <div>
+                          <p className="font-medium">Faster gRPC & transaction landing</p>
+                          <p className="text-sm text-muted-foreground">$800/month</p>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm font-medium bg-orange-500/10 text-orange-500 px-2 py-0.5 rounded-full">+$800/mo</span>
-                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                            privateShredsEnabled ? "border-orange-500 bg-orange-500" : "border-muted-foreground/30"
-                          }`}>
-                            {privateShredsEnabled && <Check className="w-3.5 h-3.5 text-white" />}
-                          </div>
-                        </div>
+                        <button
+                          onClick={() => setPrivateShredsEnabled(!privateShredsEnabled)}
+                          className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+                            privateShredsEnabled 
+                              ? "bg-gradient-omega text-white shadow-md" 
+                              : "bg-muted hover:bg-muted/80"
+                          }`}
+                        >
+                          {privateShredsEnabled ? "Added" : "Add"}
+                        </button>
                       </div>
                     </div>
                   </motion.div>
