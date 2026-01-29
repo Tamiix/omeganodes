@@ -359,7 +359,10 @@ const PricingSection = () => {
           transactionSignature: freeSignature,
           isTestMode: false,
           isTrial: false,
-          discountCode: appliedDiscount?.code
+          discountCode: appliedDiscount?.code,
+          additionalStakePackages: isDedicated ? additionalStakePackages : 0,
+          privateShredsEnabled: isDedicated ? privateShredsEnabled : false,
+          rentAccessEnabled: rentAccessEnabled
         }
       });
 
