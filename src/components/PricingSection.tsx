@@ -187,44 +187,33 @@ const PricingSection = () => {
     setDiscountError("");
     
     try {
+      // Use secure RPC function instead of direct table access
       const { data, error } = await supabase
-        .from('discount_codes')
-        .select('*')
-        .eq('code', discountCode.trim().toUpperCase())
-        .eq('is_active', true)
-        .single();
+        .rpc('validate_discount_code', {
+          code_to_validate: discountCode.trim().toUpperCase(),
+          server_type: selectedServerType
+        });
 
-      if (error || !data) {
-        setDiscountError("Invalid discount code");
+      if (error) {
+        console.error("Error validating discount code:", error);
+        setDiscountError("Failed to validate discount code");
         setAppliedDiscount(null);
         return;
       }
 
-      if (data.expires_at && new Date(data.expires_at) < new Date()) {
-        setDiscountError("This discount code has expired");
-        setAppliedDiscount(null);
-        return;
-      }
-
-      if (data.max_uses && data.current_uses >= data.max_uses) {
-        setDiscountError("This discount code has reached its maximum uses");
-        setAppliedDiscount(null);
-        return;
-      }
-
-      // Check if code is applicable to the selected server type
-      const applicableTo = (data as { applicable_to?: string }).applicable_to || 'both';
-      if (applicableTo !== 'both' && applicableTo !== selectedServerType) {
-        setDiscountError(`This code is only valid for ${applicableTo} servers`);
+      const result = data?.[0];
+      
+      if (!result || !result.is_valid) {
+        setDiscountError(result?.error_message || "Invalid discount code");
         setAppliedDiscount(null);
         return;
       }
 
       setAppliedDiscount({
-        code: data.code,
-        discount_type: data.discount_type as 'percentage' | 'flat',
-        discount_value: data.discount_value,
-        applicable_to: applicableTo as 'shared' | 'dedicated' | 'both'
+        code: result.code,
+        discount_type: result.discount_type as 'percentage' | 'flat',
+        discount_value: result.discount_value,
+        applicable_to: result.applicable_to as 'shared' | 'dedicated' | 'both'
       });
       setDiscountError("");
     } catch (err) {
