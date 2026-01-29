@@ -387,18 +387,28 @@ const PricingSection = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-12"
+          className="text-center mb-16"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-primary">Simple & Transparent</span>
+          <div className="relative inline-block">
+            {/* Decorative elements */}
+            <div className="absolute -top-4 -left-8 w-16 h-16 rounded-full bg-gradient-omega opacity-20 blur-xl" />
+            <div className="absolute -bottom-2 -right-6 w-12 h-12 rounded-full bg-secondary/30 blur-lg" />
+            
+            {/* Main heading */}
+            <h2 className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight relative">
+              <span className="block text-foreground">Choose Your</span>
+              <span className="block text-gradient-omega mt-1">Plan</span>
+            </h2>
           </div>
-          <h2 className="text-4xl sm:text-5xl font-bold mb-4">
-            Choose Your <span className="text-gradient-omega">Plan</span>
-          </h2>
-          <p className="text-muted-foreground text-lg max-w-md mx-auto">
-            No hidden fees. Enterprise infrastructure at your fingertips.
-          </p>
+          
+          {/* Subtitle with decorative line */}
+          <div className="mt-8 flex items-center justify-center gap-4">
+            <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary/50" />
+            <p className="text-muted-foreground text-lg">
+              No hidden fees • Enterprise infrastructure
+            </p>
+            <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary/50" />
+          </div>
         </motion.div>
 
         {/* Server Type Toggle */}
