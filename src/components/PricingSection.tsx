@@ -31,9 +31,9 @@ const dedicatedSpecs = [
 
 const commitments = [
   { id: "monthly", name: "Monthly", months: 1, discount: 0, label: "" },
-  { id: "3months", name: "3 Months", months: 3, discount: 0.15, label: "15% off" },
-  { id: "6months", name: "6 Months", months: 6, discount: 0.22, label: "22% off" },
-  { id: "1year", name: "1 Year", months: 12, discount: 0.30, label: "30% off" },
+  { id: "3months", name: "3 Months", months: 3, discount: 0.08, label: "8% off" },
+  { id: "6months", name: "6 Months", months: 6, discount: 0.15, label: "15% off" },
+  { id: "1year", name: "1 Year", months: 12, discount: 0.23, label: "23% off" },
 ];
 
 const dedicatedFeatures = [
