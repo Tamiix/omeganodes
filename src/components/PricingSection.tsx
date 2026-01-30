@@ -635,64 +635,7 @@ const PricingSection = () => {
                 </div>
               )}
 
-              {/* Redeem Trial Code - Shared Only */}
-              {!isDedicated && (
-                <div className="p-5 rounded-2xl bg-card/50 backdrop-blur border border-border">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <Gift className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">Have a Trial Code?</h3>
-                      <p className="text-sm text-muted-foreground">Redeem for free access</p>
-                    </div>
-                  </div>
-                  
-                  {redeemedTrial ? (
-                    <div className="p-4 rounded-xl bg-gradient-to-r from-secondary/10 to-secondary/5 border border-secondary/20">
-                      <div className="flex items-center gap-3">
-                        <Check className="w-5 h-5 text-secondary" />
-                        <div>
-                          <p className="font-medium text-secondary">Trial Activated!</p>
-                          <p className="text-sm text-muted-foreground">
-                            {TRIAL_DURATION_LABELS[redeemedTrial.duration_type]} access until {new Date(redeemedTrial.access_expires_at).toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="TRIAL-XXXXXXXX"
-                          value={trialCode}
-                          onChange={(e) => {
-                            setTrialCode(e.target.value.toUpperCase());
-                            setTrialCodeError("");
-                          }}
-                          className="font-mono bg-background/50"
-                          disabled={!user}
-                        />
-                        <Button 
-                          variant="outline" 
-                          onClick={handleRedeemTrialCode}
-                          disabled={!trialCode.trim() || isRedeemingTrialCode || !user || !isValidDiscordId}
-                          className="hover:bg-primary hover:text-white hover:border-primary"
-                        >
-                          {isRedeemingTrialCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "Redeem"}
-                        </Button>
-                      </div>
-                      {!user && (
-                        <p className="text-xs text-muted-foreground mt-2">Login required to redeem codes</p>
-                      )}
-                      {user && !isValidDiscordId && (
-                        <p className="text-xs text-muted-foreground mt-2">Enter Discord ID below to redeem</p>
-                      )}
-                      {trialCodeError && <p className="text-sm text-destructive mt-2">{trialCodeError}</p>}
-                    </>
-                  )}
-                </div>
-              )}
+{/* Trial code section removed - merged with discount codes */}
 
               {/* Dedicated Server Options */}
               <AnimatePresence>
@@ -851,21 +794,70 @@ const PricingSection = () => {
                 </div>
               </div>
 
-              {/* Discount Code */}
-              <div className={`p-5 rounded-2xl bg-card/50 backdrop-blur border border-border transition-opacity ${hasCommitmentDiscount ? 'opacity-50' : ''}`}>
+              {/* Discount / Trial Codes */}
+              <div className={`p-5 rounded-2xl bg-card/50 backdrop-blur border border-border transition-opacity ${hasCommitmentDiscount && !redeemedTrial ? 'opacity-50' : ''}`}>
                 <div className="flex items-center gap-3 mb-4">
                   <Tag className="w-4 h-4 text-primary" />
-                  <h3 className="font-semibold">Discount Code</h3>
-                  {hasCommitmentDiscount && (
+                  <h3 className="font-semibold">Discount / Trial Codes</h3>
+                  {hasCommitmentDiscount && !isDedicated && !redeemedTrial && (
                     <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
-                      Not available with commitment discounts
+                      Discount codes not available with commitment
                     </span>
                   )}
                 </div>
-                {hasCommitmentDiscount ? (
-                  <p className="text-sm text-muted-foreground">
-                    Discount codes cannot be combined with commitment discounts. Switch to monthly billing to use a code.
-                  </p>
+                
+                {/* Show redeemed trial success state */}
+                {redeemedTrial ? (
+                  <div className="p-4 rounded-xl bg-gradient-to-r from-secondary/10 to-secondary/5 border border-secondary/20">
+                    <div className="flex items-center gap-3">
+                      <Check className="w-5 h-5 text-secondary" />
+                      <div>
+                        <p className="font-medium text-secondary">Trial Activated!</p>
+                        <p className="text-sm text-muted-foreground">
+                          {TRIAL_DURATION_LABELS[redeemedTrial.duration_type]} access until {new Date(redeemedTrial.access_expires_at).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : hasCommitmentDiscount ? (
+                  <>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Discount codes cannot be combined with commitment discounts. Switch to monthly billing to use a discount code.
+                    </p>
+                    {/* Still allow trial codes even with commitment discount, but only for shared */}
+                    {!isDedicated && (
+                      <div className="pt-3 border-t border-border">
+                        <p className="text-xs text-muted-foreground mb-2">Have a trial code? Trial codes still work:</p>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="TRIAL-XXXXXXXX"
+                            value={trialCode}
+                            onChange={(e) => {
+                              setTrialCode(e.target.value.toUpperCase());
+                              setTrialCodeError("");
+                            }}
+                            className="font-mono bg-background/50"
+                            disabled={!user}
+                          />
+                          <Button 
+                            variant="outline" 
+                            onClick={handleRedeemTrialCode}
+                            disabled={!trialCode.trim() || isRedeemingTrialCode || !user || !isValidDiscordId}
+                            className="hover:bg-primary hover:text-white hover:border-primary"
+                          >
+                            {isRedeemingTrialCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "Redeem"}
+                          </Button>
+                        </div>
+                        {!user && (
+                          <p className="text-xs text-muted-foreground mt-2">Login required to redeem codes</p>
+                        )}
+                        {user && !isValidDiscordId && (
+                          <p className="text-xs text-muted-foreground mt-2">Enter Discord ID below to redeem</p>
+                        )}
+                        {trialCodeError && <p className="text-sm text-destructive mt-2">{trialCodeError}</p>}
+                      </div>
+                    )}
+                  </>
                 ) : appliedDiscount ? (
                   <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-secondary/10 to-secondary/5 border border-secondary/20">
                     <div className="flex items-center gap-2">
@@ -878,19 +870,56 @@ const PricingSection = () => {
                     <button onClick={removeDiscount} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Remove</button>
                   </div>
                 ) : (
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Enter code"
-                      value={discountCode}
-                      onChange={(e) => { setDiscountCode(e.target.value.toUpperCase()); setDiscountError(""); }}
-                      className="font-mono bg-background/50"
-                    />
-                    <Button variant="outline" onClick={validateDiscountCode} disabled={!discountCode.trim() || isValidatingCode} className="hover:bg-primary hover:text-white hover:border-primary">
-                      {isValidatingCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
-                    </Button>
+                  <div className="space-y-3">
+                    {/* Discount Code Input */}
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Enter discount code"
+                        value={discountCode}
+                        onChange={(e) => { setDiscountCode(e.target.value.toUpperCase()); setDiscountError(""); }}
+                        className="font-mono bg-background/50"
+                      />
+                      <Button variant="outline" onClick={validateDiscountCode} disabled={!discountCode.trim() || isValidatingCode} className="hover:bg-primary hover:text-white hover:border-primary">
+                        {isValidatingCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                      </Button>
+                    </div>
+                    {discountError && <p className="text-sm text-destructive">{discountError}</p>}
+                    
+                    {/* Trial Code Input - Shared Only */}
+                    {!isDedicated && (
+                      <div className="pt-3 border-t border-border">
+                        <p className="text-xs text-muted-foreground mb-2">Or redeem a trial code for free access:</p>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="TRIAL-XXXXXXXX"
+                            value={trialCode}
+                            onChange={(e) => {
+                              setTrialCode(e.target.value.toUpperCase());
+                              setTrialCodeError("");
+                            }}
+                            className="font-mono bg-background/50"
+                            disabled={!user}
+                          />
+                          <Button 
+                            variant="outline" 
+                            onClick={handleRedeemTrialCode}
+                            disabled={!trialCode.trim() || isRedeemingTrialCode || !user || !isValidDiscordId}
+                            className="hover:bg-primary hover:text-white hover:border-primary"
+                          >
+                            {isRedeemingTrialCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "Redeem"}
+                          </Button>
+                        </div>
+                        {!user && (
+                          <p className="text-xs text-muted-foreground mt-2">Login required to redeem codes</p>
+                        )}
+                        {user && !isValidDiscordId && (
+                          <p className="text-xs text-muted-foreground mt-2">Enter Discord ID below to redeem</p>
+                        )}
+                        {trialCodeError && <p className="text-sm text-destructive mt-2">{trialCodeError}</p>}
+                      </div>
+                    )}
                   </div>
                 )}
-                {discountError && <p className="text-sm text-destructive mt-2">{discountError}</p>}
               </div>
 
               {/* Admin Test Mode */}
