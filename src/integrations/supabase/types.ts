@@ -325,6 +325,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      redeem_access_code: {
+        Args: { p_code: string; p_discord_id: string }
+        Returns: Json
+      }
       validate_discount_code: {
         Args: { code_to_validate: string; server_type: string }
         Returns: {
