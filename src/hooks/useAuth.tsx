@@ -153,7 +153,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await supabase.functions.invoke('discord-registration-notification', {
           body: {
             email: email,
-            ipAddress: 'Fetched server-side',
             registerDate: new Date().toISOString()
           }
         });
