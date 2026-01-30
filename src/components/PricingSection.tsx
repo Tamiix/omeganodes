@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useState, useMemo, useEffect } from "react";
-import { Check, Zap, Cpu, Server, Plus, FlaskConical, HelpCircle, ChevronDown, ChevronUp, Tag, Loader2, Gift, Clock, Shield, Sparkles } from "lucide-react";
+import { Check, Zap, Cpu, Server, Plus, FlaskConical, HelpCircle, ChevronDown, ChevronUp, Tag, Loader2, Gift, Clock, Shield, Sparkles, Lock, LogIn } from "lucide-react";
 import CryptoPaymentModal from "./CryptoPaymentModal";
+import AuthModal from "./AuthModal";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
@@ -86,6 +87,7 @@ const PricingSection = () => {
   const [isRedeemingTrialCode, setIsRedeemingTrialCode] = useState(false);
   const [trialCodeError, setTrialCodeError] = useState("");
   const [redeemedTrial, setRedeemedTrial] = useState<{ duration_type: string; access_expires_at: string } | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   const { formatPrice } = useCurrency();
   const { isAdmin, user } = useAuth();
@@ -524,7 +526,33 @@ const PricingSection = () => {
         </div>
 
         {/* Main Content - New unified design */}
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto relative">
+          {/* Login Required Overlay */}
+          {!user && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="absolute inset-0 z-50 flex items-start justify-center pt-20"
+            >
+              <div className="absolute inset-0 bg-background/80 backdrop-blur-sm rounded-3xl" />
+              <div className="relative z-10 text-center p-8 max-w-md">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-omega flex items-center justify-center">
+                  <Lock className="w-10 h-10 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold mb-3">Account Required</h3>
+                <p className="text-muted-foreground mb-6">
+                  Create a free account or sign in to view pricing and place orders. Email verification is required.
+                </p>
+                <Button 
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className="bg-gradient-omega hover:opacity-90 text-white px-8 py-6 text-lg font-semibold rounded-xl shadow-lg shadow-primary/25"
+                >
+                  <LogIn className="w-5 h-5 mr-2" />
+                  Sign In / Create Account
+                </Button>
+              </div>
+            </motion.div>
+          )}
           {/* Top row: Billing + Price side by side */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1112,6 +1140,12 @@ const PricingSection = () => {
         appliedDiscount={appliedDiscount}
         includeShredsFromPricing={privateShredsEnabled}
         additionalStakePackages={additionalStakePackages}
+      />
+
+      {/* Auth Modal */}
+      <AuthModal 
+        open={isAuthModalOpen} 
+        onOpenChange={setIsAuthModalOpen} 
       />
     </section>
   );

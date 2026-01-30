@@ -9,7 +9,6 @@ const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/146472882651175340
 
 interface RegistrationDetails {
   email: string;
-  ipAddress: string;
   registerDate: string;
 }
 
@@ -32,11 +31,6 @@ serve(async (req) => {
           name: "📧 User Email",
           value: registrationDetails.email || "Not provided",
           inline: false
-        },
-        {
-          name: "🌐 IP Address",
-          value: registrationDetails.ipAddress || "Unknown",
-          inline: true
         },
         {
           name: "📅 Register Date",
