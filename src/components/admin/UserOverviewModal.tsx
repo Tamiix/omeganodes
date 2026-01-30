@@ -20,7 +20,7 @@ import { format } from 'date-fns';
 interface UserRole {
   id: string;
   user_id: string;
-  role: 'admin' | 'moderator' | 'user';
+  role: 'owner' | 'admin' | 'moderator' | 'user';
 }
 
 interface UserProfile {

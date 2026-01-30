@@ -16,7 +16,7 @@ interface Profile {
 interface UserRole {
   id: string;
   user_id: string;
-  role: 'admin' | 'moderator' | 'user';
+  role: 'owner' | 'admin' | 'moderator' | 'user';
   granted_at: string;
 }
 
@@ -25,6 +25,7 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   roles: UserRole[];
+  isOwner: boolean;
   isAdmin: boolean;
   isModerator: boolean;
   isLoading: boolean;
@@ -197,8 +198,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const isAdmin = roles.some(r => r.role === 'admin');
-  const isModerator = roles.some(r => r.role === 'moderator' || r.role === 'admin');
+  const isOwner = roles.some(r => r.role === 'owner');
+  const isAdmin = roles.some(r => r.role === 'admin' || r.role === 'owner');
+  const isModerator = roles.some(r => r.role === 'moderator' || r.role === 'admin' || r.role === 'owner');
 
   return (
     <AuthContext.Provider value={{
@@ -206,6 +208,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       session,
       profile,
       roles,
+      isOwner,
       isAdmin,
       isModerator,
       isLoading,
