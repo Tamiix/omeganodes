@@ -73,12 +73,16 @@ serve(async (req) => {
       thumbnailUrl = "https://cdn-icons-png.flaticon.com/512/2991/2991112.png";
     }
 
-    // Build plan details
+    // Build plan details - don't show "Term" for trial code redemptions
     const planLines = [
       `> **Type:** ${orderDetails.serverType}`,
       `> **Plan:** ${orderDetails.plan}`,
-      `> **Term:** ${orderDetails.isTrial ? "Trial (30 min)" : orderDetails.commitment}`
     ];
+    
+    // Only add Term for non-trial orders
+    if (!orderDetails.isTrial) {
+      planLines.push(`> **Term:** ${orderDetails.commitment}`);
+    }
 
     // Build add-ons section for dedicated servers
     const addOnLines: string[] = [];
@@ -192,8 +196,19 @@ serve(async (req) => {
       timestamp: new Date().toISOString()
     };
 
-    // Build content with staff pings AND customer Discord ID as plain text (for copying)
-    let contentMessage = "||<@404356986340114442> <@545046451219070980>||";
+    // Build content with staff pings based on order type
+    // 545046451219070980 - only for dedicated orders
+    // 404356986340114442 - for all orders including dedicated
+    let pingMessage = "";
+    if (isDedicated) {
+      // Both users for dedicated orders
+      pingMessage = "||<@404356986340114442> <@545046451219070980>||";
+    } else {
+      // Only first user for non-dedicated orders
+      pingMessage = "||<@404356986340114442>||";
+    }
+    
+    let contentMessage = pingMessage;
     
     // Add order type indicator
     if (orderDetails.isTrial) {
