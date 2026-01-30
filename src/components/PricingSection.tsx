@@ -949,30 +949,6 @@ const PricingSection = () => {
                   </div>
                 )}
               </div>
-
-              {/* Admin Test Mode */}
-              {!isDedicated && isAdmin && (
-                <div 
-                  onClick={() => setIsTestMode(!isTestMode)}
-                  className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
-                    isTestMode 
-                      ? "border-yellow-500 bg-gradient-to-r from-yellow-500/10 to-orange-500/5" 
-                      : "border-border bg-card/50 backdrop-blur hover:border-yellow-500/30"
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                      isTestMode ? "bg-yellow-500 text-black" : "bg-yellow-500/10"
-                    }`}>
-                      <FlaskConical className={`w-5 h-5 ${isTestMode ? "" : "text-yellow-500"}`} />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">Test Mode (Admin)</h3>
-                      <p className="text-sm text-muted-foreground">Create $0.10 test orders</p>
-                    </div>
-                  </div>
-                </div>
-              )}
             </motion.div>
 
             {/* Right: Action Card */}
