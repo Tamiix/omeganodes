@@ -319,84 +319,51 @@ const PricingSection = () => {
     setTrialCodeError("");
     
     try {
-      // Check if code exists and is valid
-      const { data: codeData, error: fetchError } = await supabase
-        .from('access_codes')
-        .select('*')
-        .eq('code', trialCode.trim().toUpperCase())
-        .eq('is_redeemed', false)
-        .maybeSingle();
+      // Use secure server-side RPC function to validate and redeem
+      const { data, error } = await supabase.rpc('redeem_access_code', {
+        p_code: trialCode.trim(),
+        p_discord_id: discordUserId.trim()
+      });
 
-      if (fetchError) throw fetchError;
+      if (error) throw error;
       
-      if (!codeData) {
-        setTrialCodeError("Invalid or already redeemed code");
+      const result = data as { 
+        success: boolean; 
+        error?: string; 
+        duration_type?: string; 
+        expires_at?: string;
+        transaction_signature?: string;
+      };
+      
+      if (!result.success) {
+        setTrialCodeError(result.error || "Invalid or already redeemed code");
         return;
       }
-
-      // Calculate expiration
-      const now = new Date();
-      const expiresAt = new Date(now.getTime() + (codeData.duration_hours * 60 * 60 * 1000));
-
-      // Redeem the code
-      const { error: updateError } = await supabase
-        .from('access_codes')
-        .update({
-          is_redeemed: true,
-          redeemed_by: user.id,
-          redeemed_at: now.toISOString(),
-          access_expires_at: expiresAt.toISOString(),
-        })
-        .eq('id', codeData.id);
-
-      if (updateError) throw updateError;
-
-      // Create a trial order for the user
-      const trialSignature = `TRIAL-CODE-${Date.now().toString(36).toUpperCase()}`;
-      
-      await supabase.from('orders').insert({
-        user_id: user.id,
-        order_number: "TEMP",
-        plan_name: `Trial (${TRIAL_DURATION_LABELS[codeData.duration_type]})`,
-        commitment: "trial",
-        server_type: "shared",
-        location: "all",
-        rps: 100,
-        tps: 50,
-        amount_usd: 0,
-        currency_code: "FREE",
-        currency_amount: 0,
-        payment_method: "trial_code",
-        transaction_signature: trialSignature,
-        status: "active",
-        expires_at: expiresAt.toISOString(),
-        is_test_order: false
-      });
 
       // Send Discord notification
       await supabase.functions.invoke('discord-order-notification', {
         body: {
-          plan: `Trial (${TRIAL_DURATION_LABELS[codeData.duration_type]})`,
+          plan: `Trial (${TRIAL_DURATION_LABELS[result.duration_type || '1_day']})`,
           commitment: "trial",
           serverType: "Shared",
           email: user.email,
           discordId: discordUserId.trim(),
           totalAmount: 0,
-          transactionSignature: trialSignature,
+          transactionSignature: result.transaction_signature,
           isTestMode: false,
           isTrial: true
         }
       });
 
       setRedeemedTrial({
-        duration_type: codeData.duration_type,
-        access_expires_at: expiresAt.toISOString(),
+        duration_type: result.duration_type || '1_day',
+        access_expires_at: result.expires_at || new Date().toISOString(),
       });
 
       const { toast } = await import("@/hooks/use-toast");
       toast({
         title: '🎉 Trial Code Redeemed!',
-        description: `You now have ${TRIAL_DURATION_LABELS[codeData.duration_type]} of free shared server access`,
+        description: `You now have ${TRIAL_DURATION_LABELS[result.duration_type || '1_day']} of free shared server access`,
       });
       
     } catch (error) {
