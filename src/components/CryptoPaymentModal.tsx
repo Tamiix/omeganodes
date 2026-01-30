@@ -20,6 +20,7 @@ interface CryptoPaymentModalProps {
   rps?: number;
   tps?: number;
   serverType?: string;
+  location?: string | null;
   rentAccessEnabled?: boolean;
   isTestMode?: boolean;
   discordUserId?: string;
@@ -57,7 +58,7 @@ const SHREDS_PRICE = 800; // USD per month
 
 type PaymentStep = "select" | "processing" | "success" | "failed" | "partial";
 
-const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tps = 50, serverType = "shared", rentAccessEnabled = false, isTestMode = false, discordUserId = "", appliedDiscount = null, includeShredsFromPricing = false, additionalStakePackages = 0 }: CryptoPaymentModalProps) => {
+const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tps = 50, serverType = "shared", location = "all", rentAccessEnabled = false, isTestMode = false, discordUserId = "", appliedDiscount = null, includeShredsFromPricing = false, additionalStakePackages = 0 }: CryptoPaymentModalProps) => {
   const [selectedCrypto, setSelectedCrypto] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [paymentStep, setPaymentStep] = useState<PaymentStep>("select");
@@ -154,7 +155,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
               plan_name: getCommitmentLabel(),
               commitment: commitment,
               server_type: serverType,
-              location: "all", // All regions included
+              location: location || "all",
               rps: rps,
               tps: tps,
               amount_usd: totalAmount,
@@ -195,6 +196,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
               totalAmount: totalAmount,
               transactionSignature: signature,
               isTestMode: isTestMode,
+              location: location,
               rentAccessEnabled: rentAccessEnabled
             }
           });

@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useState, useMemo, useEffect } from "react";
-import { Check, Zap, Cpu, Server, Plus, FlaskConical, HelpCircle, ChevronDown, ChevronUp, Tag, Loader2, Gift, Clock, Shield, Sparkles, Lock, LogIn } from "lucide-react";
+import { Check, Zap, Cpu, Server, Plus, FlaskConical, HelpCircle, ChevronDown, ChevronUp, Tag, Loader2, Gift, Clock, Shield, Sparkles, Lock, LogIn, MapPin } from "lucide-react";
 import CryptoPaymentModal from "./CryptoPaymentModal";
 import AuthModal from "./AuthModal";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -61,6 +61,12 @@ interface AppliedDiscount {
   applicable_to: 'shared' | 'dedicated' | 'both';
 }
 
+const dedicatedLocations = [
+  { id: "frankfurt", name: "Frankfurt", flag: "🇩🇪" },
+  { id: "amsterdam", name: "Amsterdam", flag: "🇳🇱" },
+  { id: "newyork", name: "New York", flag: "🇺🇸" },
+];
+
 const PricingSection = () => {
   const [selectedCommitment, setSelectedCommitment] = useState("monthly");
   const [selectedServerType, setSelectedServerType] = useState("shared");
@@ -76,6 +82,11 @@ const PricingSection = () => {
   const [isTrialProcessing, setIsTrialProcessing] = useState(false);
   const [isFreeOrderProcessing, setIsFreeOrderProcessing] = useState(false);
   const [trialsEnabled, setTrialsEnabled] = useState(false);
+  
+  // Dedicated server location selection
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [customLocation, setCustomLocation] = useState("");
+  const [isCustomLocationMode, setIsCustomLocationMode] = useState(false);
   
   const [discountCode, setDiscountCode] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null);
@@ -97,6 +108,21 @@ const PricingSection = () => {
   
   // Check if commitment discount is active (any commitment other than monthly)
   const hasCommitmentDiscount = selectedCommitment !== "monthly";
+  
+  // Get the final location for dedicated servers
+  const getFinalLocation = () => {
+    if (isCustomLocationMode && customLocation.trim()) {
+      return customLocation.trim();
+    }
+    if (selectedLocation) {
+      const loc = dedicatedLocations.find(l => l.id === selectedLocation);
+      return loc ? loc.name : null;
+    }
+    return null;
+  };
+  
+  // Check if dedicated location is valid
+  const hasValidLocation = !isDedicated || (isCustomLocationMode ? customLocation.trim().length > 0 : selectedLocation !== null);
 
   // Fetch trials enabled setting from database
   useEffect(() => {
@@ -377,7 +403,7 @@ const PricingSection = () => {
   };
 
   const handleFreeOrder = async () => {
-    if (!isValidDiscordId || !user) return;
+    if (!isValidDiscordId || !user || !hasValidLocation) return;
     setIsFreeOrderProcessing(true);
     
     try {
@@ -398,7 +424,7 @@ const PricingSection = () => {
         plan_name: planName,
         commitment: selectedCommitment,
         server_type: selectedServerType,
-        location: isDedicated ? "custom" : "all",
+        location: isDedicated ? (getFinalLocation() || "custom") : "all",
         rps: 100,
         tps: 50,
         amount_usd: 0,
@@ -427,6 +453,7 @@ const PricingSection = () => {
           isTestMode: false,
           isTrial: false,
           discountCode: appliedDiscount?.code,
+          location: isDedicated ? getFinalLocation() : "all",
           additionalStakePackages: isDedicated ? additionalStakePackages : 0,
           privateShredsEnabled: isDedicated ? privateShredsEnabled : false,
           rentAccessEnabled: rentAccessEnabled
@@ -723,6 +750,80 @@ const PricingSection = () => {
                           </button>
                         ))}
                       </div>
+                    </div>
+
+                    {/* Location Selection */}
+                    <div className="p-5 rounded-2xl bg-card/50 backdrop-blur border border-border">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-omega flex items-center justify-center">
+                          <MapPin className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold">Server Location</h3>
+                          <p className="text-xs text-muted-foreground">Select where to deploy your dedicated server</p>
+                        </div>
+                      </div>
+                      
+                      {!isCustomLocationMode ? (
+                        <div className="space-y-2">
+                          {dedicatedLocations.map((loc) => (
+                            <button
+                              key={loc.id}
+                              onClick={() => setSelectedLocation(loc.id)}
+                              className={`w-full p-3 rounded-xl border-2 flex items-center gap-3 transition-all ${
+                                selectedLocation === loc.id
+                                  ? "border-primary bg-primary/5 shadow-md"
+                                  : "border-transparent bg-muted/30 hover:bg-muted/50 hover:border-border"
+                              }`}
+                            >
+                              <span className="text-xl">{loc.flag}</span>
+                              <span className="font-medium">{loc.name}</span>
+                              {selectedLocation === loc.id && (
+                                <Check className="w-4 h-4 text-primary ml-auto" />
+                              )}
+                            </button>
+                          ))}
+                          
+                          <button
+                            onClick={() => {
+                              setIsCustomLocationMode(true);
+                              setSelectedLocation(null);
+                            }}
+                            className="w-full p-3 rounded-xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/30 flex items-center gap-3 transition-all text-muted-foreground hover:text-foreground"
+                          >
+                            <span className="text-xl">🌍</span>
+                            <span className="font-medium">Need a specific location?</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <div>
+                            <label className="text-sm text-muted-foreground mb-2 block">
+                              Enter your preferred location:
+                            </label>
+                            <Input
+                              placeholder="e.g., Tokyo, Singapore, London..."
+                              value={customLocation}
+                              onChange={(e) => setCustomLocation(e.target.value)}
+                              className={`bg-background/50 ${customLocation.trim() ? "border-secondary" : ""}`}
+                            />
+                            {customLocation.trim() && (
+                              <p className="text-xs text-secondary mt-1.5 flex items-center gap-1 font-medium">
+                                <Check className="w-3 h-3" /> Custom location selected
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => {
+                              setIsCustomLocationMode(false);
+                              setCustomLocation("");
+                            }}
+                            className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            ← Back to standard locations
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     {/* SwQoS Stake */}
@@ -1039,7 +1140,7 @@ const PricingSection = () => {
                         ? "bg-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/25"
                         : "bg-gradient-omega hover:opacity-90 shadow-lg shadow-primary/25"
                   }`}
-                  disabled={!isValidDiscordId || isTrialProcessing || isFreeOrderProcessing || (price === 0 && !user)}
+                  disabled={!isValidDiscordId || !hasValidLocation || isTrialProcessing || isFreeOrderProcessing || (price === 0 && !user)}
                   onClick={() => {
                     if (isTrialMode) {
                       handleTrialOrder();
@@ -1059,11 +1160,13 @@ const PricingSection = () => {
                     <>
                       {!isValidDiscordId 
                         ? "Enter Discord ID" 
-                        : isTrialMode 
-                          ? "Start Free Trial" 
-                          : price === 0 
-                            ? (user ? "Get Free Access" : "Login to Continue")
-                            : "Continue to Payment"}
+                        : !hasValidLocation
+                          ? "Select Server Location"
+                          : isTrialMode 
+                            ? "Start Free Trial" 
+                            : price === 0 
+                              ? (user ? "Get Free Access" : "Login to Continue")
+                              : "Continue to Payment"}
                     </>
                   )}
                 </Button>
@@ -1110,6 +1213,7 @@ const PricingSection = () => {
         amount={price}
         commitment={selectedCommitment}
         serverType={selectedServerType}
+        location={isDedicated ? getFinalLocation() : "all"}
         rentAccessEnabled={rentAccessEnabled}
         isTestMode={isTestMode}
         discordUserId={discordUserId.trim()}
