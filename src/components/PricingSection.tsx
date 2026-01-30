@@ -80,6 +80,12 @@ const PricingSection = () => {
   const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null);
   const [discountError, setDiscountError] = useState("");
   const [isValidatingCode, setIsValidatingCode] = useState(false);
+  
+  // Trial code redemption state
+  const [trialCode, setTrialCode] = useState("");
+  const [isRedeemingTrialCode, setIsRedeemingTrialCode] = useState(false);
+  const [trialCodeError, setTrialCodeError] = useState("");
+  const [redeemedTrial, setRedeemedTrial] = useState<{ duration_type: string; access_expires_at: string } | null>(null);
 
   const { formatPrice } = useCurrency();
   const { isAdmin, user } = useAuth();
@@ -296,6 +302,108 @@ const PricingSection = () => {
     } finally {
       setIsTrialProcessing(false);
       setIsTrialMode(false);
+    }
+  };
+
+  const TRIAL_DURATION_LABELS: Record<string, string> = {
+    '1_hour': '1 Hour',
+    '1_day': '1 Day',
+    '1_week': '1 Week',
+    '1_month': '1 Month',
+  };
+
+  const handleRedeemTrialCode = async () => {
+    if (!trialCode.trim() || !user || !isValidDiscordId) return;
+    
+    setIsRedeemingTrialCode(true);
+    setTrialCodeError("");
+    
+    try {
+      // Check if code exists and is valid
+      const { data: codeData, error: fetchError } = await supabase
+        .from('access_codes')
+        .select('*')
+        .eq('code', trialCode.trim().toUpperCase())
+        .eq('is_redeemed', false)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+      
+      if (!codeData) {
+        setTrialCodeError("Invalid or already redeemed code");
+        return;
+      }
+
+      // Calculate expiration
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + (codeData.duration_hours * 60 * 60 * 1000));
+
+      // Redeem the code
+      const { error: updateError } = await supabase
+        .from('access_codes')
+        .update({
+          is_redeemed: true,
+          redeemed_by: user.id,
+          redeemed_at: now.toISOString(),
+          access_expires_at: expiresAt.toISOString(),
+        })
+        .eq('id', codeData.id);
+
+      if (updateError) throw updateError;
+
+      // Create a trial order for the user
+      const trialSignature = `TRIAL-CODE-${Date.now().toString(36).toUpperCase()}`;
+      
+      await supabase.from('orders').insert({
+        user_id: user.id,
+        order_number: "TEMP",
+        plan_name: `Trial (${TRIAL_DURATION_LABELS[codeData.duration_type]})`,
+        commitment: "trial",
+        server_type: "shared",
+        location: "all",
+        rps: 100,
+        tps: 50,
+        amount_usd: 0,
+        currency_code: "FREE",
+        currency_amount: 0,
+        payment_method: "trial_code",
+        transaction_signature: trialSignature,
+        status: "active",
+        expires_at: expiresAt.toISOString(),
+        is_test_order: false
+      });
+
+      // Send Discord notification
+      await supabase.functions.invoke('discord-order-notification', {
+        body: {
+          plan: `Trial (${TRIAL_DURATION_LABELS[codeData.duration_type]})`,
+          commitment: "trial",
+          serverType: "Shared",
+          email: user.email,
+          discordId: discordUserId.trim(),
+          totalAmount: 0,
+          transactionSignature: trialSignature,
+          isTestMode: false,
+          isTrial: true
+        }
+      });
+
+      setRedeemedTrial({
+        duration_type: codeData.duration_type,
+        access_expires_at: expiresAt.toISOString(),
+      });
+
+      const { toast } = await import("@/hooks/use-toast");
+      toast({
+        title: '🎉 Trial Code Redeemed!',
+        description: `You now have ${TRIAL_DURATION_LABELS[codeData.duration_type]} of free shared server access`,
+      });
+      
+    } catch (error) {
+      console.error('Error redeeming trial code:', error);
+      setTrialCodeError("Failed to redeem code. Please try again.");
+    } finally {
+      setIsRedeemingTrialCode(false);
     }
   };
 
@@ -557,6 +665,65 @@ const PricingSection = () => {
                       {isTrialMode && <Check className="w-3.5 h-3.5 text-white" />}
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Redeem Trial Code - Shared Only */}
+              {!isDedicated && (
+                <div className="p-5 rounded-2xl bg-card/50 backdrop-blur border border-border">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Gift className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">Have a Trial Code?</h3>
+                      <p className="text-sm text-muted-foreground">Redeem for free access</p>
+                    </div>
+                  </div>
+                  
+                  {redeemedTrial ? (
+                    <div className="p-4 rounded-xl bg-gradient-to-r from-secondary/10 to-secondary/5 border border-secondary/20">
+                      <div className="flex items-center gap-3">
+                        <Check className="w-5 h-5 text-secondary" />
+                        <div>
+                          <p className="font-medium text-secondary">Trial Activated!</p>
+                          <p className="text-sm text-muted-foreground">
+                            {TRIAL_DURATION_LABELS[redeemedTrial.duration_type]} access until {new Date(redeemedTrial.access_expires_at).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="TRIAL-XXXXXXXX"
+                          value={trialCode}
+                          onChange={(e) => {
+                            setTrialCode(e.target.value.toUpperCase());
+                            setTrialCodeError("");
+                          }}
+                          className="font-mono bg-background/50"
+                          disabled={!user}
+                        />
+                        <Button 
+                          variant="outline" 
+                          onClick={handleRedeemTrialCode}
+                          disabled={!trialCode.trim() || isRedeemingTrialCode || !user || !isValidDiscordId}
+                          className="hover:bg-primary hover:text-white hover:border-primary"
+                        >
+                          {isRedeemingTrialCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "Redeem"}
+                        </Button>
+                      </div>
+                      {!user && (
+                        <p className="text-xs text-muted-foreground mt-2">Login required to redeem codes</p>
+                      )}
+                      {user && !isValidDiscordId && (
+                        <p className="text-xs text-muted-foreground mt-2">Enter Discord ID below to redeem</p>
+                      )}
+                      {trialCodeError && <p className="text-sm text-destructive mt-2">{trialCodeError}</p>}
+                    </>
+                  )}
                 </div>
               )}
 
