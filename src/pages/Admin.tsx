@@ -21,7 +21,7 @@ interface UserProfile {
 interface UserRole {
   id: string;
   user_id: string;
-  role: 'admin' | 'moderator' | 'user';
+  role: 'owner' | 'admin' | 'moderator' | 'user';
   granted_at: string;
 }
 
