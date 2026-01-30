@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Clock, Copy, Check, User } from 'lucide-react';
+import { Plus, Trash2, Clock, Copy, Check, User, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -29,6 +30,7 @@ interface AccessCode {
   redeemed_by: string | null;
   redeemed_at: string | null;
   access_expires_at: string | null;
+  assigned_email: string | null;
   created_at: string;
 }
 
@@ -55,6 +57,7 @@ const AccessCodeManager = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDuration, setSelectedDuration] = useState<string>('1_day');
+  const [assignedEmail, setAssignedEmail] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [redeemerEmails, setRedeemerEmails] = useState<Record<string, string>>({});
@@ -104,7 +107,18 @@ const AccessCodeManager = () => {
   };
 
   const handleCreate = async () => {
-    if (!selectedDuration) return;
+    if (!selectedDuration || !assignedEmail.trim()) return;
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(assignedEmail.trim())) {
+      toast({
+        title: 'Invalid Email',
+        description: 'Please enter a valid email address',
+        variant: 'destructive'
+      });
+      return;
+    }
     
     setIsSubmitting(true);
     try {
@@ -120,16 +134,18 @@ const AccessCodeManager = () => {
           duration_type: duration.value,
           duration_hours: duration.hours,
           created_by: user?.id,
+          assigned_email: assignedEmail.trim().toLowerCase(),
         });
 
       if (error) throw error;
       
       toast({
         title: 'Code Created',
-        description: `Access code "${code}" created for ${duration.label}`,
+        description: `Access code "${code}" created for ${assignedEmail.trim()}`,
       });
       
       setIsDialogOpen(false);
+      setAssignedEmail('');
       fetchCodes();
     } catch (error) {
       console.error('Error creating access code:', error);
@@ -264,9 +280,17 @@ const AccessCodeManager = () => {
                         )}
                       </div>
                     ) : (
-                      <span className="px-2 py-1 rounded-full bg-amber-500/10 text-amber-500 text-xs">
-                        Available
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-1 rounded-full bg-amber-500/10 text-amber-500 text-xs">
+                          Available
+                        </span>
+                        {code.assigned_email && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Mail className="w-3 h-3" />
+                            For: {code.assigned_email}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
 
@@ -312,6 +336,22 @@ const AccessCodeManager = () => {
           <div className="space-y-4 py-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
+                Recipient Email <span className="text-destructive">*</span>
+              </label>
+              <Input
+                type="email"
+                placeholder="winner@example.com"
+                value={assignedEmail}
+                onChange={(e) => setAssignedEmail(e.target.value)}
+                className="bg-muted/30 border-border"
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                Only this email can redeem the code
+              </p>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Access Duration
               </label>
               <Select value={selectedDuration} onValueChange={setSelectedDuration}>
@@ -329,9 +369,6 @@ const AccessCodeManager = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground mt-2">
-                A unique code will be generated that grants this duration of access when redeemed
-              </p>
             </div>
           </div>
 
@@ -339,7 +376,7 @@ const AccessCodeManager = () => {
             <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreate} disabled={isSubmitting}>
+            <Button onClick={handleCreate} disabled={isSubmitting || !assignedEmail.trim()}>
               {isSubmitting ? (
                 <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
               ) : (

@@ -17,6 +17,7 @@ export type Database = {
       access_codes: {
         Row: {
           access_expires_at: string | null
+          assigned_email: string | null
           code: string
           created_at: string
           created_by: string
@@ -29,6 +30,7 @@ export type Database = {
         }
         Insert: {
           access_expires_at?: string | null
+          assigned_email?: string | null
           code: string
           created_at?: string
           created_by: string
@@ -41,6 +43,7 @@ export type Database = {
         }
         Update: {
           access_expires_at?: string | null
+          assigned_email?: string | null
           code?: string
           created_at?: string
           created_by?: string
