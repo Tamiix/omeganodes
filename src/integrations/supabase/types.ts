@@ -328,6 +328,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_owner: { Args: { _user_id: string }; Returns: boolean }
       redeem_access_code: {
         Args: { p_code: string; p_discord_id: string }
         Returns: Json
