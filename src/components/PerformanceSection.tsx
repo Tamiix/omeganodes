@@ -13,7 +13,7 @@ const highlights = [
   "Smart load balancing across nodes",
   "Real-time health monitoring 24/7",
   "DDoS protection included",
-  "Dedicated staked connections",
+  "Shared staked connections",
   "Priority Discord support",
 ];
 
