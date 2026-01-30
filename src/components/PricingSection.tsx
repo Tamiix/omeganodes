@@ -541,7 +541,7 @@ const PricingSection = () => {
                 </div>
                 <h3 className="text-2xl font-bold mb-3">Account Required</h3>
                 <p className="text-muted-foreground mb-6">
-                  Create a free account or sign in to view pricing and place orders. Email verification is required.
+                  Create a free account or sign in to view pricing and place orders.
                 </p>
                 <Button 
                   onClick={() => setIsAuthModalOpen(true)}
