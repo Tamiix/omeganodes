@@ -38,7 +38,7 @@ const commitments = [
 ];
 
 const dedicatedFeatures = [
-  "JITO Shredstream & Omega improvements",
+  "JITO Shredstream, various other shred sources & in-house Omega improvements",
   "Yellowstone gRPC included",
   "Arbitrage friendly limits",
   "Dedicated staked connection",
@@ -859,28 +859,31 @@ const PricingSection = () => {
                       )}
                     </div>
 
-                    {/* Private Shreds */}
-                    <div className="p-5 rounded-2xl bg-card/50 backdrop-blur border border-border">
+                    {/* Private Shreds - Coming Soon */}
+                    <div className="p-5 rounded-2xl bg-card/50 backdrop-blur border border-border relative overflow-hidden">
+                      {/* Coming Soon Overlay */}
+                      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center">
+                        <div className="px-4 py-2 rounded-full bg-primary/20 border border-primary/30">
+                          <span className="text-sm font-semibold text-primary">Coming Soon</span>
+                        </div>
+                      </div>
+                      
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-omega flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-omega flex items-center justify-center opacity-50">
                           <Zap className="w-5 h-5 text-white" />
                         </div>
-                        <h3 className="font-semibold">Private Shreds</h3>
+                        <h3 className="font-semibold opacity-50">Private Shreds</h3>
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between opacity-50">
                         <div>
                           <p className="font-medium">Faster gRPC & transaction landing</p>
                           <p className="text-sm text-muted-foreground">$800/month</p>
                         </div>
                         <button
-                          onClick={() => setPrivateShredsEnabled(!privateShredsEnabled)}
-                          className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
-                            privateShredsEnabled 
-                              ? "bg-gradient-omega text-white shadow-md" 
-                              : "bg-muted hover:bg-muted/80"
-                          }`}
+                          disabled
+                          className="px-4 py-2 rounded-xl font-medium text-sm bg-muted cursor-not-allowed"
                         >
-                          {privateShredsEnabled ? "Added" : "Add"}
+                          Add
                         </button>
                       </div>
                     </div>
