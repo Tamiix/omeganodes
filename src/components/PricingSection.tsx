@@ -46,12 +46,12 @@ const dedicatedFeatures = [
 ];
 
 const sharedFeatures = [
-  "Full RPC node access",
-  "Priority Discord support",
-  "99.99% uptime SLA",
+  "RPC included",
+  "gRPC included",
+  "WebSocket included",
   "All 3 regions included",
-  "Real-time monitoring",
-  "Dedicated endpoint",
+  "99.99% uptime guarantee",
+  "Priority Discord support",
 ];
 
 interface AppliedDiscount {
