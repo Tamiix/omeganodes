@@ -32,6 +32,7 @@ const dedicatedSpecs = [
 ];
 
 const commitments = [
+  { id: "daily", name: "Daily", months: 0, discount: 0, label: "Trial only", trialOnly: true },
   { id: "monthly", name: "Monthly", months: 1, discount: 0, label: "" },
   { id: "3months", name: "3 Months", months: 3, discount: 0.08, label: "8% off" },
   { id: "6months", name: "6 Months", months: 6, discount: 0.15, label: "15% off" },
@@ -69,7 +70,7 @@ const dedicatedLocations = [
 ];
 
 const PricingSection = () => {
-  const [selectedCommitment, setSelectedCommitment] = useState("monthly");
+  const [selectedCommitment, setSelectedCommitment] = useState<string>("monthly");
   const [selectedServerType, setSelectedServerType] = useState("shared");
   const [selectedDedicatedSpec, setSelectedDedicatedSpec] = useState("epyc-9354p");
   const [additionalStakePackages, setAdditionalStakePackages] = useState(0);
@@ -107,8 +108,8 @@ const PricingSection = () => {
   const isValidDiscordId = /^\d{17,19}$/.test(discordUserId.trim());
   const isDedicated = selectedServerType === "dedicated";
   
-  // Check if commitment discount is active (any commitment other than monthly)
-  const hasCommitmentDiscount = selectedCommitment !== "monthly";
+  // Check if commitment discount is active (any commitment other than monthly or daily)
+  const hasCommitmentDiscount = selectedCommitment !== "monthly" && selectedCommitment !== "daily";
   
   // Get the final location for dedicated servers
   const getFinalLocation = () => {
@@ -141,14 +142,18 @@ const PricingSection = () => {
     fetchTrialSetting();
   }, []);
 
-  // Clear discount code when switching to a commitment with discount
+  // Clear discount code when switching to a commitment with discount, or when switching to daily
   useEffect(() => {
-    if (hasCommitmentDiscount && appliedDiscount) {
+    if ((hasCommitmentDiscount || selectedCommitment === "daily") && appliedDiscount) {
       setAppliedDiscount(null);
       setDiscountCode("");
       setDiscountError("");
     }
-  }, [hasCommitmentDiscount]);
+    // Also turn off trial mode when switching to daily
+    if (selectedCommitment === "daily" && isTrialMode) {
+      setIsTrialMode(false);
+    }
+  }, [hasCommitmentDiscount, selectedCommitment]);
 
   // Clear discount code when switching server type if code doesn't apply
   useEffect(() => {
@@ -590,25 +595,35 @@ const PricingSection = () => {
                   <Clock className="w-4 h-4 text-primary" />
                   Billing Period
                 </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {commitments.map((c) => (
-                    <button
-                      key={c.id}
-                      onClick={() => setSelectedCommitment(c.id)}
-                      className={`relative py-3 px-3 rounded-lg text-center transition-all ${
-                        selectedCommitment === c.id
-                          ? "bg-primary text-white"
-                          : "bg-muted border border-border hover:border-primary/40"
-                      }`}
-                    >
-                      <div className="text-sm font-medium">{c.name}</div>
-                      {c.label && (
-                        <div className={`text-xs mt-0.5 ${
-                          selectedCommitment === c.id ? "text-white/80" : "text-secondary"
-                        }`}>{c.label}</div>
-                      )}
-                    </button>
-                  ))}
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  {commitments
+                    .filter(c => !c.trialOnly || !isDedicated) // Hide trial-only options for dedicated
+                    .map((c) => {
+                      const isTrialOnlyCommitment = c.trialOnly === true;
+                      const isDisabled = isTrialOnlyCommitment && isDedicated;
+                      
+                      return (
+                        <button
+                          key={c.id}
+                          onClick={() => !isDisabled && setSelectedCommitment(c.id)}
+                          disabled={isDisabled}
+                          className={`relative py-3 px-3 rounded-lg text-center transition-all ${
+                            selectedCommitment === c.id
+                              ? "bg-primary text-white"
+                              : isTrialOnlyCommitment
+                                ? "bg-muted/50 border border-dashed border-border text-muted-foreground"
+                                : "bg-muted border border-border hover:border-primary/40"
+                          } ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                        >
+                          <div className="text-sm font-medium">{c.name}</div>
+                          {c.label && (
+                            <div className={`text-xs mt-0.5 ${
+                              selectedCommitment === c.id ? "text-white/80" : isTrialOnlyCommitment ? "text-amber-500" : "text-secondary"
+                            }`}>{c.label}</div>
+                          )}
+                        </button>
+                      );
+                    })}
                 </div>
               </div>
               
@@ -622,6 +637,12 @@ const PricingSection = () => {
                     <div className="text-lg text-muted-foreground line-through">{formatPrice(300)}</div>
                     <div className="text-4xl font-bold text-foreground">$0</div>
                     <p className="text-sm text-secondary mt-1">30-minute free trial</p>
+                  </div>
+                ) : selectedCommitment === "daily" ? (
+                  <div>
+                    <div className="text-lg text-muted-foreground line-through">{formatPrice(300)}</div>
+                    <div className="text-4xl font-bold text-foreground">$0</div>
+                    <p className="text-sm text-amber-500 mt-1">Redeem trial code</p>
                   </div>
                 ) : (
                   <div>
@@ -651,7 +672,7 @@ const PricingSection = () => {
               className="lg:col-span-2 space-y-3"
             >
               {/* Free Trial - Shared Only (only show if trials are enabled) */}
-              {!isDedicated && trialsEnabled && (
+              {!isDedicated && trialsEnabled && selectedCommitment !== "daily" && (
                 <div 
                   onClick={() => setIsTrialMode(!isTrialMode)}
                   className={`p-4 rounded-lg border cursor-pointer transition-all ${
@@ -1079,42 +1100,52 @@ const PricingSection = () => {
                 </div>
 
                 {/* CTA Button */}
-                <Button
-                  className={`w-full text-sm font-medium ${
-                    isTrialMode || price === 0
-                      ? "bg-secondary hover:bg-secondary/90"
-                      : "bg-gradient-omega hover:opacity-90"
-                  }`}
-                  disabled={!isValidDiscordId || !hasValidLocation || isTrialProcessing || isFreeOrderProcessing || (price === 0 && !user)}
-                  onClick={() => {
-                    if (isTrialMode) {
-                      handleTrialOrder();
-                    } else if (price === 0) {
-                      handleFreeOrder();
-                    } else {
-                      setIsPaymentOpen(true);
-                    }
-                  }}
-                >
-                  {isTrialProcessing || isFreeOrderProcessing ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      {!isValidDiscordId 
-                        ? "Enter Discord ID" 
-                        : !hasValidLocation
-                          ? "Select Location"
-                          : isTrialMode 
-                            ? "Start Free Trial" 
-                            : price === 0 
-                              ? (user ? "Get Free Access" : "Login to Continue")
-                              : "Continue to Payment"}
-                    </>
-                  )}
-                </Button>
+                {selectedCommitment === "daily" ? (
+                  <div className="p-4 rounded-lg border border-dashed border-amber-500/50 bg-amber-500/5 text-center">
+                    <Gift className="w-5 h-5 text-amber-500 mx-auto mb-2" />
+                    <p className="text-sm font-medium text-foreground">Trial Code Required</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Daily access is only available by redeeming a trial code above
+                    </p>
+                  </div>
+                ) : (
+                  <Button
+                    className={`w-full text-sm font-medium ${
+                      isTrialMode || price === 0
+                        ? "bg-secondary hover:bg-secondary/90"
+                        : "bg-gradient-omega hover:opacity-90"
+                    }`}
+                    disabled={!isValidDiscordId || !hasValidLocation || isTrialProcessing || isFreeOrderProcessing || (price === 0 && !user)}
+                    onClick={() => {
+                      if (isTrialMode) {
+                        handleTrialOrder();
+                      } else if (price === 0) {
+                        handleFreeOrder();
+                      } else {
+                        setIsPaymentOpen(true);
+                      }
+                    }}
+                  >
+                    {isTrialProcessing || isFreeOrderProcessing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        {!isValidDiscordId 
+                          ? "Enter Discord ID" 
+                          : !hasValidLocation
+                            ? "Select Location"
+                            : isTrialMode 
+                              ? "Start Free Trial" 
+                              : price === 0 
+                                ? (user ? "Get Free Access" : "Login to Continue")
+                                : "Continue to Payment"}
+                      </>
+                    )}
+                  </Button>
+                )}
                 
                 <p className="text-xs text-center text-muted-foreground">
                   {isTrialMode 
