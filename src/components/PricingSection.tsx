@@ -1021,7 +1021,7 @@ const PricingSection = () => {
                     className={`text-sm ${discordUserId && !isValidDiscordId ? "border-destructive" : isValidDiscordId ? "border-secondary" : ""}`}
                   />
                   {isValidDiscordId && (
-                    <p className="text-xs text-secondary mt-1 flex items-center gap-1">
+                    <p className="text-xs text-green-500 mt-1 flex items-center gap-1">
                       <Check className="w-3 h-3" /> Valid
                     </p>
                   )}
