@@ -518,7 +518,7 @@ const PricingSection = () => {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {type.id === "shared" ? <Shield className="w-4 h-4" /> : <Server className="w-4 h-4" />}
+                {type.id === "shared" ? <Shield className="w-4 h-4" /> : type.id === "shreds" ? <Zap className="w-4 h-4" /> : <Server className="w-4 h-4" />}
                 {type.name}
               </button>
             ))}
@@ -527,6 +527,28 @@ const PricingSection = () => {
 
         {/* Main Content */}
         <div className="max-w-5xl mx-auto relative">
+          {/* Shreds Coming Soon */}
+          {selectedServerType === "shreds" ? (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-xl border border-border bg-card p-12 text-center"
+            >
+              <div className="w-16 h-16 mx-auto mb-6 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Zap className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-2xl font-bold mb-3">Shreds Coming Soon</h3>
+              <p className="text-muted-foreground max-w-md mx-auto mb-6">
+                Standalone shred access is currently in development. Join our Discord to be notified when it launches.
+              </p>
+              <Button variant="omegaOutline" asChild>
+                <a href="https://discord.gg/omeganodes" target="_blank" rel="noopener noreferrer">
+                  Join Discord for Updates
+                </a>
+              </Button>
+            </motion.div>
+          ) : (
+          <>
           {/* Login Required Overlay */}
           {!user && (
             <motion.div
@@ -1105,6 +1127,8 @@ const PricingSection = () => {
               </div>
             </motion.div>
           </div>
+          </>
+          )}
         </div>
 
         {/* Discord Support CTA */}
