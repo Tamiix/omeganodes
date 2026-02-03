@@ -48,7 +48,7 @@ const HeroSection = () => {
             className="text-lg text-muted-foreground max-w-xl mx-auto mb-10"
           >
             Sub-millisecond latency, 700k+ SOL staked, 3 global regions. 
-            Built by serious botters.
+            Built for serious botters.
           </motion.p>
 
           {/* CTAs */}
