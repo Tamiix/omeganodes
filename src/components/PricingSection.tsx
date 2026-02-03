@@ -13,6 +13,7 @@ import FingerprintJS from "@fingerprintjs/fingerprintjs";
 const serverTypes = [
   { id: "shared", name: "Shared", description: "Multi-tenant infrastructure" },
   { id: "dedicated", name: "Dedicated", description: "Your own hardware" },
+  { id: "shreds", name: "Shreds", description: "Standalone shred access" },
 ];
 
 const dedicatedSpecs = [
