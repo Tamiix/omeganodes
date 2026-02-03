@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
-import { Check, TrendingUp } from "lucide-react";
+import { Check } from "lucide-react";
 
 const stats = [
-  { value: "<1ms", label: "Response Time", description: "Average latency across all regions" },
-  { value: "1000", label: "Requests/sec", description: "Shared server throughput" },
-  { value: "300", label: "TPS Capacity", description: "Transactions per second" },
-  { value: "99.9%", label: "Uptime SLA", description: "Guaranteed availability" },
+  { value: "<1ms", label: "Response Time" },
+  { value: "1000", label: "Requests/sec" },
+  { value: "300", label: "TPS Capacity" },
+  { value: "99.9%", label: "Uptime SLA" },
 ];
 
 const highlights = [
@@ -19,82 +19,65 @@ const highlights = [
 
 const PerformanceSection = () => {
   return (
-    <section id="performance" className="py-24 relative overflow-hidden">
-      {/* Gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-card to-background" />
-      
-      {/* Glowing orbs */}
-      <div className="absolute top-1/3 right-0 w-[500px] h-[500px] rounded-full bg-[#F5B5B5]/10 blur-[120px]" />
-      <div className="absolute bottom-1/3 left-0 w-[400px] h-[400px] rounded-full bg-[#5B4EE4]/10 blur-[100px]" />
-
-      <div className="container mx-auto px-6 relative z-10">
+    <section id="performance" className="py-24 bg-muted/30">
+      <div className="container mx-auto px-6">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-14"
         >
-          <span className="inline-block px-4 py-1.5 rounded-full bg-secondary/10 border border-secondary/30 text-secondary text-sm font-medium mb-4">
-            Performance Metrics
-          </span>
-          <h2 className="text-4xl sm:text-5xl md:text-6xl font-black mb-4">
+          <p className="text-sm font-medium text-secondary mb-3">Performance Metrics</p>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
             <span className="text-gradient-omega">Production</span> Ready
           </h2>
-          <p className="text-muted-foreground text-lg max-w-xl mx-auto mb-2">
-            Real metrics from our production infrastructure. No asterisks, no exceptions.
-          </p>
-          <p className="text-sm text-muted-foreground/70">
-            Need higher limits? Dedicated servers offer fully customizable RPS & TPS.
+          <p className="text-muted-foreground max-w-lg mx-auto">
+            Real metrics from our production infrastructure. No asterisks.
           </p>
         </motion.div>
 
         {/* Stats grid */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-16"
+          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12"
         >
-          {stats.map((stat, index) => (
+          {stats.map((stat) => (
             <div 
               key={stat.label}
-              className="glass-card rounded-2xl p-6 text-center hover:border-secondary/30 transition-all"
+              className="rounded-lg border border-border bg-card p-6 text-center"
             >
-              <p className="text-4xl sm:text-5xl font-black text-gradient-omega mb-2">{stat.value}</p>
-              <p className="font-semibold text-foreground mb-1">{stat.label}</p>
-              <p className="text-sm text-muted-foreground">{stat.description}</p>
+              <p className="text-3xl font-bold text-foreground mb-1">{stat.value}</p>
+              <p className="text-sm text-muted-foreground">{stat.label}</p>
             </div>
           ))}
         </motion.div>
 
         {/* Features list */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ delay: 0.2 }}
-          className="glass-card rounded-2xl p-8 max-w-4xl mx-auto glow-omega"
+          className="border border-border rounded-lg bg-card p-8 max-w-3xl mx-auto"
         >
-          <div className="flex justify-center mb-6">
-            <div className="flex items-center gap-3 -translate-x-8">
-              <div className="w-10 h-10 rounded-lg bg-gradient-omega flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-white" />
-              </div>
-              <h3 className="text-xl font-bold">What You Get</h3>
-            </div>
-          </div>
+          <h3 className="text-lg font-semibold mb-6 text-center">What's Included</h3>
           
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-2 gap-3">
             {highlights.map((item) => (
               <div key={item} className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0">
-                  <Check className="w-4 h-4 text-secondary" />
+                <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Check className="w-3 h-3 text-primary" />
                 </div>
-                <span className="text-foreground">{item}</span>
+                <span className="text-sm text-foreground">{item}</span>
               </div>
             ))}
           </div>
+          
+          <p className="text-xs text-muted-foreground text-center mt-6">
+            Need higher limits? Dedicated servers offer fully customizable RPS & TPS.
+          </p>
         </motion.div>
       </div>
     </section>

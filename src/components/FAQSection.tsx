@@ -35,43 +35,39 @@ const faqs = [
 
 const FAQSection = () => {
   return (
-    <section id="faq" className="py-24 relative">
+    <section id="faq" className="py-24">
       <div className="container mx-auto px-6">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
           className="text-center mb-12"
         >
-          <span className="text-primary font-medium text-sm uppercase tracking-wider mb-3 block">
-            FAQ
-          </span>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+          <p className="text-sm font-medium text-primary mb-3">FAQ</p>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
             Frequently Asked Questions
           </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto">
-            Find quick answers to common questions about our RPC infrastructure.
+          <p className="text-muted-foreground max-w-lg mx-auto">
+            Quick answers to common questions about our infrastructure.
           </p>
         </motion.div>
 
         {/* FAQ Accordion */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.1 }}
           className="max-w-2xl mx-auto"
         >
-          <Accordion type="single" collapsible className="space-y-3">
+          <Accordion type="single" collapsible className="space-y-2">
             {faqs.map((faq, index) => (
               <AccordionItem
                 key={index}
                 value={`item-${index}`}
-                className="border border-border rounded-lg px-5 bg-card data-[state=open]:border-primary/30 transition-colors"
+                className="border border-border rounded-lg px-4 bg-card data-[state=open]:border-primary/40 transition-colors"
               >
-                <AccordionTrigger className="text-left text-base font-medium text-foreground hover:text-primary hover:no-underline py-4">
+                <AccordionTrigger className="text-left text-sm font-medium text-foreground hover:text-primary hover:no-underline py-4">
                   {faq.question}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground text-sm pb-4 leading-relaxed">

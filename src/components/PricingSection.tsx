@@ -479,59 +479,31 @@ const PricingSection = () => {
   };
 
   return (
-    <section id="pricing" className="py-24 relative overflow-hidden">
-      {/* Vibrant gradient background */}
-      <div className="absolute inset-0">
-        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-primary/15 blur-[150px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-secondary/10 blur-[120px]" />
-      </div>
-      
-      <div className="container mx-auto px-6 relative z-10">
+    <section id="pricing" className="py-24 bg-muted/30">
+      <div className="container mx-auto px-6">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-12"
         >
-          {/* Icon cluster */}
-          <div className="flex justify-center mb-6">
-            <div className="relative">
-              <motion.div 
-                className="w-16 h-16 rounded-2xl bg-gradient-omega flex items-center justify-center"
-                animate={{ rotate: [0, 5, -5, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <Cpu className="w-8 h-8 text-white" />
-              </motion.div>
-              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-secondary flex items-center justify-center">
-                <Check className="w-3 h-3 text-secondary-foreground" />
-              </div>
-            </div>
-          </div>
-          
-          {/* Heading */}
-          <h2 className="text-4xl sm:text-5xl md:text-6xl font-black mb-4">
+          <p className="text-sm font-medium text-primary mb-3">Pricing</p>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
             Choose Your <span className="text-gradient-omega">Plan</span>
           </h2>
-          
-          {/* Subtitle pills */}
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <span className="px-4 py-1.5 rounded-full bg-card border border-border text-sm text-muted-foreground">
-              No hidden fees
-            </span>
-            <span className="px-4 py-1.5 rounded-full bg-card border border-border text-sm text-muted-foreground">
-              Cancel anytime
-            </span>
-            <span className="px-4 py-1.5 rounded-full bg-card border border-border text-sm text-muted-foreground">
-              Enterprise ready
-            </span>
+          <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground">
+            <span>No hidden fees</span>
+            <span>•</span>
+            <span>Cancel anytime</span>
+            <span>•</span>
+            <span>Enterprise ready</span>
           </div>
         </motion.div>
 
         {/* Server Type Toggle */}
-        <div className="flex justify-center mb-10">
-          <div className="inline-flex p-1.5 rounded-2xl bg-card/80 backdrop-blur border border-border shadow-lg">
+        <div className="flex justify-center mb-8">
+          <div className="inline-flex p-1 rounded-lg bg-card border border-border">
             {serverTypes.map((type) => (
               <button
                 key={type.id}
@@ -539,10 +511,10 @@ const PricingSection = () => {
                   setSelectedServerType(type.id);
                   if (type.id === "dedicated") setIsTrialMode(false);
                 }}
-                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm transition-all ${
+                className={`flex items-center gap-2 px-5 py-2 rounded-md text-sm font-medium transition-all ${
                   selectedServerType === type.id
-                    ? "bg-gradient-omega text-white shadow-md"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    ? "bg-gradient-omega text-white"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {type.id === "shared" ? <Shield className="w-4 h-4" /> : <Server className="w-4 h-4" />}
@@ -552,63 +524,64 @@ const PricingSection = () => {
           </div>
         </div>
 
-        {/* Main Content - New unified design */}
-        <div className="max-w-6xl mx-auto relative">
+        {/* Main Content */}
+        <div className="max-w-5xl mx-auto relative">
           {/* Login Required Overlay */}
           {!user && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="absolute inset-0 z-50 flex items-start justify-center pt-20"
+              className="absolute inset-0 z-50 flex items-start justify-center pt-16"
             >
-              <div className="absolute inset-0 bg-background/80 backdrop-blur-sm rounded-3xl" />
-              <div className="relative z-10 text-center p-8 max-w-md">
-                <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-omega flex items-center justify-center">
-                  <Lock className="w-10 h-10 text-white" />
+              <div className="absolute inset-0 bg-background/90 backdrop-blur-sm rounded-xl" />
+              <div className="relative z-10 text-center p-6 max-w-sm">
+                <div className="w-14 h-14 mx-auto mb-4 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Lock className="w-7 h-7 text-primary" />
                 </div>
-                <h3 className="text-2xl font-bold mb-3">Account Required</h3>
-                <p className="text-muted-foreground mb-6">
-                  Create a free account or sign in to view pricing and place orders.
+                <h3 className="text-xl font-semibold mb-2">Account Required</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Sign in to view pricing and place orders.
                 </p>
                 <Button 
                   onClick={() => setIsAuthModalOpen(true)}
-                  className="bg-gradient-omega hover:opacity-90 text-white px-8 py-6 text-lg font-semibold rounded-xl shadow-lg shadow-primary/25"
+                  className="bg-gradient-omega hover:opacity-90"
                 >
-                  <LogIn className="w-5 h-5 mr-2" />
-                  Sign In / Create Account
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Sign In
                 </Button>
               </div>
             </motion.div>
           )}
-          {/* Top row: Billing + Price side by side */}
+          
+          {/* Top row: Billing + Price */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="glass-card rounded-3xl p-8 mb-6 glow-omega"
+            className="rounded-xl border border-border bg-card p-6 mb-4"
           >
-            <div className="grid lg:grid-cols-2 gap-8 items-center">
+            <div className="grid lg:grid-cols-2 gap-6 items-center">
               {/* Left: Billing Period */}
               <div>
-                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-primary" />
+                <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-primary" />
                   Billing Period
                 </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {commitments.map((c) => (
                     <button
                       key={c.id}
                       onClick={() => setSelectedCommitment(c.id)}
-                      className={`relative py-4 px-4 rounded-xl text-center transition-all ${
+                      className={`relative py-3 px-3 rounded-lg text-center transition-all ${
                         selectedCommitment === c.id
-                          ? "bg-gradient-omega text-white shadow-lg shadow-primary/25"
-                          : "bg-card border border-border hover:border-primary/30"
+                          ? "bg-primary text-white"
+                          : "bg-muted border border-border hover:border-primary/40"
                       }`}
                     >
-                      <div className="font-semibold">{c.name}</div>
+                      <div className="text-sm font-medium">{c.name}</div>
                       {c.label && (
-                        <div className={`text-xs mt-1 ${
-                          selectedCommitment === c.id ? "text-white/80" : "text-secondary font-semibold"
+                        <div className={`text-xs mt-0.5 ${
+                          selectedCommitment === c.id ? "text-white/80" : "text-secondary"
                         }`}>{c.label}</div>
                       )}
                     </button>
@@ -618,27 +591,25 @@ const PricingSection = () => {
               
               {/* Right: Price Display */}
               <div className="text-center lg:text-right">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 mb-3">
-                  <span className="text-xs font-semibold text-primary uppercase tracking-wider">
-                    {isDedicated ? "Dedicated Server" : "Shared Infrastructure"}
-                  </span>
-                </div>
+                <p className="text-xs text-muted-foreground mb-1">
+                  {isDedicated ? "Dedicated Server" : "Shared Infrastructure"}
+                </p>
                 {isTrialMode ? (
                   <div>
-                    <div className="text-xl text-muted-foreground line-through">{formatPrice(300)}</div>
-                    <div className="text-6xl font-black text-gradient-omega">$0</div>
-                    <p className="text-secondary font-semibold mt-1">30-minute free trial</p>
+                    <div className="text-lg text-muted-foreground line-through">{formatPrice(300)}</div>
+                    <div className="text-4xl font-bold text-foreground">$0</div>
+                    <p className="text-sm text-secondary mt-1">30-minute free trial</p>
                   </div>
                 ) : (
                   <div>
                     {(discount > 0 || appliedDiscount) && (
-                      <div className="text-xl text-muted-foreground line-through">
+                      <div className="text-lg text-muted-foreground line-through">
                         {formatPrice(appliedDiscount ? priceBeforeDiscount : originalPrice)}
                       </div>
                     )}
                     <div className="flex items-baseline justify-center lg:justify-end gap-1">
-                      <span className="text-6xl font-black text-gradient-omega">{formatPrice(price)}</span>
-                      <span className="text-xl text-muted-foreground">/mo</span>
+                      <span className="text-4xl font-bold text-foreground">{formatPrice(price)}</span>
+                      <span className="text-lg text-muted-foreground">/mo</span>
                     </div>
                   </div>
                 )}
@@ -647,50 +618,45 @@ const PricingSection = () => {
           </motion.div>
 
           {/* Bottom grid: Options + Features + Action */}
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="grid lg:grid-cols-3 gap-4">
             
             {/* Left Column: Options */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="lg:col-span-2 space-y-4"
+              className="lg:col-span-2 space-y-3"
             >
               {/* Free Trial - Shared Only (only show if trials are enabled) */}
               {!isDedicated && trialsEnabled && (
                 <div 
                   onClick={() => setIsTrialMode(!isTrialMode)}
-                  className={`p-5 rounded-2xl border-2 cursor-pointer transition-all hover:shadow-lg ${
+                  className={`p-4 rounded-lg border cursor-pointer transition-all ${
                     isTrialMode 
-                      ? "border-secondary bg-gradient-to-r from-secondary/10 to-secondary/5 shadow-secondary/20 shadow-lg" 
-                      : "border-border bg-card/50 backdrop-blur hover:border-secondary/50"
+                      ? "border-secondary bg-secondary/5" 
+                      : "border-border bg-card hover:border-secondary/50"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-                        isTrialMode ? "bg-secondary text-white" : "bg-secondary/10"
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                        isTrialMode ? "bg-secondary" : "bg-secondary/10"
                       }`}>
-                        <Gift className={`w-5 h-5 ${isTrialMode ? "text-white" : "text-secondary"}`} />
+                        <Gift className={`w-4 h-4 ${isTrialMode ? "text-white" : "text-secondary"}`} />
                       </div>
                       <div>
-                        <h3 className="font-semibold flex items-center gap-2">
-                          Free Trial
-                          {isTrialMode && <span className="text-xs bg-secondary text-white px-2 py-0.5 rounded-full">Active</span>}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">30 minutes, no payment required</p>
+                        <h3 className="text-sm font-medium">Free Trial</h3>
+                        <p className="text-xs text-muted-foreground">30 minutes, no payment required</p>
                       </div>
                     </div>
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                       isTrialMode ? "border-secondary bg-secondary" : "border-muted-foreground/30"
                     }`}>
-                      {isTrialMode && <Check className="w-3.5 h-3.5 text-white" />}
+                      {isTrialMode && <Check className="w-3 h-3 text-white" />}
                     </div>
                   </div>
                 </div>
               )}
-
-{/* Trial code section removed - merged with discount codes */}
 
               {/* Dedicated Server Options */}
               <AnimatePresence>
@@ -699,53 +665,44 @@ const PricingSection = () => {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="space-y-4"
+                    className="space-y-3"
                   >
                     {/* Deployment Notice */}
-                    <div className="p-4 rounded-xl bg-muted/50 border border-border space-y-2">
-                      <div className="flex items-start gap-3">
-                        <Clock className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                        <p className="text-sm text-muted-foreground">
-                          Dedicated servers take <strong className="text-foreground">1-3 working days</strong> to deploy and configure.
-                        </p>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <svg className="w-5 h-5 text-primary shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <p className="text-sm text-muted-foreground">
-                          Need a specific location? We can deploy in <strong className="text-foreground">almost any region</strong> on request.
-                        </p>
-                      </div>
+                    <div className="p-3 rounded-lg bg-muted/50 border border-border text-xs text-muted-foreground space-y-1.5">
+                      <p>
+                        <Clock className="w-3.5 h-3.5 text-primary inline mr-1.5" />
+                        Dedicated servers take <strong className="text-foreground">1-3 working days</strong> to deploy.
+                      </p>
+                      <p>
+                        <MapPin className="w-3.5 h-3.5 text-primary inline mr-1.5" />
+                        Custom locations available on request.
+                      </p>
                     </div>
 
                     {/* Hardware Selection */}
-                    <div className="p-5 rounded-2xl bg-card/50 backdrop-blur border border-border">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-omega flex items-center justify-center">
-                          <Cpu className="w-5 h-5 text-white" />
-                        </div>
-                        <h3 className="font-semibold">Hardware</h3>
-                      </div>
+                    <div className="p-4 rounded-lg border border-border bg-card">
+                      <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                        <Cpu className="w-4 h-4 text-primary" />
+                        Hardware
+                      </h3>
                       <div className="space-y-2">
                         {dedicatedSpecs.map((spec) => (
                           <button
                             key={spec.id}
                             onClick={() => setSelectedDedicatedSpec(spec.id)}
-                            className={`w-full p-4 rounded-xl border-2 flex items-center justify-between transition-all ${
+                            className={`w-full p-3 rounded-lg border flex items-center justify-between transition-all ${
                               selectedDedicatedSpec === spec.id
-                                ? "border-primary bg-primary/5 shadow-md"
-                                : "border-transparent bg-muted/30 hover:bg-muted/50 hover:border-border"
+                                ? "border-primary bg-primary/5"
+                                : "border-border hover:border-primary/40"
                             }`}
                           >
-                            <div>
-                              <p className="font-medium">{spec.cpu}</p>
-                              <p className="text-sm text-muted-foreground">{spec.memory}</p>
+                            <div className="text-left">
+                              <p className="text-sm font-medium">{spec.cpu}</p>
+                              <p className="text-xs text-muted-foreground">{spec.memory}</p>
                             </div>
                             <div className="text-right">
-                              <span className="text-xl font-bold text-primary">${spec.price}</span>
-                              <span className="text-sm text-muted-foreground">/mo</span>
+                              <span className="text-lg font-semibold">${spec.price}</span>
+                              <span className="text-xs text-muted-foreground">/mo</span>
                             </div>
                           </button>
                         ))}
@@ -753,16 +710,11 @@ const PricingSection = () => {
                     </div>
 
                     {/* Location Selection */}
-                    <div className="p-5 rounded-2xl bg-card/50 backdrop-blur border border-border">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-omega flex items-center justify-center">
-                          <MapPin className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold">Server Location</h3>
-                          <p className="text-xs text-muted-foreground">Select where to deploy your dedicated server</p>
-                        </div>
-                      </div>
+                    <div className="p-4 rounded-lg border border-border bg-card">
+                      <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-primary" />
+                        Server Location
+                      </h3>
                       
                       {!isCustomLocationMode ? (
                         <div className="space-y-2">
@@ -770,14 +722,14 @@ const PricingSection = () => {
                             <button
                               key={loc.id}
                               onClick={() => setSelectedLocation(loc.id)}
-                              className={`w-full p-3 rounded-xl border-2 flex items-center gap-3 transition-all ${
+                              className={`w-full p-2.5 rounded-lg border flex items-center gap-2.5 transition-all ${
                                 selectedLocation === loc.id
-                                  ? "border-primary bg-primary/5 shadow-md"
-                                  : "border-transparent bg-muted/30 hover:bg-muted/50 hover:border-border"
+                                  ? "border-primary bg-primary/5"
+                                  : "border-border hover:border-primary/40"
                               }`}
                             >
-                              <span className="text-xl">{loc.flag}</span>
-                              <span className="font-medium">{loc.name}</span>
+                              <span className="text-lg">{loc.flag}</span>
+                              <span className="text-sm font-medium">{loc.name}</span>
                               {selectedLocation === loc.id && (
                                 <Check className="w-4 h-4 text-primary ml-auto" />
                               )}
@@ -789,102 +741,82 @@ const PricingSection = () => {
                               setIsCustomLocationMode(true);
                               setSelectedLocation(null);
                             }}
-                            className="w-full p-3 rounded-xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/30 flex items-center gap-3 transition-all text-muted-foreground hover:text-foreground"
+                            className="w-full p-2.5 rounded-lg border border-dashed border-border hover:border-primary/40 flex items-center gap-2.5 transition-all text-muted-foreground hover:text-foreground text-sm"
                           >
-                            <span className="text-xl">🌍</span>
-                            <span className="font-medium">Need a specific location?</span>
+                            <span className="text-lg">🌍</span>
+                            <span>Other location</span>
                           </button>
                         </div>
                       ) : (
-                        <div className="space-y-3">
-                          <div>
-                            <label className="text-sm text-muted-foreground mb-2 block">
-                              Enter your preferred location:
-                            </label>
-                            <Input
-                              placeholder="e.g., Tokyo, Singapore, London..."
-                              value={customLocation}
-                              onChange={(e) => setCustomLocation(e.target.value)}
-                              className={`bg-background/50 ${customLocation.trim() ? "border-secondary" : ""}`}
-                            />
-                            {customLocation.trim() && (
-                              <p className="text-xs text-secondary mt-1.5 flex items-center gap-1 font-medium">
-                                <Check className="w-3 h-3" /> Custom location selected
-                              </p>
-                            )}
-                          </div>
+                        <div className="space-y-2">
+                          <Input
+                            placeholder="e.g., Tokyo, Singapore..."
+                            value={customLocation}
+                            onChange={(e) => setCustomLocation(e.target.value)}
+                            className={`text-sm ${customLocation.trim() ? "border-secondary" : ""}`}
+                          />
+                          {customLocation.trim() && (
+                            <p className="text-xs text-secondary flex items-center gap-1">
+                              <Check className="w-3 h-3" /> Custom location selected
+                            </p>
+                          )}
                           <button
                             onClick={() => {
                               setIsCustomLocationMode(false);
                               setCustomLocation("");
                             }}
-                            className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                            className="text-xs text-muted-foreground hover:text-primary"
                           >
-                            ← Back to standard locations
+                            ← Standard locations
                           </button>
                         </div>
                       )}
                     </div>
 
                     {/* SwQoS Stake */}
-                    <div className="p-5 rounded-2xl bg-card/50 backdrop-blur border border-border">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-omega flex items-center justify-center">
-                          <Plus className="w-5 h-5 text-white" />
-                        </div>
-                        <h3 className="font-semibold">Additional Stake</h3>
-                      </div>
+                    <div className="p-4 rounded-lg border border-border bg-card">
+                      <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                        <Plus className="w-4 h-4 text-primary" />
+                        Additional Stake
+                      </h3>
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-medium">100,000 SOL per package</p>
-                          <p className="text-sm text-muted-foreground">$350/month each</p>
+                          <p className="text-sm font-medium">100,000 SOL per package</p>
+                          <p className="text-xs text-muted-foreground">$350/month each</p>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                           <button
                             onClick={() => setAdditionalStakePackages(Math.max(0, additionalStakePackages - 1))}
                             disabled={additionalStakePackages === 0}
-                            className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-lg font-medium hover:bg-muted/80 disabled:opacity-40 transition-all"
+                            className="w-8 h-8 rounded-md bg-muted flex items-center justify-center font-medium hover:bg-muted/80 disabled:opacity-40"
                           >−</button>
-                          <span className="w-8 text-center text-xl font-bold">{additionalStakePackages}</span>
+                          <span className="w-6 text-center font-semibold">{additionalStakePackages}</span>
                           <button
                             onClick={() => setAdditionalStakePackages(Math.min(10, additionalStakePackages + 1))}
-                            className="w-10 h-10 rounded-xl bg-gradient-omega text-white flex items-center justify-center text-lg font-medium hover:opacity-90 transition-all"
+                            className="w-8 h-8 rounded-md bg-primary text-white flex items-center justify-center font-medium hover:bg-primary/90"
                           >+</button>
                         </div>
                       </div>
                       {additionalStakePackages > 0 && (
-                        <p className="text-sm text-secondary mt-3 font-medium">
+                        <p className="text-xs text-secondary mt-2">
                           Total stake: {(50000 + additionalStakePackages * 100000).toLocaleString()} SOL
                         </p>
                       )}
                     </div>
 
                     {/* Private Shreds - Coming Soon */}
-                    <div className="p-5 rounded-2xl bg-card/50 backdrop-blur border border-border relative overflow-hidden">
-                      {/* Coming Soon Overlay */}
-                      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center">
-                        <div className="px-4 py-2 rounded-full bg-primary/20 border border-primary/30">
-                          <span className="text-sm font-semibold text-primary">Coming Soon</span>
-                        </div>
+                    <div className="p-4 rounded-lg border border-border bg-card relative overflow-hidden">
+                      <div className="absolute inset-0 bg-background/80 z-10 flex items-center justify-center">
+                        <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded">Coming Soon</span>
                       </div>
                       
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-omega flex items-center justify-center opacity-50">
-                          <Zap className="w-5 h-5 text-white" />
-                        </div>
-                        <h3 className="font-semibold opacity-50">Private Shreds</h3>
-                      </div>
                       <div className="flex items-center justify-between opacity-50">
                         <div>
-                          <p className="font-medium">Faster gRPC & transaction landing</p>
-                          <p className="text-sm text-muted-foreground">$800/month</p>
+                          <p className="text-sm font-medium flex items-center gap-2">
+                            <Zap className="w-4 h-4" /> Private Shreds
+                          </p>
+                          <p className="text-xs text-muted-foreground">$800/month</p>
                         </div>
-                        <button
-                          disabled
-                          className="px-4 py-2 rounded-xl font-medium text-sm bg-muted cursor-not-allowed"
-                        >
-                          Add
-                        </button>
                       </div>
                     </div>
                   </motion.div>
@@ -893,73 +825,66 @@ const PricingSection = () => {
 
               <div 
                 onClick={() => setRentAccessEnabled(!rentAccessEnabled)}
-                className={`p-5 rounded-2xl border-2 cursor-pointer transition-all hover:shadow-lg ${
+                className={`p-4 rounded-lg border cursor-pointer transition-all ${
                   rentAccessEnabled 
-                    ? "border-primary bg-gradient-to-r from-primary/10 to-accent/5 shadow-primary/20 shadow-lg" 
-                    : "border-border bg-card/50 backdrop-blur hover:border-primary/30"
+                    ? "border-primary bg-primary/5" 
+                    : "border-border bg-card hover:border-primary/40"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-                      rentAccessEnabled ? "bg-gradient-omega" : "bg-primary/10"
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                      rentAccessEnabled ? "bg-primary" : "bg-primary/10"
                     }`}>
-                      <Zap className={`w-5 h-5 ${rentAccessEnabled ? "text-white" : "text-primary"}`} />
+                      <Zap className={`w-4 h-4 ${rentAccessEnabled ? "text-white" : "text-primary"}`} />
                     </div>
                     <div>
-                      <h3 className="font-semibold">{isDedicated ? "Earn By Sharing" : "Rent Access"}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {isDedicated ? "Your Endpoint" : "Earn by sharing unused endpoints"}
+                      <h3 className="text-sm font-medium">{isDedicated ? "Earn By Sharing" : "Rent Access"}</h3>
+                      <p className="text-xs text-muted-foreground">
+                        {isDedicated ? "Share your endpoint" : "Earn by sharing unused endpoints"}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-primary">
                       +{isDedicated ? "20" : "10"}%
                     </span>
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                       rentAccessEnabled ? "border-primary bg-primary" : "border-muted-foreground/30"
                     }`}>
-                      {rentAccessEnabled && <Check className="w-3.5 h-3.5 text-white" />}
+                      {rentAccessEnabled && <Check className="w-3 h-3 text-white" />}
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Discount / Trial Codes */}
-              <div className={`p-5 rounded-2xl bg-card/50 backdrop-blur border border-border transition-opacity ${hasCommitmentDiscount && !redeemedTrial ? 'opacity-50' : ''}`}>
-                <div className="flex items-center gap-3 mb-4">
+              <div className={`p-4 rounded-lg border border-border bg-card ${hasCommitmentDiscount && !redeemedTrial ? 'opacity-60' : ''}`}>
+                <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
                   <Tag className="w-4 h-4 text-primary" />
-                  <h3 className="font-semibold">Discount / Trial Codes</h3>
-                  {hasCommitmentDiscount && !isDedicated && !redeemedTrial && (
-                    <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
-                      Discount codes not available with commitment
-                    </span>
-                  )}
-                </div>
+                  Discount / Trial Codes
+                </h3>
                 
-                {/* Show redeemed trial success state */}
                 {redeemedTrial ? (
-                  <div className="p-4 rounded-xl bg-gradient-to-r from-secondary/10 to-secondary/5 border border-secondary/20">
-                    <div className="flex items-center gap-3">
-                      <Check className="w-5 h-5 text-secondary" />
+                  <div className="p-3 rounded-lg bg-secondary/10 border border-secondary/20">
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-secondary" />
                       <div>
-                        <p className="font-medium text-secondary">Trial Activated!</p>
-                        <p className="text-sm text-muted-foreground">
-                          {TRIAL_DURATION_LABELS[redeemedTrial.duration_type]} access until {new Date(redeemedTrial.access_expires_at).toLocaleString()}
+                        <p className="text-sm font-medium text-secondary">Trial Activated!</p>
+                        <p className="text-xs text-muted-foreground">
+                          {TRIAL_DURATION_LABELS[redeemedTrial.duration_type]} until {new Date(redeemedTrial.access_expires_at).toLocaleString()}
                         </p>
                       </div>
                     </div>
                   </div>
                 ) : hasCommitmentDiscount ? (
                   <>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Discount codes cannot be combined with commitment discounts. Switch to monthly billing to use a discount code.
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Discount codes cannot be combined with commitment discounts.
                     </p>
-                    {/* Still allow trial codes even with commitment discount, but only for shared */}
                     {!isDedicated && (
-                      <div className="pt-3 border-t border-border">
-                        <p className="text-xs text-muted-foreground mb-2">Have a trial code? Trial codes still work:</p>
+                      <div className="pt-2 border-t border-border">
+                        <p className="text-xs text-muted-foreground mb-2">Trial codes still work:</p>
                         <div className="flex gap-2">
                           <Input
                             placeholder="TRIAL-XXXXXXXX"
@@ -968,59 +893,57 @@ const PricingSection = () => {
                               setTrialCode(e.target.value.toUpperCase());
                               setTrialCodeError("");
                             }}
-                            className="font-mono bg-background/50"
+                            className="font-mono text-sm"
                             disabled={!user}
                           />
                           <Button 
                             variant="outline" 
+                            size="sm"
                             onClick={handleRedeemTrialCode}
                             disabled={!trialCode.trim() || isRedeemingTrialCode || !user || !isValidDiscordId}
-                            className="hover:bg-primary hover:text-white hover:border-primary"
                           >
                             {isRedeemingTrialCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "Redeem"}
                           </Button>
                         </div>
                         {!user && (
-                          <p className="text-xs text-muted-foreground mt-2">Login required to redeem codes</p>
+                          <p className="text-xs text-muted-foreground mt-1">Login required</p>
                         )}
                         {user && !isValidDiscordId && (
-                          <p className="text-xs text-muted-foreground mt-2">Enter Discord ID below to redeem</p>
+                          <p className="text-xs text-muted-foreground mt-1">Enter Discord ID first</p>
                         )}
-                        {trialCodeError && <p className="text-sm text-destructive mt-2">{trialCodeError}</p>}
+                        {trialCodeError && <p className="text-xs text-destructive mt-1">{trialCodeError}</p>}
                       </div>
                     )}
                   </>
                 ) : appliedDiscount ? (
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-secondary/10 to-secondary/5 border border-secondary/20">
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-secondary/10 border border-secondary/20">
                     <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-secondary" />
-                      <span className="font-mono font-bold text-secondary">{appliedDiscount.code}</span>
-                      <span className="text-sm text-muted-foreground">
+                      <Check className="w-3.5 h-3.5 text-secondary" />
+                      <span className="font-mono text-sm font-medium text-secondary">{appliedDiscount.code}</span>
+                      <span className="text-xs text-muted-foreground">
                         ({appliedDiscount.discount_type === 'percentage' ? `${appliedDiscount.discount_value}%` : `$${appliedDiscount.discount_value}`} off)
                       </span>
                     </div>
-                    <button onClick={removeDiscount} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Remove</button>
+                    <button onClick={removeDiscount} className="text-xs text-muted-foreground hover:text-foreground">Remove</button>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {/* Discount Code Input */}
+                  <div className="space-y-2">
                     <div className="flex gap-2">
                       <Input
-                        placeholder="Enter discount code"
+                        placeholder="Discount code"
                         value={discountCode}
                         onChange={(e) => { setDiscountCode(e.target.value.toUpperCase()); setDiscountError(""); }}
-                        className="font-mono bg-background/50"
+                        className="font-mono text-sm"
                       />
-                      <Button variant="outline" onClick={validateDiscountCode} disabled={!discountCode.trim() || isValidatingCode} className="hover:bg-primary hover:text-white hover:border-primary">
+                      <Button variant="outline" size="sm" onClick={validateDiscountCode} disabled={!discountCode.trim() || isValidatingCode}>
                         {isValidatingCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
                       </Button>
                     </div>
-                    {discountError && <p className="text-sm text-destructive">{discountError}</p>}
+                    {discountError && <p className="text-xs text-destructive">{discountError}</p>}
                     
-                    {/* Trial Code Input - Shared Only */}
                     {!isDedicated && (
-                      <div className="pt-3 border-t border-border">
-                        <p className="text-xs text-muted-foreground mb-2">Or redeem a trial code for free access:</p>
+                      <div className="pt-2 border-t border-border">
+                        <p className="text-xs text-muted-foreground mb-2">Or redeem a trial code:</p>
                         <div className="flex gap-2">
                           <Input
                             placeholder="TRIAL-XXXXXXXX"
@@ -1029,25 +952,25 @@ const PricingSection = () => {
                               setTrialCode(e.target.value.toUpperCase());
                               setTrialCodeError("");
                             }}
-                            className="font-mono bg-background/50"
+                            className="font-mono text-sm"
                             disabled={!user}
                           />
                           <Button 
                             variant="outline" 
+                            size="sm"
                             onClick={handleRedeemTrialCode}
                             disabled={!trialCode.trim() || isRedeemingTrialCode || !user || !isValidDiscordId}
-                            className="hover:bg-primary hover:text-white hover:border-primary"
                           >
                             {isRedeemingTrialCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "Redeem"}
                           </Button>
                         </div>
                         {!user && (
-                          <p className="text-xs text-muted-foreground mt-2">Login required to redeem codes</p>
+                          <p className="text-xs text-muted-foreground mt-1">Login required</p>
                         )}
                         {user && !isValidDiscordId && (
-                          <p className="text-xs text-muted-foreground mt-2">Enter Discord ID below to redeem</p>
+                          <p className="text-xs text-muted-foreground mt-1">Enter Discord ID first</p>
                         )}
-                        {trialCodeError && <p className="text-sm text-destructive mt-2">{trialCodeError}</p>}
+                        {trialCodeError && <p className="text-xs text-destructive mt-1">{trialCodeError}</p>}
                       </div>
                     )}
                   </div>
@@ -1057,21 +980,20 @@ const PricingSection = () => {
 
             {/* Right: Action Card */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
               className="lg:col-span-1"
             >
-              <div className="sticky top-24 space-y-4">
+              <div className="sticky top-20 space-y-3">
                 {/* Features Card */}
-                <div className="p-5 rounded-2xl bg-card border border-border">
-                  <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">What's Included</h4>
-                  <div className="space-y-3">
+                <div className="p-4 rounded-lg border border-border bg-card">
+                  <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">What's Included</h4>
+                  <div className="space-y-2">
                     {(isDedicated ? dedicatedFeatures : sharedFeatures).map((feature, i) => (
-                      <div key={i} className="flex items-start gap-3">
-                        <Check className="w-4 h-4 text-secondary shrink-0 mt-0.5" />
-                        <span className="text-sm">{feature}</span>
+                      <div key={i} className="flex items-start gap-2">
+                        <Check className="w-3.5 h-3.5 text-secondary shrink-0 mt-0.5" />
+                        <span className="text-xs">{feature}</span>
                       </div>
                     ))}
                   </div>
@@ -1079,15 +1001,15 @@ const PricingSection = () => {
 
                 {/* Regions */}
                 {!isDedicated && (
-                  <div className="p-3 rounded-xl bg-muted/30 border border-border mt-4 text-center">
-                    <span className="text-sm font-medium">🇺🇸 NY • 🇩🇪 Frankfurt • 🇳🇱 Amsterdam</span>
+                  <div className="p-2.5 rounded-lg bg-muted/50 border border-border text-center">
+                    <span className="text-xs">🇺🇸 NY • 🇩🇪 Frankfurt • 🇳🇱 Amsterdam</span>
                   </div>
                 )}
 
                 {/* Discord ID Input Card */}
-                <div className="p-5 rounded-2xl bg-card border border-border mt-4">
-                  <label className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-2">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#5865F2">
+                <div className="p-4 rounded-lg border border-border bg-card">
+                  <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 mb-2">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="#5865F2">
                       <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.36-.698.772-1.362 1.225-1.993a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.12-.098.246-.198.373-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
                     </svg>
                     Discord User ID
@@ -1096,17 +1018,17 @@ const PricingSection = () => {
                     placeholder="123456789012345678"
                     value={discordUserId}
                     onChange={(e) => setDiscordUserId(e.target.value.replace(/\D/g, ''))}
-                    className={`bg-background/50 ${discordUserId && !isValidDiscordId ? "border-destructive" : isValidDiscordId ? "border-secondary" : ""}`}
+                    className={`text-sm ${discordUserId && !isValidDiscordId ? "border-destructive" : isValidDiscordId ? "border-secondary" : ""}`}
                   />
                   {isValidDiscordId && (
-                    <p className="text-xs text-secondary mt-1.5 flex items-center gap-1 font-medium">
-                      <Check className="w-3 h-3" /> Valid Discord ID
+                    <p className="text-xs text-secondary mt-1 flex items-center gap-1">
+                      <Check className="w-3 h-3" /> Valid
                     </p>
                   )}
                   
                   <button
                     onClick={() => setShowDiscordGuide(!showDiscordGuide)}
-                    className="text-xs text-muted-foreground hover:text-primary mt-2 flex items-center gap-1 transition-colors"
+                    className="text-xs text-muted-foreground hover:text-primary mt-2 flex items-center gap-1"
                   >
                     <HelpCircle className="w-3 h-3" />
                     How to find your ID?
@@ -1121,11 +1043,11 @@ const PricingSection = () => {
                         exit={{ opacity: 0, height: 0 }}
                         className="overflow-hidden"
                       >
-                        <div className="mt-3 p-3 rounded-xl bg-muted/50 text-sm text-muted-foreground">
-                          <ol className="list-decimal list-inside space-y-1">
-                            <li>Open Discord Settings → Advanced</li>
+                        <div className="mt-2 p-2 rounded-md bg-muted/50 text-xs text-muted-foreground">
+                          <ol className="list-decimal list-inside space-y-0.5">
+                            <li>Discord Settings → Advanced</li>
                             <li>Enable Developer Mode</li>
-                            <li>Right-click your profile → Copy User ID</li>
+                            <li>Right-click profile → Copy ID</li>
                           </ol>
                         </div>
                       </motion.div>
@@ -1135,13 +1057,10 @@ const PricingSection = () => {
 
                 {/* CTA Button */}
                 <Button
-                  size="lg"
-                  className={`w-full text-base font-semibold mt-4 ${
-                    isTrialMode 
-                      ? "bg-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/25" 
-                      : price === 0
-                        ? "bg-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/25"
-                        : "bg-gradient-omega hover:opacity-90 shadow-lg shadow-primary/25"
+                  className={`w-full text-sm font-medium ${
+                    isTrialMode || price === 0
+                      ? "bg-secondary hover:bg-secondary/90"
+                      : "bg-gradient-omega hover:opacity-90"
                   }`}
                   disabled={!isValidDiscordId || !hasValidLocation || isTrialProcessing || isFreeOrderProcessing || (price === 0 && !user)}
                   onClick={() => {
@@ -1157,14 +1076,14 @@ const PricingSection = () => {
                   {isTrialProcessing || isFreeOrderProcessing ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      {isFreeOrderProcessing ? "Processing..." : "Activating..."}
+                      Processing...
                     </>
                   ) : (
                     <>
                       {!isValidDiscordId 
                         ? "Enter Discord ID" 
                         : !hasValidLocation
-                          ? "Select Server Location"
+                          ? "Select Location"
                           : isTrialMode 
                             ? "Start Free Trial" 
                             : price === 0 
@@ -1174,12 +1093,12 @@ const PricingSection = () => {
                   )}
                 </Button>
                 
-                <p className="text-xs text-center text-muted-foreground mt-3">
+                <p className="text-xs text-center text-muted-foreground">
                   {isTrialMode 
-                    ? "No payment required • Instant access" 
+                    ? "No payment required" 
                     : price === 0 
-                      ? "100% discount applied • No payment required"
-                      : "Secure crypto payment • USDC/USDT"
+                      ? "100% discount applied"
+                      : "USDC/USDT payment"
                   }
                 </p>
               </div>
@@ -1192,16 +1111,16 @@ const PricingSection = () => {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-center mt-16"
+          className="text-center mt-12"
         >
-          <p className="text-muted-foreground mb-4">Have questions? We're here to help.</p>
+          <p className="text-sm text-muted-foreground mb-3">Have questions?</p>
           <a
             href="https://discord.gg/omeganode"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#5865F2] text-white font-medium hover:bg-[#4752C4] transition-all shadow-lg shadow-[#5865F2]/25"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-[#5865F2] text-white text-sm font-medium hover:bg-[#4752C4] transition-colors"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.36-.698.772-1.362 1.225-1.993a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.12-.098.246-.198.373-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
             </svg>
             Join Discord

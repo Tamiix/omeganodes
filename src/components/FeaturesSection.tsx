@@ -6,85 +6,73 @@ const features = [
     icon: Zap,
     title: "Sub-Millisecond Speed",
     description: "Routes optimized for speed. Built for bots, trusted in production.",
-    gradient: "from-[#5B4EE4] to-[#7B6FE8]",
   },
   {
     icon: Shield,
     title: "99.9% Uptime SLA",
     description: "Auto failover keeps you online. Survived every congestion spike so far.",
-    gradient: "from-[#E8A5A5] to-[#D89595]",
   },
   {
     icon: Clock,
     title: "2-Minute Setup",
     description: "Join Discord, whitelist your IP, you're live. No config files needed.",
-    gradient: "from-[#8B7EE8] to-[#A89AEC]",
   },
   {
     icon: Server,
     title: "Dedicated Hardware",
     description: "AMD EPYC with JITO Shredstream and Yellowstone gRPC. Your box, your rules.",
-    gradient: "from-[#5B4EE4] to-[#E8A5A5]",
   },
   {
     icon: Globe,
     title: "Global Network",
     description: "Nodes in NYC, Frankfurt, and Amsterdam. Pick one or use all three.",
-    gradient: "from-[#9B8FEC] to-[#5B4EE4]",
   },
   {
     icon: Cpu,
     title: "700k+ SOL Staked",
     description: "More stake weight means better tx priority. Land more, miss less.",
-    gradient: "from-[#E8A5A5] to-[#8B7EE8]",
   },
 ];
 
 const FeaturesSection = () => {
   return (
-    <section id="features" className="py-24 relative overflow-hidden">
-      {/* Background glow */}
-      <div className="absolute top-1/2 left-0 w-[400px] h-[400px] rounded-full bg-[#5B4EE4]/8 blur-[120px]" />
-      <div className="absolute bottom-0 right-0 w-[300px] h-[300px] rounded-full bg-[#F5B5B5]/8 blur-[100px]" />
-
-      <div className="container mx-auto px-6 relative z-10">
+    <section id="features" className="py-24">
+      <div className="container mx-auto px-6">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-14"
         >
-          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-4">
-            Why Choose Omega
-          </span>
-          <h2 className="text-4xl sm:text-5xl md:text-6xl font-black mb-4">
+          <p className="text-sm font-medium text-primary mb-3">Why Choose Omega</p>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
             Built for <span className="text-gradient-omega">Builders</span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-            We offer top tier gRPC & txs service. Enterprise infrastructure that scales.
+          <p className="text-muted-foreground max-w-lg mx-auto">
+            Top tier gRPC & transaction service. Enterprise infrastructure that scales.
           </p>
         </motion.div>
 
         {/* Features grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {features.map((feature, index) => (
             <motion.div
               key={feature.title}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className="group p-6 rounded-2xl glass-card hover:border-primary/30 transition-all duration-300"
+              transition={{ delay: index * 0.05 }}
+              className="group p-6 rounded-lg border border-border bg-card hover:border-primary/40 transition-colors"
             >
               {/* Icon */}
-              <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform`}>
-                <feature.icon className="w-7 h-7 text-white" />
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                <feature.icon className="w-5 h-5 text-primary" />
               </div>
 
               {/* Content */}
-              <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-              <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
+              <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
             </motion.div>
           ))}
         </div>
