@@ -2,90 +2,89 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* OmegaNode Design System - Crypto Native */
+/* OmegaNode Design System - Professional & Clean */
 
 @layer base {
   :root {
-    /* Softer dark base - not too dark */
-    --background: 240 10% 8%;
-    --foreground: 0 0% 98%;
+    /* Clean dark base */
+    --background: 220 16% 6%;
+    --foreground: 210 20% 98%;
 
-    --card: 240 8% 12%;
-    --card-foreground: 0 0% 98%;
+    --card: 220 14% 10%;
+    --card-foreground: 210 20% 98%;
 
-    --popover: 240 8% 12%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 220 14% 10%;
+    --popover-foreground: 210 20% 98%;
 
-    /* Logo purple - softer, less saturated */
-    --primary: 248 65% 55%;
+    /* Logo purple - refined */
+    --primary: 248 58% 58%;
     --primary-foreground: 0 0% 100%;
 
-    /* Logo rose/coral - soft pink accent */
-    --secondary: 10 70% 78%;
+    /* Soft rose accent */
+    --secondary: 10 55% 75%;
     --secondary-foreground: 0 0% 10%;
 
-    --muted: 240 8% 16%;
-    --muted-foreground: 240 5% 60%;
+    --muted: 220 12% 14%;
+    --muted-foreground: 220 10% 55%;
 
-    /* Accent - soft lavender */
-    --accent: 260 50% 65%;
+    /* Accent - subtle lavender */
+    --accent: 250 45% 62%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 65% 50%;
+    --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 8% 18%;
-    --input: 240 8% 18%;
-    --ring: 248 65% 55%;
+    --border: 220 12% 16%;
+    --input: 220 12% 16%;
+    --ring: 248 58% 58%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    /* Omega brand tokens - matching logo */
-    --omega-purple: 248 65% 55%;
-    --omega-violet: 260 55% 60%;
-    --omega-rose: 10 70% 78%;
-    --omega-coral: 15 65% 72%;
+    /* Omega brand tokens */
+    --omega-purple: 248 58% 58%;
+    --omega-violet: 255 50% 60%;
+    --omega-rose: 10 55% 75%;
 
-    --sidebar-background: 240 10% 8%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 248 65% 55%;
+    --sidebar-background: 220 16% 6%;
+    --sidebar-foreground: 210 20% 98%;
+    --sidebar-primary: 248 58% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 8% 14%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 240 8% 18%;
-    --sidebar-ring: 248 65% 55%;
+    --sidebar-accent: 220 12% 12%;
+    --sidebar-accent-foreground: 210 20% 98%;
+    --sidebar-border: 220 12% 16%;
+    --sidebar-ring: 248 58% 58%;
   }
 
   .dark {
-    --background: 240 10% 8%;
-    --foreground: 0 0% 98%;
-    --card: 240 8% 12%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 8% 12%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 248 65% 55%;
+    --background: 220 16% 6%;
+    --foreground: 210 20% 98%;
+    --card: 220 14% 10%;
+    --card-foreground: 210 20% 98%;
+    --popover: 220 14% 10%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 248 58% 58%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 10 70% 78%;
+    --secondary: 10 55% 75%;
     --secondary-foreground: 0 0% 10%;
-    --muted: 240 8% 16%;
-    --muted-foreground: 240 5% 60%;
-    --accent: 260 50% 65%;
+    --muted: 220 12% 14%;
+    --muted-foreground: 220 10% 55%;
+    --accent: 250 45% 62%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 65% 50%;
+    --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 8% 18%;
-    --input: 240 8% 18%;
-    --ring: 248 65% 55%;
-    --sidebar-background: 240 10% 8%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 248 65% 55%;
+    --border: 220 12% 16%;
+    --input: 220 12% 16%;
+    --ring: 248 58% 58%;
+    --sidebar-background: 220 16% 6%;
+    --sidebar-foreground: 210 20% 98%;
+    --sidebar-primary: 248 58% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 8% 14%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 240 8% 18%;
-    --sidebar-ring: 248 65% 55%;
+    --sidebar-accent: 220 12% 12%;
+    --sidebar-accent-foreground: 210 20% 98%;
+    --sidebar-border: 220 12% 16%;
+    --sidebar-ring: 248 58% 58%;
   }
 }
 
@@ -96,7 +95,8 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'cv11', 'ss01';
   }
 
   html {
@@ -105,73 +105,27 @@
 }
 
 @layer utilities {
-  .font-mono {
-    font-family: 'JetBrains Mono', monospace;
-  }
-
-  /* Logo gradient - purple to rose */
+  /* Clean gradient text - subtle */
   .text-gradient-omega {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #5B4EE4 0%, #F5B5B5 100%);
+    background-image: linear-gradient(135deg, hsl(248 58% 65%) 0%, hsl(10 55% 78%) 100%);
   }
 
-  .text-gradient-rose {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #E8A5A5 0%, #F5C5C5 100%);
-  }
-
+  /* Solid brand gradient for buttons */
   .bg-gradient-omega {
-    background: linear-gradient(135deg, #5B4EE4 0%, #E8A5A5 100%);
+    background: linear-gradient(135deg, hsl(248 58% 55%) 0%, hsl(255 50% 60%) 100%);
   }
 
-  .bg-gradient-soft {
-    background: linear-gradient(135deg, #5B4EE4 0%, #8B7EE8 50%, #F5B5B5 100%);
+  /* Clean card style - no glass effect */
+  .card-clean {
+    @apply bg-card border border-border rounded-lg;
   }
 
-  /* Glow effects - softer */
-  .glow-omega {
-    box-shadow: 0 0 40px rgba(91, 78, 228, 0.25), 0 0 80px rgba(245, 181, 181, 0.15);
+  /* Subtle hover glow */
+  .hover-glow {
+    @apply transition-shadow duration-300;
   }
-
-  .glow-omega-sm {
-    box-shadow: 0 0 20px rgba(91, 78, 228, 0.2);
+  .hover-glow:hover {
+    box-shadow: 0 0 0 1px hsl(248 58% 58% / 0.3);
   }
-
-  .glow-rose {
-    box-shadow: 0 0 30px rgba(245, 181, 181, 0.3);
-  }
-
-  /* Glass card effect */
-  .glass-card {
-    @apply bg-card/80 backdrop-blur-xl border border-white/5;
-  }
-
-  /* Animated gradient border */
-  .gradient-border {
-    position: relative;
-    background: linear-gradient(var(--background), var(--background)) padding-box,
-                linear-gradient(135deg, #5B4EE4, #F5B5B5) border-box;
-    border: 1px solid transparent;
-  }
-}
-
-/* Animated background gradient */
-@keyframes gradient-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient-shift 8s ease infinite;
-}
-
-/* Pulse glow animation */
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.4; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.05); }
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 4s ease-in-out infinite;
 }
