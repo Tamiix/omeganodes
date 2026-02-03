@@ -496,7 +496,7 @@ const PricingSection = () => {
         >
           <p className="text-sm font-medium text-primary mb-3">Pricing</p>
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-            Choose Your <span className="text-gradient-omega">Plan</span>
+            Choose your <span className="text-gradient-omega">Service</span>
           </h2>
           <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground">
             <span>No hidden fees</span>
