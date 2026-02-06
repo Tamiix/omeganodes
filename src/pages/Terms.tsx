@@ -21,13 +21,10 @@ const Terms = () => {
             <h2>1. Acceptance of Terms</h2>
             <p>By accessing or using Omega Networks ("Service"), you agree to be bound by these Terms & Conditions. If you do not agree, you may not use the Service.</p>
 
-            <h2>2. Eligibility</h2>
-            <p>You must be at least 18 years old or have the consent of a legal guardian to use the Service. By creating an account, you represent that you meet this requirement.</p>
-
-            <h2>3. Account Responsibilities</h2>
+            <h2>2. Account Responsibilities</h2>
             <p>You are responsible for maintaining the confidentiality of your account credentials. You agree to notify us immediately of any unauthorized use. We are not liable for any loss arising from unauthorized access to your account.</p>
 
-            <h2>4. Acceptable Use</h2>
+            <h2>3. Acceptable Use</h2>
             <p>You agree not to:</p>
             <ul className="list-disc pl-6 space-y-1">
               <li>Use the Service for any unlawful purpose</li>
@@ -37,31 +34,25 @@ const Terms = () => {
               <li>Use the Service to transmit malicious software or harmful content</li>
             </ul>
 
-            <h2>5. Payments & Billing</h2>
+            <h2>4. Payments & Billing</h2>
             <p>All fees are non-refundable unless otherwise stated. Prices are subject to change with reasonable notice. You are responsible for all applicable taxes. Failure to pay may result in suspension or termination of your access.</p>
 
-            <h2>6. Service Availability</h2>
+            <h2>5. Service Availability</h2>
             <p>We strive to maintain high uptime but do not guarantee uninterrupted access. We reserve the right to modify, suspend, or discontinue the Service at any time without prior notice. Scheduled maintenance will be communicated when possible.</p>
 
-            <h2>7. Intellectual Property</h2>
-            <p>All content, trademarks, and materials on the Service are the property of Omega Networks. You may not copy, modify, or distribute any part of the Service without written permission.</p>
-
-            <h2>8. Limitation of Liability</h2>
-            <p>To the maximum extent permitted by law, Omega Networks shall not be liable for any indirect, incidental, special, or consequential damages arising from the use or inability to use the Service. Our total liability shall not exceed the amount paid by you in the preceding 12 months.</p>
-
-            <h2>9. Termination</h2>
+            <h2>6. Termination</h2>
             <p>We reserve the right to suspend or terminate your account at our sole discretion, with or without cause, and with or without notice. Upon termination, your right to use the Service ceases immediately.</p>
 
-            <h2>10. Privacy</h2>
+            <h2>7. Privacy</h2>
             <p>Your use of the Service is also governed by our Privacy Policy. By using the Service, you consent to the collection and use of information as described therein.</p>
 
-            <h2>11. Changes to Terms</h2>
+            <h2>8. Changes to Terms</h2>
             <p>We may update these Terms at any time. Continued use of the Service after changes constitutes acceptance. We will notify users of material changes via email or in-app notification.</p>
 
-            <h2>12. Governing Law</h2>
+            <h2>9. Governing Law</h2>
             <p>These Terms shall be governed by and construed in accordance with applicable laws. Any disputes shall be resolved through binding arbitration or in the courts of the applicable jurisdiction.</p>
 
-            <h2>13. Contact</h2>
+            <h2>10. Contact</h2>
             <p>If you have questions about these Terms, please contact us through our Discord server or support channels.</p>
           </div>
         </motion.div>
