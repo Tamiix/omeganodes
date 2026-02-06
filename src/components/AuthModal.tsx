@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { z } from 'zod';
 import { Eye, EyeOff, Mail, User, Lock, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [successMessage, setSuccessMessage] = useState('');
   
@@ -42,6 +44,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
     setEmail('');
     setUsername('');
     setPassword('');
+    setAgreedToTerms(false);
     setErrors({});
     setSuccessMessage('');
   };
@@ -63,6 +66,12 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
             }
           });
           setErrors(fieldErrors);
+          setIsLoading(false);
+          return;
+        }
+
+        if (!agreedToTerms) {
+          setErrors(prev => ({ ...prev, terms: 'You must agree to the Terms & Conditions' }));
           setIsLoading(false);
           return;
         }
@@ -244,6 +253,37 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
               </p>
             )}
           </div>
+
+          {/* Terms Checkbox (signup only) */}
+          <AnimatePresence>
+            {mode === 'signup' && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-1"
+              >
+                <div className="flex items-start gap-2">
+                  <Checkbox
+                    id="terms"
+                    checked={agreedToTerms}
+                    onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+                    disabled={isLoading}
+                    className="mt-0.5"
+                  />
+                  <label htmlFor="terms" className="text-xs text-muted-foreground leading-snug cursor-pointer">
+                    I agree to the{' '}
+                    <a href="/terms" target="_blank" className="text-primary hover:underline">
+                      Terms & Conditions
+                    </a>
+                  </label>
+                </div>
+                {errors.terms && (
+                  <p className="text-xs text-destructive">{errors.terms}</p>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Submit Button */}
           <Button
