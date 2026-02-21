@@ -485,8 +485,8 @@ const PricingSection = () => {
   };
 
   return (
-    <section id="pricing" className="py-24 bg-muted/30">
-      <div className="container mx-auto px-6">
+    <section id="pricing" className="py-16 sm:py-24 bg-muted/30">
+      <div className="container mx-auto px-4 sm:px-6">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -508,8 +508,8 @@ const PricingSection = () => {
         </motion.div>
 
         {/* Server Type Toggle */}
-        <div className="flex justify-center mb-8">
-          <div className="inline-flex p-1 rounded-lg bg-card border border-border">
+        <div className="flex justify-center mb-6 sm:mb-8">
+          <div className="inline-flex p-1 rounded-lg bg-card border border-border w-full sm:w-auto">
             {serverTypes.map((type) => (
               <button
                 key={type.id}
@@ -517,13 +517,13 @@ const PricingSection = () => {
                   setSelectedServerType(type.id);
                   if (type.id === "dedicated") setIsTrialMode(false);
                 }}
-                className={`flex items-center gap-2 px-5 py-2 rounded-md text-sm font-medium transition-all ${
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2.5 rounded-md text-xs sm:text-sm font-medium transition-all ${
                   selectedServerType === type.id
                     ? "bg-gradient-omega text-white"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {type.id === "shared" ? <Shield className="w-4 h-4" /> : type.id === "shreds" ? <Zap className="w-4 h-4" /> : <Server className="w-4 h-4" />}
+                {type.id === "shared" ? <Shield className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> : type.id === "shreds" ? <Zap className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> : <Server className="w-3.5 sm:w-4 h-3.5 sm:h-4" />}
                 {type.name}
               </button>
             ))}
@@ -586,7 +586,7 @@ const PricingSection = () => {
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="rounded-xl border border-border bg-card p-6 mb-4"
+            className="rounded-xl border border-border bg-card p-4 sm:p-6 mb-4"
           >
             <div className="grid lg:grid-cols-2 gap-6 items-center">
               {/* Left: Billing Period */}
@@ -595,7 +595,7 @@ const PricingSection = () => {
                   <Clock className="w-4 h-4 text-primary" />
                   Billing Period
                 </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
                   {commitments
                     .filter(c => !c.trialOnly || !isDedicated) // Hide trial-only options for dedicated
                     .map((c) => {
@@ -607,7 +607,7 @@ const PricingSection = () => {
                           key={c.id}
                           onClick={() => !isDisabled && setSelectedCommitment(c.id)}
                           disabled={isDisabled}
-                          className={`relative py-3 px-3 rounded-lg text-center transition-all ${
+                          className={`relative py-2.5 sm:py-3 px-2 sm:px-3 rounded-lg text-center transition-all ${
                             selectedCommitment === c.id
                               ? "bg-primary text-white"
                               : isTrialOnlyCommitment
@@ -662,7 +662,7 @@ const PricingSection = () => {
           </motion.div>
 
           {/* Bottom grid: Options + Features + Action */}
-          <div className="grid lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             
             {/* Left Column: Options */}
             <motion.div
@@ -832,12 +832,12 @@ const PricingSection = () => {
                           <button
                             onClick={() => setAdditionalStakePackages(Math.max(0, additionalStakePackages - 1))}
                             disabled={additionalStakePackages === 0}
-                            className="w-8 h-8 rounded-md bg-muted flex items-center justify-center font-medium hover:bg-muted/80 disabled:opacity-40"
+                            className="w-10 h-10 sm:w-8 sm:h-8 rounded-md bg-muted flex items-center justify-center font-medium hover:bg-muted/80 disabled:opacity-40"
                           >−</button>
                           <span className="w-6 text-center font-semibold">{additionalStakePackages}</span>
                           <button
                             onClick={() => setAdditionalStakePackages(Math.min(10, additionalStakePackages + 1))}
-                            className="w-8 h-8 rounded-md bg-primary text-white flex items-center justify-center font-medium hover:bg-primary/90"
+                            className="w-10 h-10 sm:w-8 sm:h-8 rounded-md bg-primary text-white flex items-center justify-center font-medium hover:bg-primary/90"
                           >+</button>
                         </div>
                       </div>
