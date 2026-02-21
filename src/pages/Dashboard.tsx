@@ -13,10 +13,7 @@ import {
   Server,
   MapPin,
   Settings,
-  ChevronDown,
-  Gift,
-  DollarSign,
-  Users
+  ChevronDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -83,9 +80,6 @@ const Dashboard = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'orders' | 'connections' | 'settings'>('orders');
   const [currencyOpen, setCurrencyOpen] = useState(false);
-  const [referralCode, setReferralCode] = useState<string | null>(null);
-  const [isGeneratingReferral, setIsGeneratingReferral] = useState(false);
-  const [referralStats, setReferralStats] = useState<{ totalEarnings: number; totalReferrals: number }>({ totalEarnings: 0, totalReferrals: 0 });
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -96,7 +90,6 @@ const Dashboard = () => {
   useEffect(() => {
     if (user) {
       fetchUserData();
-      fetchReferralData();
     }
   }, [user]);
 
@@ -119,45 +112,6 @@ const Dashboard = () => {
     
     if (connectionsData) {
       setConnections(connectionsData as ConnectionUrl[]);
-    }
-  };
-
-  const fetchReferralData = async () => {
-    // Get referral code from profile
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('referral_code')
-      .eq('user_id', user!.id)
-      .single();
-    
-    if (profileData?.referral_code) {
-      setReferralCode(profileData.referral_code);
-    }
-
-    // Get referral stats
-    const { data: referralsData } = await supabase
-      .from('referrals')
-      .select('commission_amount')
-      .eq('referrer_id', user!.id);
-    
-    if (referralsData) {
-      setReferralStats({
-        totalEarnings: referralsData.reduce((sum, r) => sum + Number(r.commission_amount), 0),
-        totalReferrals: referralsData.length
-      });
-    }
-  };
-
-  const generateReferralCode = async () => {
-    setIsGeneratingReferral(true);
-    try {
-      const { data, error } = await supabase.rpc('generate_referral_code');
-      if (error) throw error;
-      setReferralCode(data as string);
-    } catch (err) {
-      console.error('Failed to generate referral code:', err);
-    } finally {
-      setIsGeneratingReferral(false);
     }
   };
 
@@ -508,65 +462,6 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Gift className="w-5 h-5 text-primary" />
-                  Referral Program
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Share your referral code with friends. You earn <span className="font-semibold text-secondary">10%</span> of their total payment amount!
-                </p>
-                
-                {referralCode ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/30 border border-border">
-                      <code className="flex-1 text-sm font-mono text-foreground font-semibold tracking-wider">
-                        {referralCode}
-                      </code>
-                      <button
-                        onClick={() => copyToClipboard(referralCode, 'referral-code')}
-                        className="p-1.5 rounded-md hover:bg-muted transition-colors"
-                      >
-                        {copiedId === 'referral-code' ? (
-                          <Check className="w-4 h-4 text-secondary" />
-                        ) : (
-                          <Copy className="w-4 h-4 text-muted-foreground" />
-                        )}
-                      </button>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-3 rounded-lg bg-muted/20 border border-border">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Users className="w-4 h-4 text-primary" />
-                          <p className="text-xs text-muted-foreground">Total Referrals</p>
-                        </div>
-                        <p className="text-lg font-bold text-foreground">{referralStats.totalReferrals}</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-muted/20 border border-border">
-                        <div className="flex items-center gap-2 mb-1">
-                          <DollarSign className="w-4 h-4 text-secondary" />
-                          <p className="text-xs text-muted-foreground">Total Earnings</p>
-                        </div>
-                        <p className="text-lg font-bold text-secondary">${referralStats.totalEarnings.toFixed(2)}</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <Button 
-                    variant="omega" 
-                    onClick={generateReferralCode}
-                    disabled={isGeneratingReferral}
-                    className="w-full"
-                  >
-                    {isGeneratingReferral ? 'Generating...' : 'Generate Referral Code'}
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
 
             <Card className="bg-card border-border">
               <CardHeader>
