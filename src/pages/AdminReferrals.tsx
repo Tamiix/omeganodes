@@ -124,9 +124,9 @@ const AdminReferrals = () => {
     <div className="min-h-screen bg-background">
       <AdminHeader />
 
-      <main className="container mx-auto px-6 py-8">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
           <Card className="bg-card border-border">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -200,41 +200,41 @@ const AdminReferrals = () => {
           ) : (
             filteredReferrals.map((referral) => (
               <Card key={referral.id} className="bg-card border-border hover:border-primary/30 transition-colors">
-                <CardContent className="py-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-6">
+                <CardContent className="py-4 px-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 sm:gap-6">
                       {/* Referrer */}
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-xs text-muted-foreground mb-0.5">Referrer</p>
-                        <p className="text-sm font-medium text-foreground">{referral.referrer_username}</p>
-                        <p className="text-xs text-muted-foreground">{referral.referrer_email}</p>
+                        <p className="text-sm font-medium text-foreground truncate">{referral.referrer_username}</p>
+                        <p className="text-xs text-muted-foreground truncate hidden sm:block">{referral.referrer_email}</p>
                       </div>
 
-                      <div className="text-muted-foreground">→</div>
+                      <div className="text-muted-foreground shrink-0">→</div>
 
                       {/* Referred */}
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-xs text-muted-foreground mb-0.5">Referred</p>
-                        <p className="text-sm font-medium text-foreground">{referral.referred_username}</p>
-                        <p className="text-xs text-muted-foreground">{referral.referred_email}</p>
+                        <p className="text-sm font-medium text-foreground truncate">{referral.referred_username}</p>
+                        <p className="text-xs text-muted-foreground truncate hidden sm:block">{referral.referred_email}</p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-3 sm:gap-6 justify-between sm:justify-end">
                       {/* Order Amount */}
-                      <div className="text-right">
+                      <div className="text-left sm:text-right">
                         <p className="text-xs text-muted-foreground">Order</p>
                         <p className="text-sm font-medium text-foreground">${Number(referral.order_amount_usd).toFixed(2)}</p>
                       </div>
 
                       {/* Commission */}
-                      <div className="text-right">
+                      <div className="text-left sm:text-right">
                         <p className="text-xs text-muted-foreground">Commission</p>
                         <p className="text-sm font-bold text-secondary">${Number(referral.commission_amount).toFixed(2)}</p>
                       </div>
 
                       {/* Status */}
-                      <span className={`text-xs px-2.5 py-1 rounded-full border font-medium ${
+                      <span className={`text-xs px-2 py-0.5 rounded-full border font-medium shrink-0 ${
                         referral.status === 'confirmed'
                           ? 'bg-secondary/20 text-secondary border-secondary/30'
                           : referral.status === 'pending'
@@ -245,7 +245,7 @@ const AdminReferrals = () => {
                       </span>
 
                       {/* Date */}
-                      <div className="text-right min-w-[80px]">
+                      <div className="text-right hidden sm:block min-w-[80px]">
                         <p className="text-xs text-muted-foreground">
                           {new Date(referral.created_at).toLocaleDateString('en-US', {
                             month: 'short', day: 'numeric', year: 'numeric'

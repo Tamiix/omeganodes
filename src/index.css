@@ -128,4 +128,11 @@
   .hover-glow:hover {
     box-shadow: 0 0 0 1px hsl(248 58% 58% / 0.3);
   }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
