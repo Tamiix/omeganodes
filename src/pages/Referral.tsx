@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Copy, Check, Gift, DollarSign, Users, TrendingUp, Clock } from 'lucide-react';
+import { ArrowLeft, Copy, Check, Gift, DollarSign, Users, TrendingUp, Clock, Send, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface Referral {
   id: string;
@@ -18,8 +20,12 @@ interface Referral {
 const Referral = () => {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
+  const { toast } = useToast();
   const [referralCode, setReferralCode] = useState<string | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [pendingCode, setPendingCode] = useState<string | null>(null);
+  const [codeStatus, setCodeStatus] = useState<string>('none');
+  const [customCode, setCustomCode] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [stats, setStats] = useState({ totalEarnings: 0, totalReferrals: 0, pendingEarnings: 0 });
@@ -37,12 +43,14 @@ const Referral = () => {
   const fetchReferralData = async () => {
     const { data: profileData } = await supabase
       .from('profiles')
-      .select('referral_code')
+      .select('referral_code, pending_referral_code, referral_code_status')
       .eq('user_id', user!.id)
       .single();
 
-    if (profileData?.referral_code) {
+    if (profileData) {
       setReferralCode(profileData.referral_code);
+      setPendingCode(profileData.pending_referral_code);
+      setCodeStatus(profileData.referral_code_status || 'none');
     }
 
     const { data: referralsData } = await supabase
@@ -63,16 +71,25 @@ const Referral = () => {
     }
   };
 
-  const generateReferralCode = async () => {
-    setIsGenerating(true);
+  const requestCustomCode = async () => {
+    if (!customCode.trim()) return;
+    setIsSubmitting(true);
     try {
-      const { data, error } = await supabase.rpc('generate_referral_code');
+      const { data, error } = await supabase.rpc('request_referral_code', { p_code: customCode.trim() });
       if (error) throw error;
-      setReferralCode(data as string);
-    } catch (err) {
-      console.error('Failed to generate referral code:', err);
+      const result = data as { success: boolean; error?: string; code?: string };
+      if (!result.success) {
+        toast({ title: 'Error', description: result.error, variant: 'destructive' });
+      } else {
+        toast({ title: 'Submitted!', description: 'Your custom code is pending admin approval.' });
+        setPendingCode(result.code || customCode.trim().toLowerCase());
+        setCodeStatus('pending');
+        setCustomCode('');
+      }
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message || 'Failed to submit code', variant: 'destructive' });
     } finally {
-      setIsGenerating(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -120,11 +137,13 @@ const Referral = () => {
         {/* Referral Code Section */}
         <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-lg">Your Referral Code</CardTitle>
+            <CardTitle className="text-lg">Your Referral Link</CardTitle>
           </CardHeader>
-          <CardContent>
-            {referralCode ? (
-              <div className="space-y-4">
+          <CardContent className="space-y-5">
+            {/* Current active code */}
+            {referralCode && (
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Active Code</p>
                 <div className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
                   <code className="flex-1 text-sm sm:text-base font-mono text-foreground font-bold text-center break-all">
                     omeganodes.io/ref/{referralCode}
@@ -140,19 +159,74 @@ const Referral = () => {
                     )}
                   </button>
                 </div>
-                <p className="text-xs text-muted-foreground text-center">
-                  Share this code with friends. When they use it during checkout, you earn 10% of their payment.
-                </p>
               </div>
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground mb-4">
-                  Generate your unique referral code to start earning commissions.
-                </p>
-                <Button variant="omega" onClick={generateReferralCode} disabled={isGenerating}>
-                  {isGenerating ? 'Generating...' : 'Generate Referral Code'}
+            )}
+
+            {/* Pending code status */}
+            {codeStatus === 'pending' && pendingCode && (
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                <Clock className="w-5 h-5 text-yellow-400 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    Pending approval: <span className="font-mono">{pendingCode}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">An admin will review your custom code request.</p>
+                </div>
+              </div>
+            )}
+
+            {codeStatus === 'rejected' && (
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                <XCircle className="w-5 h-5 text-destructive shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Your last custom code request was rejected.</p>
+                  <p className="text-xs text-muted-foreground">You can submit a new one below.</p>
+                </div>
+              </div>
+            )}
+
+            {/* Request custom code */}
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                {referralCode ? 'Request Custom Code' : 'Choose Your Referral Code'}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Pick a custom name for your referral link (e.g. "mintech", "tamiix"). 3-20 characters, letters, numbers, and hyphens.
+              </p>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-0 flex-1 min-w-0">
+                  <span className="text-xs sm:text-sm text-muted-foreground font-mono shrink-0 bg-muted px-3 py-2.5 rounded-l-md border border-r-0 border-border">
+                    omeganodes.io/ref/
+                  </span>
+                  <Input
+                    type="text"
+                    placeholder="your-name"
+                    value={customCode}
+                    onChange={(e) => setCustomCode(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                    maxLength={20}
+                    className="rounded-l-none bg-card border-border"
+                    disabled={codeStatus === 'pending'}
+                  />
+                </div>
+                <Button
+                  onClick={requestCustomCode}
+                  disabled={isSubmitting || !customCode.trim() || customCode.trim().length < 3 || codeStatus === 'pending'}
+                  size="icon"
+                  variant="omega"
+                  className="shrink-0"
+                >
+                  <Send className="w-4 h-4" />
                 </Button>
               </div>
+              {codeStatus === 'pending' && (
+                <p className="text-xs text-yellow-400">You already have a pending request. Wait for admin review.</p>
+              )}
+            </div>
+
+            {!referralCode && codeStatus !== 'pending' && (
+              <p className="text-xs text-muted-foreground text-center">
+                Submit a custom code above. Once approved by an admin, your referral link will be active.
+              </p>
             )}
           </CardContent>
         </Card>
