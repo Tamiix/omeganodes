@@ -35,14 +35,14 @@ const faqs = [
 
 const FAQSection = () => {
   return (
-    <section id="faq" className="py-24">
-      <div className="container mx-auto px-6">
+    <section id="faq" className="py-16 sm:py-24">
+      <div className="container mx-auto px-4 sm:px-6">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-12"
+          className="text-center mb-8 sm:mb-12"
         >
           <p className="text-sm font-medium text-primary mb-3">FAQ</p>
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
@@ -65,7 +65,7 @@ const FAQSection = () => {
               <AccordionItem
                 key={index}
                 value={`item-${index}`}
-                className="border border-border rounded-lg px-4 bg-card data-[state=open]:border-primary/40 transition-colors"
+                className="border border-border rounded-lg px-3 sm:px-4 bg-card data-[state=open]:border-primary/40 transition-colors"
               >
                 <AccordionTrigger className="text-left text-sm font-medium text-foreground hover:text-primary hover:no-underline py-4">
                   {faq.question}

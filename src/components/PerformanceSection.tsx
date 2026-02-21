@@ -19,14 +19,14 @@ const highlights = [
 
 const PerformanceSection = () => {
   return (
-    <section id="performance" className="py-24 bg-muted/30">
-      <div className="container mx-auto px-6">
+    <section id="performance" className="py-16 sm:py-24 bg-muted/30">
+      <div className="container mx-auto px-4 sm:px-6">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-14"
+          className="text-center mb-10 sm:mb-14"
         >
           <p className="text-sm font-medium text-secondary mb-3">Performance Metrics</p>
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
@@ -42,14 +42,14 @@ const PerformanceSection = () => {
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-12"
         >
           {stats.map((stat) => (
             <div 
               key={stat.label}
-              className="rounded-lg border border-border bg-card p-6 text-center"
+              className="rounded-lg border border-border bg-card p-4 sm:p-6 text-center"
             >
-              <p className="text-3xl font-bold text-foreground mb-1">{stat.value}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-foreground mb-1">{stat.value}</p>
               <p className="text-sm text-muted-foreground">{stat.label}</p>
             </div>
           ))}
@@ -60,9 +60,9 @@ const PerformanceSection = () => {
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="border border-border rounded-lg bg-card p-8 max-w-3xl mx-auto"
+          className="border border-border rounded-lg bg-card p-5 sm:p-8 max-w-3xl mx-auto"
         >
-          <h3 className="text-lg font-semibold mb-6 text-center">What's Included</h3>
+          <h3 className="text-lg font-semibold mb-4 sm:mb-6 text-center">What's Included</h3>
           
           <div className="grid sm:grid-cols-2 gap-3">
             {highlights.map((item) => (
