@@ -191,7 +191,7 @@ const Referral = () => {
                 {referralCode ? 'Request Custom Code' : 'Choose Your Referral Code'}
               </p>
               <p className="text-xs text-muted-foreground">
-                Pick a custom name for your referral link (e.g. "skynode", "alpha-x"). 3-20 characters, letters, numbers, and hyphens.
+                Pick a custom name for your referral link (e.g. "omega", "omeganode"). 3-20 characters, letters, numbers, and hyphens.
               </p>
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-0 flex-1 min-w-0">
