@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Gift, DollarSign, Users, TrendingUp, CheckCircle, Clock, XCircle, Banknote, MoreVertical } from 'lucide-react';
+import { Search, Gift, Users, TrendingUp, CheckCircle, Clock, XCircle, Banknote, MoreVertical, ShieldCheck, ShieldX } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,11 +26,20 @@ interface ReferralEntry {
   referred_email?: string;
 }
 
+interface PendingCodeRequest {
+  user_id: string;
+  username: string;
+  email: string;
+  pending_referral_code: string;
+  current_referral_code: string | null;
+}
+
 const AdminReferrals = () => {
   const navigate = useNavigate();
   const { user, isAdmin, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const [referrals, setReferrals] = useState<ReferralEntry[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<PendingCodeRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -54,13 +63,15 @@ const AdminReferrals = () => {
   }, [user, isAdmin, authLoading, navigate, toast]);
 
   useEffect(() => {
-    if (user && isAdmin) fetchReferrals();
+    if (user && isAdmin) {
+      fetchReferrals();
+      fetchPendingRequests();
+    }
   }, [user, isAdmin]);
 
   const fetchReferrals = async () => {
     setIsLoading(true);
     try {
-      // Fetch all referrals
       const { data: referralsData, error: refError } = await supabase
         .from('referrals')
         .select('*')
@@ -68,7 +79,6 @@ const AdminReferrals = () => {
 
       if (refError) throw refError;
 
-      // Fetch all profiles for username/email mapping
       const { data: profiles } = await supabase
         .from('profiles')
         .select('user_id, username, email');
@@ -87,7 +97,6 @@ const AdminReferrals = () => {
 
       setReferrals(enriched);
 
-      // Calculate stats
       const uniqueReferrers = new Set(enriched.map(r => r.referrer_id)).size;
       const confirmed = enriched.filter(r => r.status === 'confirmed');
       const pending = enriched.filter(r => r.status === 'pending');
@@ -106,6 +115,43 @@ const AdminReferrals = () => {
       toast({ title: 'Error', description: 'Failed to fetch referrals', variant: 'destructive' });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchPendingRequests = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_id, username, email, pending_referral_code, referral_code, referral_code_status')
+        .eq('referral_code_status', 'pending');
+
+      if (error) throw error;
+      setPendingRequests((data || []).map(p => ({
+        user_id: p.user_id,
+        username: p.username,
+        email: p.email,
+        pending_referral_code: p.pending_referral_code || '',
+        current_referral_code: p.referral_code,
+      })));
+    } catch (error) {
+      console.error('Error fetching pending requests:', error);
+    }
+  };
+
+  const reviewCode = async (userId: string, action: 'approve' | 'reject') => {
+    try {
+      const { data, error } = await supabase.rpc('review_referral_code', { p_user_id: userId, p_action: action });
+      if (error) throw error;
+      const result = data as { success: boolean; error?: string };
+      if (!result.success) {
+        toast({ title: 'Error', description: result.error, variant: 'destructive' });
+      } else {
+        toast({ title: action === 'approve' ? 'Approved' : 'Rejected', description: `Referral code ${action}d successfully.` });
+        fetchPendingRequests();
+      }
+    } catch (error) {
+      console.error('Error reviewing code:', error);
+      toast({ title: 'Error', description: 'Failed to review code', variant: 'destructive' });
     }
   };
 
@@ -151,6 +197,60 @@ const AdminReferrals = () => {
       <AdminHeader />
 
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Pending Code Requests */}
+        {pendingRequests.length > 0 && (
+          <Card className="bg-card border-border mb-8">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Clock className="w-5 h-5 text-yellow-400" />
+                Pending Custom Code Requests ({pendingRequests.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {pendingRequests.map((req) => (
+                  <div key={req.user_id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg bg-muted/20 border border-border">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">{req.username}</p>
+                      <p className="text-xs text-muted-foreground">{req.email}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-muted-foreground">Requested:</span>
+                        <code className="text-sm font-mono font-bold text-primary">{req.pending_referral_code}</code>
+                        {req.current_referral_code && (
+                          <>
+                            <span className="text-xs text-muted-foreground">Current:</span>
+                            <code className="text-xs font-mono text-muted-foreground">{req.current_referral_code}</code>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-secondary border-secondary/30 hover:bg-secondary/10"
+                        onClick={() => reviewCode(req.user_id, 'approve')}
+                      >
+                        <ShieldCheck className="w-4 h-4 mr-1" />
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                        onClick={() => reviewCode(req.user_id, 'reject')}
+                      >
+                        <ShieldX className="w-4 h-4 mr-1" />
+                        Reject
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
           <Card className="bg-card border-border">
@@ -255,16 +355,12 @@ const AdminReferrals = () => {
                 <CardContent className="py-4 px-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3 sm:gap-6">
-                      {/* Referrer */}
                       <div className="min-w-0">
                         <p className="text-xs text-muted-foreground mb-0.5">Referrer</p>
                         <p className="text-sm font-medium text-foreground truncate">{referral.referrer_username}</p>
                         <p className="text-xs text-muted-foreground truncate hidden sm:block">{referral.referrer_email}</p>
                       </div>
-
                       <div className="text-muted-foreground shrink-0">→</div>
-
-                      {/* Referred */}
                       <div className="min-w-0">
                         <p className="text-xs text-muted-foreground mb-0.5">Referred</p>
                         <p className="text-sm font-medium text-foreground truncate">{referral.referred_username}</p>
@@ -273,19 +369,14 @@ const AdminReferrals = () => {
                     </div>
 
                     <div className="flex items-center gap-3 sm:gap-6 justify-between sm:justify-end">
-                      {/* Order Amount */}
                       <div className="text-left sm:text-right">
                         <p className="text-xs text-muted-foreground">Order</p>
                         <p className="text-sm font-medium text-foreground">${Number(referral.order_amount_usd).toFixed(2)}</p>
                       </div>
-
-                      {/* Commission */}
                       <div className="text-left sm:text-right">
                         <p className="text-xs text-muted-foreground">Commission</p>
                         <p className="text-sm font-bold text-secondary">${Number(referral.commission_amount).toFixed(2)}</p>
                       </div>
-
-                      {/* Status */}
                       <span className={`text-xs px-2 py-0.5 rounded-full border font-medium shrink-0 ${
                         referral.status === 'confirmed'
                           ? 'bg-secondary/20 text-secondary border-secondary/30'
@@ -299,8 +390,6 @@ const AdminReferrals = () => {
                       }`}>
                         {referral.status}
                       </span>
-
-                      {/* Date */}
                       <div className="text-right hidden sm:block min-w-[80px]">
                         <p className="text-xs text-muted-foreground">
                           {new Date(referral.created_at).toLocaleDateString('en-US', {
@@ -308,8 +397,6 @@ const AdminReferrals = () => {
                           })}
                         </p>
                       </div>
-
-                      {/* Actions */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0">

@@ -236,7 +236,9 @@ export type Database = {
           discord_username: string | null
           email: string
           id: string
+          pending_referral_code: string | null
           referral_code: string | null
+          referral_code_status: string
           updated_at: string
           user_id: string
           username: string
@@ -247,7 +249,9 @@ export type Database = {
           discord_username?: string | null
           email: string
           id?: string
+          pending_referral_code?: string | null
           referral_code?: string | null
+          referral_code_status?: string
           updated_at?: string
           user_id: string
           username: string
@@ -258,7 +262,9 @@ export type Database = {
           discord_username?: string | null
           email?: string
           id?: string
+          pending_referral_code?: string | null
           referral_code?: string | null
+          referral_code_status?: string
           updated_at?: string
           user_id?: string
           username?: string
@@ -379,6 +385,11 @@ export type Database = {
       is_owner: { Args: { _user_id: string }; Returns: boolean }
       redeem_access_code: {
         Args: { p_code: string; p_discord_id: string }
+        Returns: Json
+      }
+      request_referral_code: { Args: { p_code: string }; Returns: Json }
+      review_referral_code: {
+        Args: { p_action: string; p_user_id: string }
         Returns: Json
       }
       validate_discount_code: {
