@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Gift, DollarSign, Users, TrendingUp, CheckCircle, Clock } from 'lucide-react';
+import { Search, Gift, DollarSign, Users, TrendingUp, CheckCircle, Clock, XCircle, Banknote, MoreVertical } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -36,6 +38,7 @@ const AdminReferrals = () => {
     totalCommissions: 0,
     confirmedCommissions: 0,
     pendingCommissions: 0,
+    paidCommissions: 0,
     uniqueReferrers: 0,
   });
 
@@ -87,12 +90,14 @@ const AdminReferrals = () => {
       const uniqueReferrers = new Set(enriched.map(r => r.referrer_id)).size;
       const confirmed = enriched.filter(r => r.status === 'confirmed');
       const pending = enriched.filter(r => r.status === 'pending');
+      const paid = enriched.filter(r => r.status === 'paid');
 
       setStats({
         totalReferrals: enriched.length,
         totalCommissions: enriched.reduce((sum, r) => sum + Number(r.commission_amount), 0),
         confirmedCommissions: confirmed.reduce((sum, r) => sum + Number(r.commission_amount), 0),
         pendingCommissions: pending.reduce((sum, r) => sum + Number(r.commission_amount), 0),
+        paidCommissions: paid.reduce((sum, r) => sum + Number(r.commission_amount), 0),
         uniqueReferrers,
       });
     } catch (error) {
@@ -100,6 +105,23 @@ const AdminReferrals = () => {
       toast({ title: 'Error', description: 'Failed to fetch referrals', variant: 'destructive' });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const updateStatus = async (id: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('referrals')
+        .update({ status: newStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({ title: 'Updated', description: `Referral marked as ${newStatus}` });
+      fetchReferrals();
+    } catch (error) {
+      console.error('Error updating referral:', error);
+      toast({ title: 'Error', description: 'Failed to update referral status', variant: 'destructive' });
     }
   };
 
@@ -239,6 +261,10 @@ const AdminReferrals = () => {
                           ? 'bg-secondary/20 text-secondary border-secondary/30'
                           : referral.status === 'pending'
                           ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                          : referral.status === 'paid'
+                          ? 'bg-primary/20 text-primary border-primary/30'
+                          : referral.status === 'rejected'
+                          ? 'bg-destructive/20 text-destructive border-destructive/30'
                           : 'bg-muted text-muted-foreground border-border'
                       }`}>
                         {referral.status}
@@ -252,6 +278,41 @@ const AdminReferrals = () => {
                           })}
                         </p>
                       </div>
+
+                      {/* Actions */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {referral.status !== 'confirmed' && (
+                            <DropdownMenuItem onClick={() => updateStatus(referral.id, 'confirmed')}>
+                              <CheckCircle className="w-4 h-4 mr-2 text-secondary" />
+                              Confirm
+                            </DropdownMenuItem>
+                          )}
+                          {referral.status !== 'paid' && referral.status !== 'rejected' && (
+                            <DropdownMenuItem onClick={() => updateStatus(referral.id, 'paid')}>
+                              <Banknote className="w-4 h-4 mr-2 text-primary" />
+                              Mark Paid
+                            </DropdownMenuItem>
+                          )}
+                          {referral.status !== 'pending' && (
+                            <DropdownMenuItem onClick={() => updateStatus(referral.id, 'pending')}>
+                              <Clock className="w-4 h-4 mr-2 text-yellow-400" />
+                              Set Pending
+                            </DropdownMenuItem>
+                          )}
+                          {referral.status !== 'rejected' && (
+                            <DropdownMenuItem onClick={() => updateStatus(referral.id, 'rejected')} className="text-destructive">
+                              <XCircle className="w-4 h-4 mr-2" />
+                              Reject
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 </CardContent>
