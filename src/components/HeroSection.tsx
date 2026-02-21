@@ -11,18 +11,18 @@ const scrollToPricing = () => {
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center pt-20">
+    <section className="relative min-h-[80vh] sm:min-h-[90vh] flex items-center justify-center pt-16 sm:pt-20">
       {/* Subtle background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
       
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 mb-8"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 mb-6 sm:mb-8"
           >
             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             <span className="text-sm font-medium text-primary">Solana RPC Infrastructure</span>
@@ -33,7 +33,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.05 }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight mb-6"
+            className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight mb-4 sm:mb-6"
           >
             <span className="text-foreground">Enterprise RPC</span>
             <br />
@@ -45,7 +45,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="text-lg text-muted-foreground max-w-xl mx-auto mb-10"
+            className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto mb-8 sm:mb-10 px-2"
           >
             Sub-millisecond latency, 700k+ SOL staked, 3 global regions. 
             Built for serious botters.
@@ -56,7 +56,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.15 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-20"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12 sm:mb-20"
           >
             <Button 
               size="lg" 
@@ -89,9 +89,9 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="border border-border rounded-xl p-6 sm:p-8 bg-card/50"
+            className="border border-border rounded-xl p-4 sm:p-6 md:p-8 bg-card/50"
           >
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
               <div className="text-center">
                 <p className="text-2xl sm:text-3xl font-bold text-foreground">&lt;1ms</p>
                 <p className="text-sm text-muted-foreground mt-1">Latency</p>
@@ -111,7 +111,7 @@ const HeroSection = () => {
             </div>
 
             {/* Region flags */}
-            <div className="flex items-center justify-center gap-6 mt-6 pt-6 border-t border-border">
+            <div className="flex items-center justify-center gap-4 sm:gap-6 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>🇺🇸</span> New York
               </div>

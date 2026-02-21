@@ -36,14 +36,14 @@ const features = [
 
 const FeaturesSection = () => {
   return (
-    <section id="features" className="py-24">
-      <div className="container mx-auto px-6">
+    <section id="features" className="py-16 sm:py-24">
+      <div className="container mx-auto px-4 sm:px-6">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-14"
+          className="text-center mb-10 sm:mb-14"
         >
           <p className="text-sm font-medium text-primary mb-3">Why Choose Omega</p>
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
@@ -55,7 +55,7 @@ const FeaturesSection = () => {
         </motion.div>
 
         {/* Features grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {features.map((feature, index) => (
             <motion.div
               key={feature.title}
@@ -63,7 +63,7 @@ const FeaturesSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.05 }}
-              className="group p-6 rounded-lg border border-border bg-card hover:border-primary/40 transition-colors"
+              className="group p-5 sm:p-6 rounded-lg border border-border bg-card hover:border-primary/40 transition-colors"
             >
               {/* Icon */}
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
