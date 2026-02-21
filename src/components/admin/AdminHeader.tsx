@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Shield, Users, UserCheck, Tag, Clock } from 'lucide-react';
+import { ArrowLeft, Shield, Users, UserCheck, Tag, Clock, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const AdminHeader = () => {
@@ -9,6 +9,7 @@ const AdminHeader = () => {
   const isCustomersPage = location.pathname === '/admin/customers';
   const isDiscountCodesPage = location.pathname === '/admin/discount-codes';
   const isAccessCodesPage = location.pathname === '/admin/access-codes';
+  const isReferralsPage = location.pathname === '/admin/referrals';
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
@@ -37,7 +38,7 @@ const AdminHeader = () => {
           {/* Navigation Tabs */}
           <div className="flex items-center gap-2">
             <Button
-              variant={!isCustomersPage && !isDiscountCodesPage && !isAccessCodesPage ? "default" : "ghost"}
+              variant={!isCustomersPage && !isDiscountCodesPage && !isAccessCodesPage && !isReferralsPage ? "default" : "ghost"}
               size="sm"
               onClick={() => navigate('/admin')}
               className="gap-2"
@@ -71,6 +72,15 @@ const AdminHeader = () => {
             >
               <Clock className="w-4 h-4" />
               Trials
+            </Button>
+            <Button
+              variant={isReferralsPage ? "default" : "ghost"}
+              size="sm"
+              onClick={() => navigate('/admin/referrals')}
+              className="gap-2"
+            >
+              <Gift className="w-4 h-4" />
+              Referrals
             </Button>
           </div>
         </div>

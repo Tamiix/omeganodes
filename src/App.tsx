@@ -14,6 +14,7 @@ import AccessCodes from "./pages/AccessCodes";
 import NotFound from "./pages/NotFound";
 import Terms from "./pages/Terms";
 import Referral from "./pages/Referral";
+import AdminReferrals from "./pages/AdminReferrals";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/admin/customers" element={<Customers />} />
               <Route path="/admin/discount-codes" element={<DiscountCodes />} />
               <Route path="/admin/access-codes" element={<AccessCodes />} />
+              <Route path="/admin/referrals" element={<AdminReferrals />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/referral" element={<Referral />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
