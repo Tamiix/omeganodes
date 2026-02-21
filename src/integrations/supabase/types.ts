@@ -236,6 +236,7 @@ export type Database = {
           discord_username: string | null
           email: string
           id: string
+          referral_code: string | null
           updated_at: string
           user_id: string
           username: string
@@ -246,6 +247,7 @@ export type Database = {
           discord_username?: string | null
           email: string
           id?: string
+          referral_code?: string | null
           updated_at?: string
           user_id: string
           username: string
@@ -256,11 +258,56 @@ export type Database = {
           discord_username?: string | null
           email?: string
           id?: string
+          referral_code?: string | null
           updated_at?: string
           user_id?: string
           username?: string
         }
         Relationships: []
+      }
+      referrals: {
+        Row: {
+          commission_amount: number
+          commission_rate: number
+          created_at: string
+          id: string
+          order_amount_usd: number
+          order_id: string | null
+          referred_id: string
+          referrer_id: string
+          status: string
+        }
+        Insert: {
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          order_amount_usd?: number
+          order_id?: string | null
+          referred_id: string
+          referrer_id: string
+          status?: string
+        }
+        Update: {
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          order_amount_usd?: number
+          order_id?: string | null
+          referred_id?: string
+          referrer_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trial_usage: {
         Row: {
@@ -321,6 +368,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_referral_code: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -342,6 +390,15 @@ export type Database = {
           discount_value: number
           error_message: string
           is_valid: boolean
+        }[]
+      }
+      validate_referral_code: {
+        Args: { p_code: string }
+        Returns: {
+          error_message: string
+          is_valid: boolean
+          referrer_id: string
+          referrer_username: string
         }[]
       }
     }
