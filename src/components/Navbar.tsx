@@ -122,18 +122,45 @@ const Navbar = () => {
             animate={{ opacity: 1, height: "auto" }}
             className="md:hidden pt-4 pb-2 space-y-2"
           >
-            <a href="#features" className="block py-2 text-sm text-muted-foreground hover:text-foreground">
+            <a href="#features" onClick={() => setIsOpen(false)} className="block py-2 text-sm text-muted-foreground hover:text-foreground">
               Features
             </a>
-            <a href="#performance" className="block py-2 text-sm text-muted-foreground hover:text-foreground">
+            <a href="#performance" onClick={() => setIsOpen(false)} className="block py-2 text-sm text-muted-foreground hover:text-foreground">
               Performance
             </a>
-            <a href="#pricing" className="block py-2 text-sm text-muted-foreground hover:text-foreground">
+            <a href="#pricing" onClick={() => setIsOpen(false)} className="block py-2 text-sm text-muted-foreground hover:text-foreground">
               Pricing
             </a>
-            <a href="#faq" className="block py-2 text-sm text-muted-foreground hover:text-foreground">
+            <a href="#faq" onClick={() => setIsOpen(false)} className="block py-2 text-sm text-muted-foreground hover:text-foreground">
               FAQ
             </a>
+            
+            <div className="border-t border-border my-2" />
+
+            {/* Mobile Auth / User Section */}
+            {!isLoading && (
+              user ? (
+                <div className="space-y-1">
+                  <div className="px-2 py-2 text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                    Account
+                  </div>
+                  <UserMenu />
+                </div>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  className="w-full gap-2"
+                  onClick={() => {
+                    setAuthOpen(true);
+                    setIsOpen(false);
+                  }}
+                >
+                  <LogIn className="w-4 h-4" />
+                  Sign In
+                </Button>
+              )
+            )}
+
             <div className="flex gap-2 pt-2">
               <a
                 href="https://discord.gg/omeganode"
@@ -147,21 +174,6 @@ const Navbar = () => {
                 Discord
               </a>
             </div>
-            
-            {/* Mobile Auth */}
-            {!isLoading && !user && (
-              <Button 
-                variant="outline" 
-                className="w-full gap-2"
-                onClick={() => {
-                  setAuthOpen(true);
-                  setIsOpen(false);
-                }}
-              >
-                <LogIn className="w-4 h-4" />
-                Sign In
-              </Button>
-            )}
             
             <Button className="w-full bg-gradient-omega" onClick={() => { scrollToPricing(); setIsOpen(false); }}>
               Get Started

@@ -93,22 +93,22 @@ const Referral = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center gap-4">
+        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
+          <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate('/')}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground shrink-0"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <h1 className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2">
                 <Gift className="w-5 h-5 text-primary" />
                 Referral Program
               </h1>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Earn 10% commission on every referral purchase
               </p>
             </div>
@@ -116,7 +116,7 @@ const Referral = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-8 space-y-6">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
         {/* Referral Code Section */}
         <Card className="bg-card border-border">
           <CardHeader>
