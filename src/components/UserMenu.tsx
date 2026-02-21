@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, LogOut, Settings, Shield, ChevronDown } from 'lucide-react';
+import { User, LogOut, Settings, Shield, ChevronDown, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -66,6 +66,17 @@ const UserMenu = () => {
                 >
                   <Settings className="w-4 h-4" />
                   Dashboard
+                </button>
+
+                <button
+                  onClick={() => {
+                    navigate('/referral');
+                    setIsOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                >
+                  <Gift className="w-4 h-4" />
+                  Referral
                 </button>
 
                 {isAdmin && (
