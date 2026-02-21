@@ -33,6 +33,7 @@ const AdminReferrals = () => {
   const [referrals, setReferrals] = useState<ReferralEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [stats, setStats] = useState({
     totalReferrals: 0,
     totalCommissions: 0,
@@ -125,12 +126,15 @@ const AdminReferrals = () => {
     }
   };
 
-  const filteredReferrals = referrals.filter(r =>
-    (r.referrer_username || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (r.referrer_email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (r.referred_username || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (r.referred_email || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredReferrals = referrals.filter(r => {
+    const matchesSearch =
+      (r.referrer_username || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (r.referrer_email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (r.referred_username || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (r.referred_email || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || r.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   if (authLoading || isLoading) {
     return (
@@ -195,16 +199,42 @@ const AdminReferrals = () => {
           </Card>
         </div>
 
-        {/* Search */}
-        <div className="relative mb-6">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search by referrer or referred username/email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-card border-border"
-          />
+        {/* Search + Filter */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search by referrer or referred username/email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-card border-border"
+            />
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+            {['all', 'pending', 'confirmed', 'paid', 'rejected'].map((status) => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap shrink-0 transition-all ${
+                  statusFilter === status
+                    ? (status === 'confirmed' ? 'bg-secondary/20 text-secondary border border-secondary/30'
+                      : status === 'pending' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                      : status === 'paid' ? 'bg-primary/20 text-primary border border-primary/30'
+                      : status === 'rejected' ? 'bg-destructive/20 text-destructive border border-destructive/30'
+                      : 'bg-primary text-primary-foreground')
+                    : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+                {status !== 'all' && (
+                  <span className="ml-1 opacity-70">
+                    ({referrals.filter(r => r.status === status).length})
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Referrals List */}
