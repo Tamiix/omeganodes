@@ -126,12 +126,12 @@ const Referral = () => {
             {referralCode ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
-                  <code className="flex-1 text-lg font-mono text-foreground font-bold tracking-widest text-center">
-                    {referralCode}
+                  <code className="flex-1 text-sm sm:text-base font-mono text-foreground font-bold text-center break-all">
+                    omeganodes.lovable.app/ref/{referralCode}
                   </code>
                   <button
-                    onClick={() => copyToClipboard(referralCode, 'code')}
-                    className="p-2 rounded-lg hover:bg-muted transition-colors"
+                    onClick={() => copyToClipboard(`https://omeganodes.lovable.app/ref/${referralCode}`, 'code')}
+                    className="p-2 rounded-lg hover:bg-muted transition-colors shrink-0"
                   >
                     {copiedId === 'code' ? (
                       <Check className="w-5 h-5 text-secondary" />
