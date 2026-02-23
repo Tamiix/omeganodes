@@ -94,16 +94,21 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
     }
   };
 
+  const getReferralDiscount = () => {
+    if (!referralInfo) return 0;
+    const months = getTotalMonths();
+    const baseTotal = amount * months;
+    return Math.round(baseTotal * 0.10 * 100) / 100;
+  };
+
   const getTotalAmount = () => {
     if (isTestMode) return TEST_AMOUNT;
     
     const months = getTotalMonths();
     const baseTotal = amount * months;
-    // For dedicated servers, shreds are already included in amount from pricing page
-    // swqosTier is also pre-selected on pricing page for dedicated, so we don't add it here
-    // The amount prop already contains the full price with all add-ons
+    const referralDiscount = referralInfo ? Math.round(baseTotal * 0.10 * 100) / 100 : 0;
     
-    return baseTotal;
+    return Math.max(0, baseTotal - referralDiscount);
   };
 
   const validateReferralCode = async () => {
@@ -209,6 +214,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
 
             // Create referral record if a referral code was used
             if (!orderError && orderData && referralInfo) {
+              // Commission is 10% of the discounted amount
               const commissionAmount = totalAmount * 0.10;
               try {
                 await supabase.from('referrals').insert({
@@ -620,6 +626,17 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
                     </span>
                   </div>
                 )}
+                {referralInfo && !isTestMode && (
+                  <div className="flex justify-between items-center mb-2 text-secondary">
+                    <span className="text-sm flex items-center gap-1">
+                      <Gift className="w-3 h-3" />
+                      Referral Discount (10%)
+                    </span>
+                    <span className="text-sm font-medium">
+                      -{formatPrice(getReferralDiscount())}
+                    </span>
+                  </div>
+                )}
                 <div className="border-t border-border my-3" />
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Total Due</span>
@@ -644,9 +661,12 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
                   <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/10 border border-secondary/30">
                     <div className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-secondary" />
-                      <span className="text-sm text-secondary font-medium">
-                        Referred by {referralInfo.referrer_username}
-                      </span>
+                      <div>
+                        <span className="text-sm text-secondary font-medium block">
+                          Referred by {referralInfo.referrer_username}
+                        </span>
+                        <span className="text-xs text-secondary/70">10% off your order!</span>
+                      </div>
                     </div>
                     <button onClick={removeReferral} className="text-xs text-muted-foreground hover:text-foreground">
                       Remove
