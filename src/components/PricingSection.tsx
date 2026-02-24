@@ -13,7 +13,7 @@ import FingerprintJS from "@fingerprintjs/fingerprintjs";
 const serverTypes = [
   { id: "shared", name: "Shared", description: "Multi-tenant infrastructure" },
   { id: "dedicated", name: "Dedicated", description: "Your own hardware" },
-  { id: "shreds", name: "Shreds", description: "Standalone shred access" },
+  { id: "swqos", name: "SwQoS", description: "Standalone stake packages" },
 ];
 
 const dedicatedSpecs = [
@@ -114,6 +114,8 @@ const PricingSection = () => {
 
   const isValidDiscordId = /^\d{17,19}$/.test(discordUserId.trim());
   const isDedicated = selectedServerType === "dedicated";
+  const isSwQoS = selectedServerType === "swqos";
+  const [swqosStakePackages, setSwqosStakePackages] = useState(1);
   
   // Check if commitment discount is active (any commitment other than monthly or daily)
   const hasCommitmentDiscount = selectedCommitment !== "monthly" && selectedCommitment !== "daily";
@@ -197,7 +199,15 @@ const PricingSection = () => {
     let beforeDiscount = 0;
     let discountPercent = 0;
 
-    if (isDedicated) {
+    if (isSwQoS) {
+      // SwQoS standalone: $350/mo per 100k SOL package
+      const totalStake = swqosStakePackages * 350;
+      const commitment = commitments.find(c => c.id === selectedCommitment);
+      discountPercent = commitment?.discount || 0;
+      serverPrice = Math.round(totalStake * (1 - discountPercent));
+      addOnsPrice = 0;
+      beforeDiscount = totalStake;
+    } else if (isDedicated) {
       const spec = dedicatedSpecs.find(s => s.id === selectedDedicatedSpec);
       const basePrice = spec?.price || 2700;
       const stakeDiscountPercent = selectedCommitment === "3months" ? 0.10 : 0;
@@ -207,9 +217,7 @@ const PricingSection = () => {
       const commitment = commitments.find(c => c.id === selectedCommitment);
       discountPercent = commitment?.discount || 0;
       
-      // Server price with commitment discount
       serverPrice = Math.round(basePrice * (1 - discountPercent));
-      // Add-ons are NOT discounted by commitment or discount codes
       addOnsPrice = stakeAddition + shredsAddition;
       beforeDiscount = basePrice + (additionalStakePackages * 350) + shredsAddition;
     } else {
@@ -222,13 +230,12 @@ const PricingSection = () => {
     }
 
     const rentPercent = isDedicated ? 0.20 : 0.10;
-    const rentCost = rentAccessEnabled ? Math.round((serverPrice + addOnsPrice) * rentPercent) : 0;
+    const rentCost = rentAccessEnabled && !isSwQoS ? Math.round((serverPrice + addOnsPrice) * rentPercent) : 0;
     const totalBeforeCodeDiscount = serverPrice + addOnsPrice + rentCost;
-    const finalOriginal = rentAccessEnabled ? Math.round(beforeDiscount * (1 + rentPercent)) : beforeDiscount;
+    const finalOriginal = rentAccessEnabled && !isSwQoS ? Math.round(beforeDiscount * (1 + rentPercent)) : beforeDiscount;
 
-    // Discount codes only apply to server price, not add-ons
     let codeDiscountAmount = 0;
-    let discountableAmount = serverPrice + (rentAccessEnabled ? Math.round(serverPrice * rentPercent) : 0);
+    let discountableAmount = serverPrice + (rentAccessEnabled && !isSwQoS ? Math.round(serverPrice * rentPercent) : 0);
     
     if (appliedDiscount) {
       if (appliedDiscount.discount_type === 'percentage') {
@@ -238,7 +245,6 @@ const PricingSection = () => {
       }
     }
 
-    // Apply referral discount (10% off the total)
     let referralDiscountAmount = 0;
     if (referralBanner) {
       referralDiscountAmount = Math.round((totalBeforeCodeDiscount - codeDiscountAmount) * 0.10);
@@ -254,7 +260,7 @@ const PricingSection = () => {
       referralDiscountAmount,
       priceBeforeDiscount: totalBeforeCodeDiscount
     };
-  }, [selectedCommitment, selectedServerType, selectedDedicatedSpec, additionalStakePackages, privateShredsEnabled, isDedicated, rentAccessEnabled, appliedDiscount, referralBanner]);
+  }, [selectedCommitment, selectedServerType, selectedDedicatedSpec, additionalStakePackages, privateShredsEnabled, isDedicated, isSwQoS, swqosStakePackages, rentAccessEnabled, appliedDiscount, referralBanner]);
 
   const validateDiscountCode = async () => {
     if (!discountCode.trim()) return;
@@ -635,7 +641,7 @@ const PricingSection = () => {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {type.id === "shared" ? <Shield className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> : type.id === "shreds" ? <Zap className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> : <Server className="w-3.5 sm:w-4 h-3.5 sm:h-4" />}
+                {type.id === "shared" ? <Shield className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> : type.id === "swqos" ? <Sparkles className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> : type.id === "dedicated" ? <Server className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> : <Zap className="w-3.5 sm:w-4 h-3.5 sm:h-4" />}
                 {type.name}
               </button>
             ))}
@@ -644,26 +650,204 @@ const PricingSection = () => {
 
         {/* Main Content */}
         <div className="max-w-5xl mx-auto relative">
-          {/* Shreds Coming Soon */}
-          {selectedServerType === "shreds" ? (
+          {/* SwQoS Standalone */}
+          {isSwQoS ? (
+          <>
+          {/* Login Required Overlay for SwQoS */}
+          {!user && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="absolute inset-0 z-50 flex items-start justify-center pt-16"
+            >
+              <div className="absolute inset-0 bg-background/90 backdrop-blur-sm rounded-xl" />
+              <div className="relative z-10 text-center p-6 max-w-sm">
+                <div className="w-14 h-14 mx-auto mb-4 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Lock className="w-7 h-7 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Account Required</h3>
+                <p className="text-sm text-muted-foreground mb-4">Sign in to view pricing and place orders.</p>
+                <Button onClick={() => setIsAuthModalOpen(true)} className="bg-gradient-omega hover:opacity-90">
+                  <LogIn className="w-4 h-4 mr-2" /> Sign In
+                </Button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Top row: Billing + Price for SwQoS */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="rounded-xl border border-border bg-card p-4 sm:p-6 mb-4"
+          >
+            <div className="grid lg:grid-cols-2 gap-6 items-center">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-primary" />
+                  Billing Period
+                </h3>
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
+                  {commitments
+                    .filter(c => !c.trialOnly)
+                    .map((c) => (
+                      <button
+                        key={c.id}
+                        onClick={() => setSelectedCommitment(c.id)}
+                        className={`relative py-2.5 sm:py-3 px-2 sm:px-3 rounded-lg text-center transition-all ${
+                          selectedCommitment === c.id
+                            ? "bg-primary text-white"
+                            : "bg-muted border border-border hover:border-primary/40"
+                        }`}
+                      >
+                        <div className="text-sm font-medium">{c.name}</div>
+                        {c.label && !c.trialOnly && (
+                          <div className={`text-xs mt-0.5 ${selectedCommitment === c.id ? "text-white/80" : "text-secondary"}`}>{c.label}</div>
+                        )}
+                      </button>
+                    ))}
+                </div>
+              </div>
+              
+              <div className="text-center lg:text-right">
+                <p className="text-xs text-muted-foreground mb-1">SwQoS Stake</p>
+                <div>
+                  {(discount > 0 || referralBanner) && (
+                    <div className="text-lg text-muted-foreground line-through">
+                      {formatPrice(swqosStakePackages * 350)}
+                    </div>
+                  )}
+                  <div className="flex items-baseline justify-center lg:justify-end gap-1">
+                    <span className="text-4xl font-bold text-foreground">{formatPrice(price)}</span>
+                    <span className="text-lg text-muted-foreground">/mo</span>
+                  </div>
+                  {referralBanner && (
+                    <div className="flex items-center justify-center lg:justify-end gap-1.5 mt-1.5">
+                      <Gift className="w-3.5 h-3.5 text-secondary" />
+                      <span className="text-xs font-medium text-secondary">10% referral discount applied</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Bottom grid for SwQoS */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="rounded-xl border border-border bg-card p-12 text-center"
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="lg:col-span-2 space-y-3"
             >
-              <div className="w-16 h-16 mx-auto mb-6 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Zap className="w-8 h-8 text-primary" />
+              {/* Stake Package Selector */}
+              <div className="p-4 rounded-lg border border-border bg-card">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  Stake Packages
+                </h3>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">100,000 SOL per package</p>
+                    <p className="text-xs text-muted-foreground">$350/month each</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setSwqosStakePackages(Math.max(1, swqosStakePackages - 1))}
+                      disabled={swqosStakePackages <= 1}
+                      className="w-10 h-10 sm:w-8 sm:h-8 rounded-md bg-muted flex items-center justify-center font-medium hover:bg-muted/80 disabled:opacity-40"
+                    >−</button>
+                    <span className="w-6 text-center font-semibold">{swqosStakePackages}</span>
+                    <button
+                      onClick={() => setSwqosStakePackages(Math.min(10, swqosStakePackages + 1))}
+                      className="w-10 h-10 sm:w-8 sm:h-8 rounded-md bg-primary text-white flex items-center justify-center font-medium hover:bg-primary/90"
+                    >+</button>
+                  </div>
+                </div>
+                <p className="text-xs text-secondary mt-2">
+                  Total stake: {(swqosStakePackages * 100000).toLocaleString()} SOL
+                </p>
               </div>
-              <h3 className="text-2xl font-bold mb-3">Shreds Coming Soon</h3>
-              <p className="text-muted-foreground max-w-md mx-auto mb-6">
-                Standalone shred access is currently in development. Join our Discord to be notified when it launches.
-              </p>
-              <Button variant="omegaOutline" asChild>
-                <a href="https://discord.gg/omeganodes" target="_blank" rel="noopener noreferrer">
-                  Join Discord for Updates
-                </a>
-              </Button>
+
+              {/* Info */}
+              <div className="p-3 rounded-lg bg-muted/50 border border-border text-xs text-muted-foreground space-y-1.5">
+                <p>
+                  <Sparkles className="w-3.5 h-3.5 text-primary inline mr-1.5" />
+                  Stake-Weighted Quality of Service — prioritize your transactions on the Solana network.
+                </p>
+                <p>
+                  <Shield className="w-3.5 h-3.5 text-primary inline mr-1.5" />
+                  Same pricing as dedicated server add-on — no premium for standalone purchase.
+                </p>
+              </div>
             </motion.div>
+
+            {/* Right: Action Card for SwQoS */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="lg:col-span-1"
+            >
+              <div className="sticky top-20 space-y-3">
+                <div className="p-4 rounded-lg border border-border bg-card">
+                  <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">What's Included</h4>
+                  <div className="space-y-2">
+                    {[
+                      "Stake-Weighted QoS priority",
+                      "100,000 SOL per package",
+                      "Same pricing as dedicated add-on",
+                      "No server purchase required",
+                      "Priority transaction processing",
+                    ].map((feature, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <Check className="w-3.5 h-3.5 text-secondary shrink-0 mt-0.5" />
+                        <span className="text-xs">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Discord ID Input */}
+                <div className="p-4 rounded-lg border border-border bg-card">
+                  <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 mb-2">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="#5865F2">
+                      <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.36-.698.772-1.362 1.225-1.993a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.12-.098.246-.198.373-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                    </svg>
+                    Discord User ID
+                  </label>
+                  <Input
+                    placeholder="123456789012345678"
+                    value={discordUserId}
+                    onChange={(e) => setDiscordUserId(e.target.value.replace(/\D/g, ''))}
+                    className={`text-sm ${discordUserId && !isValidDiscordId ? "border-destructive" : isValidDiscordId ? "border-secondary" : ""}`}
+                  />
+                  {isValidDiscordId && (
+                    <p className="text-xs text-green-500 mt-1 flex items-center gap-1">
+                      <Check className="w-3 h-3" /> Valid
+                    </p>
+                  )}
+                </div>
+
+                {/* CTA */}
+                <Button
+                  className="w-full text-sm font-medium bg-gradient-omega hover:opacity-90"
+                  disabled={!isValidDiscordId || (price === 0 && !user)}
+                  onClick={() => {
+                    if (price === 0) {
+                      handleFreeOrder();
+                    } else {
+                      setIsPaymentOpen(true);
+                    }
+                  }}
+                >
+                  {!isValidDiscordId ? "Enter Discord ID" : "Continue to Payment"}
+                </Button>
+                <p className="text-xs text-center text-muted-foreground">USDC/USDT payment</p>
+              </div>
+            </motion.div>
+          </div>
+          </>
           ) : (
           <>
           {/* Login Required Overlay */}
@@ -1270,13 +1454,13 @@ const PricingSection = () => {
         amount={price}
         commitment={selectedCommitment}
         serverType={selectedServerType}
-        location={isDedicated ? getFinalLocation() : "all"}
-        rentAccessEnabled={rentAccessEnabled}
+        location={isDedicated ? getFinalLocation() : isSwQoS ? "N/A" : "all"}
+        rentAccessEnabled={isSwQoS ? false : rentAccessEnabled}
         isTestMode={isTestMode}
         discordUserId={discordUserId.trim()}
         appliedDiscount={appliedDiscount}
-        includeShredsFromPricing={privateShredsEnabled}
-        additionalStakePackages={additionalStakePackages}
+        includeShredsFromPricing={isSwQoS ? false : privateShredsEnabled}
+        additionalStakePackages={isSwQoS ? swqosStakePackages : additionalStakePackages}
         initialReferralCode={storedReferralCode || undefined}
       />
 
