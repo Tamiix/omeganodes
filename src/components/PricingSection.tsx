@@ -13,6 +13,7 @@ import FingerprintJS from "@fingerprintjs/fingerprintjs";
 const serverTypes = [
   { id: "shared", name: "Shared", description: "Multi-tenant infrastructure" },
   { id: "dedicated", name: "Dedicated", description: "Your own hardware" },
+  { id: "shreds", name: "Shreds", description: "Standalone shred access" },
   { id: "swqos", name: "SwQoS", description: "Standalone stake packages" },
 ];
 
@@ -848,6 +849,25 @@ const PricingSection = () => {
             </motion.div>
           </div>
           </>
+          ) : selectedServerType === "shreds" ? (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-xl border border-border bg-card p-12 text-center"
+            >
+              <div className="w-16 h-16 mx-auto mb-6 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Zap className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-2xl font-bold mb-3">Shreds Coming Soon</h3>
+              <p className="text-muted-foreground max-w-md mx-auto mb-6">
+                Standalone shred access is currently in development. Join our Discord to be notified when it launches.
+              </p>
+              <Button variant="omegaOutline" asChild>
+                <a href="https://discord.gg/omeganodes" target="_blank" rel="noopener noreferrer">
+                  Join Discord for Updates
+                </a>
+              </Button>
+            </motion.div>
           ) : (
           <>
           {/* Login Required Overlay */}
