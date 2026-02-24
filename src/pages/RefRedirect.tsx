@@ -9,7 +9,7 @@ const RefRedirect = () => {
     if (code) {
       localStorage.setItem('referral_code', code);
     }
-    navigate('/', { replace: true });
+    navigate('/#pricing', { replace: true });
   }, [code, navigate]);
 
   return null;
