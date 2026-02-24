@@ -95,12 +95,19 @@ const PricingSection = () => {
   const [discountError, setDiscountError] = useState("");
   const [isValidatingCode, setIsValidatingCode] = useState(false);
   
+  // Unified code input (discount or trial)
+  const [unifiedCode, setUnifiedCode] = useState("");
+  
   // Trial code redemption state
   const [trialCode, setTrialCode] = useState("");
   const [isRedeemingTrialCode, setIsRedeemingTrialCode] = useState(false);
   const [trialCodeError, setTrialCodeError] = useState("");
   const [redeemedTrial, setRedeemedTrial] = useState<{ duration_type: string; access_expires_at: string } | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  // Referral code from localStorage (set via /ref/:code link)
+  const [storedReferralCode, setStoredReferralCode] = useState<string | null>(null);
+  const [referralBanner, setReferralBanner] = useState<{ username: string; code: string } | null>(null);
 
   const { formatPrice } = useCurrency();
   const { isAdmin, user } = useAuth();
@@ -140,6 +147,26 @@ const PricingSection = () => {
       }
     };
     fetchTrialSetting();
+  }, []);
+
+  // Auto-apply referral code from localStorage (set by /ref/:code)
+  useEffect(() => {
+    const code = localStorage.getItem('referral_code');
+    if (code) {
+      setStoredReferralCode(code);
+      // Validate the referral code to show the banner
+      const validateRef = async () => {
+        try {
+          const { data, error } = await supabase.rpc('validate_referral_code', { p_code: code });
+          if (!error && data?.[0]?.is_valid) {
+            setReferralBanner({ username: data[0].referrer_username, code });
+          }
+        } catch (err) {
+          console.error('Failed to validate stored referral code:', err);
+        }
+      };
+      validateRef();
+    }
   }, []);
 
   // Clear discount code when switching to a commitment with discount, or when switching to daily
@@ -269,7 +296,85 @@ const PricingSection = () => {
   const removeDiscount = () => {
     setAppliedDiscount(null);
     setDiscountCode("");
+    setUnifiedCode("");
     setDiscountError("");
+  };
+
+  const handleUnifiedCodeApply = async () => {
+    const code = unifiedCode.trim().toUpperCase();
+    if (!code) return;
+    
+    // Check if it looks like a trial code (starts with TRIAL-)
+    if (code.startsWith('TRIAL-')) {
+      setTrialCode(code);
+      setUnifiedCode("");
+      // Trigger trial redemption
+      if (!user) {
+        setTrialCodeError("Login required to redeem trial codes");
+        return;
+      }
+      if (!isValidDiscordId) {
+        setTrialCodeError("Enter Discord ID first");
+        return;
+      }
+      setIsRedeemingTrialCode(true);
+      setTrialCodeError("");
+      try {
+        const { data, error } = await supabase.rpc('redeem_access_code', {
+          p_code: code,
+          p_discord_id: discordUserId.trim()
+        });
+        if (error) throw error;
+        const result = data as { success: boolean; error?: string; duration_type?: string; expires_at?: string; transaction_signature?: string };
+        if (!result.success) {
+          setTrialCodeError(result.error || "Invalid or already redeemed code");
+          return;
+        }
+        await supabase.functions.invoke('discord-order-notification', {
+          body: {
+            plan: `Trial (${TRIAL_DURATION_LABELS[result.duration_type || '1_day']})`,
+            commitment: "trial", serverType: "Shared", email: user.email,
+            discordId: discordUserId.trim(), totalAmount: 0,
+            transactionSignature: result.transaction_signature, isTestMode: false, isTrial: true
+          }
+        });
+        setRedeemedTrial({ duration_type: result.duration_type || '1_day', access_expires_at: result.expires_at || new Date().toISOString() });
+        const { toast } = await import("@/hooks/use-toast");
+        toast({ title: '🎉 Trial Code Redeemed!', description: `You now have ${TRIAL_DURATION_LABELS[result.duration_type || '1_day']} of free shared server access` });
+      } catch (error) {
+        console.error('Error redeeming trial code:', error);
+        setTrialCodeError("Failed to redeem code. Please try again.");
+      } finally {
+        setIsRedeemingTrialCode(false);
+      }
+    } else {
+      // Treat as discount code
+      setDiscountCode(code);
+      setIsValidatingCode(true);
+      setDiscountError("");
+      try {
+        const { data, error } = await supabase.rpc('validate_discount_code', {
+          code_to_validate: code,
+          server_type: selectedServerType
+        });
+        if (error) { setDiscountError("Failed to validate code"); setAppliedDiscount(null); return; }
+        const result = data?.[0];
+        if (!result || !result.is_valid) { setDiscountError(result?.error_message || "Invalid code"); setAppliedDiscount(null); return; }
+        setAppliedDiscount({
+          code: result.code,
+          discount_type: result.discount_type as 'percentage' | 'flat',
+          discount_value: result.discount_value,
+          applicable_to: result.applicable_to as 'shared' | 'dedicated' | 'both'
+        });
+        setDiscountError("");
+        setUnifiedCode("");
+      } catch (err) {
+        setDiscountError("Failed to validate code");
+        setAppliedDiscount(null);
+      } finally {
+        setIsValidatingCode(false);
+      }
+    }
   };
 
   const [fingerprint, setFingerprint] = useState<string>("");
@@ -902,6 +1007,31 @@ const PricingSection = () => {
                 </div>
               </div>
 
+              {/* Referral Banner */}
+              {referralBanner && (
+                <div className="p-4 rounded-lg border border-secondary/30 bg-secondary/5">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-secondary/10">
+                      <Gift className="w-5 h-5 text-secondary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-secondary">
+                        Referred by {referralBanner.username} — 10% off!
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Your referral discount will be applied automatically at checkout.
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => { setReferralBanner(null); setStoredReferralCode(null); localStorage.removeItem('referral_code'); }}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Discount / Trial Codes */}
               <div className={`p-4 rounded-lg border border-border bg-card ${hasCommitmentDiscount && !redeemedTrial ? 'opacity-60' : ''}`}>
                 <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
@@ -931,31 +1061,22 @@ const PricingSection = () => {
                         <p className="text-xs text-muted-foreground mb-2">Trial codes still work:</p>
                         <div className="flex gap-2">
                           <Input
-                            placeholder="TRIAL-XXXXXXXX"
-                            value={trialCode}
-                            onChange={(e) => {
-                              setTrialCode(e.target.value.toUpperCase());
-                              setTrialCodeError("");
-                            }}
+                            placeholder="Enter code (discount or trial)"
+                            value={unifiedCode}
+                            onChange={(e) => { setUnifiedCode(e.target.value.toUpperCase()); setDiscountError(""); setTrialCodeError(""); }}
                             className="font-mono text-sm"
-                            disabled={!user}
                           />
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={handleRedeemTrialCode}
-                            disabled={!trialCode.trim() || isRedeemingTrialCode || !user || !isValidDiscordId}
+                            onClick={handleUnifiedCodeApply}
+                            disabled={!unifiedCode.trim() || isRedeemingTrialCode || isValidatingCode}
                           >
-                            {isRedeemingTrialCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "Redeem"}
+                            {(isRedeemingTrialCode || isValidatingCode) ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
                           </Button>
                         </div>
-                        {!user && (
-                          <p className="text-xs text-muted-foreground mt-1">Login required</p>
-                        )}
-                        {user && !isValidDiscordId && (
-                          <p className="text-xs text-muted-foreground mt-1">Enter Discord ID first</p>
-                        )}
                         {trialCodeError && <p className="text-xs text-destructive mt-1">{trialCodeError}</p>}
+                        {discountError && <p className="text-xs text-destructive mt-1">{discountError}</p>}
                       </div>
                     )}
                   </>
@@ -974,49 +1095,17 @@ const PricingSection = () => {
                   <div className="space-y-2">
                     <div className="flex gap-2">
                       <Input
-                        placeholder="Discount code"
-                        value={discountCode}
-                        onChange={(e) => { setDiscountCode(e.target.value.toUpperCase()); setDiscountError(""); }}
+                        placeholder="Enter code (discount or trial)"
+                        value={unifiedCode}
+                        onChange={(e) => { setUnifiedCode(e.target.value.toUpperCase()); setDiscountError(""); setTrialCodeError(""); }}
                         className="font-mono text-sm"
                       />
-                      <Button variant="outline" size="sm" onClick={validateDiscountCode} disabled={!discountCode.trim() || isValidatingCode}>
-                        {isValidatingCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                      <Button variant="outline" size="sm" onClick={handleUnifiedCodeApply} disabled={!unifiedCode.trim() || isValidatingCode || isRedeemingTrialCode}>
+                        {(isValidatingCode || isRedeemingTrialCode) ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
                       </Button>
                     </div>
                     {discountError && <p className="text-xs text-destructive">{discountError}</p>}
-                    
-                    {!isDedicated && (
-                      <div className="pt-2 border-t border-border">
-                        <p className="text-xs text-muted-foreground mb-2">Or redeem a trial code:</p>
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="TRIAL-XXXXXXXX"
-                            value={trialCode}
-                            onChange={(e) => {
-                              setTrialCode(e.target.value.toUpperCase());
-                              setTrialCodeError("");
-                            }}
-                            className="font-mono text-sm"
-                            disabled={!user}
-                          />
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={handleRedeemTrialCode}
-                            disabled={!trialCode.trim() || isRedeemingTrialCode || !user || !isValidDiscordId}
-                          >
-                            {isRedeemingTrialCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "Redeem"}
-                          </Button>
-                        </div>
-                        {!user && (
-                          <p className="text-xs text-muted-foreground mt-1">Login required</p>
-                        )}
-                        {user && !isValidDiscordId && (
-                          <p className="text-xs text-muted-foreground mt-1">Enter Discord ID first</p>
-                        )}
-                        {trialCodeError && <p className="text-xs text-destructive mt-1">{trialCodeError}</p>}
-                      </div>
-                    )}
+                    {trialCodeError && <p className="text-xs text-destructive">{trialCodeError}</p>}
                   </div>
                 )}
               </div>
@@ -1198,6 +1287,7 @@ const PricingSection = () => {
         appliedDiscount={appliedDiscount}
         includeShredsFromPricing={privateShredsEnabled}
         additionalStakePackages={additionalStakePackages}
+        initialReferralCode={storedReferralCode || undefined}
       />
 
       {/* Auth Modal */}

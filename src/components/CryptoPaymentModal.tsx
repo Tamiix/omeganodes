@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Copy, Check, Loader2, XCircle, CheckCircle, ExternalLink, Zap, Shield, Activity, Info, Gift } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,7 +16,7 @@ interface AppliedDiscount {
 interface CryptoPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  amount: number; // Amount in USD (already has discount applied)
+  amount: number;
   commitment: string;
   rps?: number;
   tps?: number;
@@ -28,6 +28,7 @@ interface CryptoPaymentModalProps {
   appliedDiscount?: AppliedDiscount | null;
   includeShredsFromPricing?: boolean;
   additionalStakePackages?: number;
+  initialReferralCode?: string;
 }
 
 const PRODUCTION_WALLET = "8b6cCUhEYL2B7UMC15phYkf9y9GEs3cUV2UQ4zECHroA";
@@ -59,7 +60,7 @@ const SHREDS_PRICE = 800; // USD per month
 
 type PaymentStep = "select" | "processing" | "success" | "failed" | "partial";
 
-const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tps = 50, serverType = "shared", location = "all", rentAccessEnabled = false, isTestMode = false, discordUserId = "", appliedDiscount = null, includeShredsFromPricing = false, additionalStakePackages = 0 }: CryptoPaymentModalProps) => {
+const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tps = 50, serverType = "shared", location = "all", rentAccessEnabled = false, isTestMode = false, discordUserId = "", appliedDiscount = null, includeShredsFromPricing = false, additionalStakePackages = 0, initialReferralCode }: CryptoPaymentModalProps) => {
   const [selectedCrypto, setSelectedCrypto] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [paymentStep, setPaymentStep] = useState<PaymentStep>("select");
@@ -75,6 +76,28 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
 
   const { formatPrice } = useCurrency();
   const { user } = useAuth();
+
+  // Auto-apply referral code from props (set via /ref/:code link)
+  useEffect(() => {
+    if (isOpen && initialReferralCode && !referralInfo && !referralCode) {
+      setReferralCode(initialReferralCode);
+      // Auto-validate
+      const autoValidate = async () => {
+        setIsValidatingReferral(true);
+        try {
+          const { data, error } = await supabase.rpc('validate_referral_code', { p_code: initialReferralCode });
+          if (!error && data?.[0]?.is_valid) {
+            setReferralInfo({ referrer_id: data[0].referrer_id, referrer_username: data[0].referrer_username });
+          }
+        } catch (err) {
+          console.error('Failed to auto-validate referral:', err);
+        } finally {
+          setIsValidatingReferral(false);
+        }
+      };
+      autoValidate();
+    }
+  }, [isOpen, initialReferralCode]);
 
   const cryptoOptions = getCryptoOptions(isTestMode);
   const TEST_AMOUNT = 0.1;
