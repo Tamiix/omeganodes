@@ -237,17 +237,24 @@ const PricingSection = () => {
         codeDiscountAmount = Math.min(appliedDiscount.discount_value, discountableAmount);
       }
     }
+
+    // Apply referral discount (10% off the total)
+    let referralDiscountAmount = 0;
+    if (referralBanner) {
+      referralDiscountAmount = Math.round((totalBeforeCodeDiscount - codeDiscountAmount) * 0.10);
+    }
     
-    const finalPrice = Math.max(0, totalBeforeCodeDiscount - codeDiscountAmount);
+    const finalPrice = Math.max(0, totalBeforeCodeDiscount - codeDiscountAmount - referralDiscountAmount);
 
     return { 
       price: finalPrice, 
       originalPrice: finalOriginal, 
       discount: discountPercent,
       discountAmount: codeDiscountAmount,
+      referralDiscountAmount,
       priceBeforeDiscount: totalBeforeCodeDiscount
     };
-  }, [selectedCommitment, selectedServerType, selectedDedicatedSpec, additionalStakePackages, privateShredsEnabled, isDedicated, rentAccessEnabled, appliedDiscount]);
+  }, [selectedCommitment, selectedServerType, selectedDedicatedSpec, additionalStakePackages, privateShredsEnabled, isDedicated, rentAccessEnabled, appliedDiscount, referralBanner]);
 
   const validateDiscountCode = async () => {
     if (!discountCode.trim()) return;
@@ -751,9 +758,9 @@ const PricingSection = () => {
                   </div>
                 ) : (
                   <div>
-                    {(discount > 0 || appliedDiscount) && (
+                    {(discount > 0 || appliedDiscount || referralBanner) && (
                       <div className="text-lg text-muted-foreground line-through">
-                        {formatPrice(appliedDiscount ? priceBeforeDiscount : originalPrice)}
+                        {formatPrice(appliedDiscount ? priceBeforeDiscount : (referralBanner ? priceBeforeDiscount : originalPrice))}
                       </div>
                     )}
                     <div className="flex items-baseline justify-center lg:justify-end gap-1">
@@ -1007,30 +1014,7 @@ const PricingSection = () => {
                 </div>
               </div>
 
-              {/* Referral Banner */}
-              {referralBanner && (
-                <div className="p-4 rounded-lg border border-secondary/30 bg-secondary/5">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-secondary/10">
-                      <Gift className="w-5 h-5 text-secondary" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-secondary">
-                        Referred by {referralBanner.username} — 10% off!
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Your referral discount will be applied automatically at checkout.
-                      </p>
-                    </div>
-                    <button 
-                      onClick={() => { setReferralBanner(null); setStoredReferralCode(null); localStorage.removeItem('referral_code'); }}
-                      className="text-xs text-muted-foreground hover:text-foreground"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              )}
+              {/* Referral discount is applied silently - no banner shown */}
 
               {/* Discount / Trial Codes */}
               <div className={`p-4 rounded-lg border border-border bg-card ${hasCommitmentDiscount && !redeemedTrial ? 'opacity-60' : ''}`}>
