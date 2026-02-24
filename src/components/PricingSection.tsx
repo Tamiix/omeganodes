@@ -767,6 +767,12 @@ const PricingSection = () => {
                       <span className="text-4xl font-bold text-foreground">{formatPrice(price)}</span>
                       <span className="text-lg text-muted-foreground">/mo</span>
                     </div>
+                    {referralBanner && (
+                      <div className="flex items-center justify-center lg:justify-end gap-1.5 mt-1.5">
+                        <Gift className="w-3.5 h-3.5 text-secondary" />
+                        <span className="text-xs font-medium text-secondary">10% referral discount applied</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
