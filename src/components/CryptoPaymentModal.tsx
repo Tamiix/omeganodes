@@ -36,12 +36,7 @@ const TEST_WALLET = "vpVbwh9bWRJcur5xSfpEHnAzQ74XeTpG9XDWVvzzSR8";
 const WEEKLY_WALLET = "D4MC6jNAe24WPKkUKnHvvRePkxbrmgeaFU6Gi6F9ynTp";
 
 const getCryptoOptions = (isTestMode: boolean, isWeekly: boolean) => {
-  if (isWeekly) {
-    return [
-      { id: "sol", name: "SOL", symbol: "SOL", icon: "◎", address: WEEKLY_WALLET, subtext: "Native SOL" },
-    ];
-  }
-  const wallet = isTestMode ? TEST_WALLET : PRODUCTION_WALLET;
+  const wallet = isWeekly ? WEEKLY_WALLET : (isTestMode ? TEST_WALLET : PRODUCTION_WALLET);
   return [
     { id: "usdc", name: "USDC", symbol: "USDC", icon: "$", address: wallet, subtext: "SPL Token" },
     { id: "usdt", name: "USDT", symbol: "USDT", icon: "₮", address: wallet, subtext: "SPL Token" },
@@ -133,7 +128,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
 
   const getTotalAmount = () => {
     if (isTestMode) return TEST_AMOUNT;
-    if (isWeekly) return 1; // Fixed 1 SOL
+    if (isWeekly) return 90; // Fixed $90 for 1 week
     
     const months = getTotalMonths();
     const baseTotal = amount * months;
@@ -680,7 +675,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Total Due</span>
                   <span className="text-lg font-bold text-gradient-omega">
-                    {isTestMode ? "$0.10" : isWeekly ? "1 SOL" : formatPrice(getTotalAmount())}
+                    {isTestMode ? "$0.10" : isWeekly ? "$90.00" : formatPrice(getTotalAmount())}
                   </span>
                 </div>
                 {isTestMode && (
@@ -778,8 +773,8 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Send exactly <span className="font-semibold text-foreground">
-                      {isTestMode ? `$${TEST_AMOUNT.toFixed(2)}` : isWeekly ? "1 SOL" : formatPrice(getTotalAmount())}
-                    </span> {isWeekly ? "to the address above" : `worth of ${cryptoOptions.find(c => c.id === selectedCrypto)?.symbol}`}. 
+                      {isTestMode ? `$${TEST_AMOUNT.toFixed(2)}` : formatPrice(getTotalAmount())}
+                    </span> worth of {cryptoOptions.find(c => c.id === selectedCrypto)?.symbol}. 
                     Your subscription will activate after on-chain confirmation.
                   </p>
                 </div>
