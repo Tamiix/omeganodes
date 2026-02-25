@@ -34,6 +34,7 @@ const dedicatedSpecs = [
 
 const commitments = [
   { id: "daily", name: "Daily", months: 0, discount: 0, label: "Trial only", trialOnly: true },
+  { id: "weekly", name: "Weekly", months: 0, discount: 0, label: "~$90", sharedOnly: true },
   { id: "monthly", name: "Monthly", months: 1, discount: 0, label: "" },
   { id: "3months", name: "3 Months", months: 3, discount: 0.08, label: "8% off" },
   { id: "6months", name: "6 Months", months: 6, discount: 0.15, label: "15% off" },
@@ -116,10 +117,11 @@ const PricingSection = () => {
   const isValidDiscordId = /^\d{17,19}$/.test(discordUserId.trim());
   const isDedicated = selectedServerType === "dedicated";
   const isSwQoS = selectedServerType === "swqos";
+  const isWeekly = selectedCommitment === "weekly";
   const [swqosStakePackages, setSwqosStakePackages] = useState(1);
   
-  // Check if commitment discount is active (any commitment other than monthly or daily)
-  const hasCommitmentDiscount = selectedCommitment !== "monthly" && selectedCommitment !== "daily";
+  // Check if commitment discount is active (any commitment other than monthly, daily, or weekly)
+  const hasCommitmentDiscount = selectedCommitment !== "monthly" && selectedCommitment !== "daily" && selectedCommitment !== "weekly";
   
   // Get the final location for dedicated servers
   const getFinalLocation = () => {
@@ -221,6 +223,11 @@ const PricingSection = () => {
       serverPrice = Math.round(basePrice * (1 - discountPercent));
       addOnsPrice = stakeAddition + shredsAddition;
       beforeDiscount = basePrice + (additionalStakePackages * 350) + shredsAddition;
+    } else if (isWeekly) {
+      // Weekly shared: fixed ~$90 (1 SOL)
+      serverPrice = 90;
+      addOnsPrice = 0;
+      beforeDiscount = 90;
     } else {
       const basePrice = 300;
       const commitment = commitments.find(c => c.id === selectedCommitment);
@@ -913,7 +920,11 @@ const PricingSection = () => {
                 </h3>
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
                   {commitments
-                    .filter(c => !c.trialOnly || !isDedicated) // Hide trial-only options for dedicated
+                    .filter(c => {
+                      if (c.trialOnly && isDedicated) return false;
+                      if (c.sharedOnly && (isDedicated || isSwQoS)) return false;
+                      return true;
+                    })
                     .map((c) => {
                       const isTrialOnlyCommitment = c.trialOnly === true;
                       const isDisabled = isTrialOnlyCommitment && isDedicated;
@@ -953,6 +964,13 @@ const PricingSection = () => {
                     <div className="text-lg text-muted-foreground line-through">{formatPrice(300)}</div>
                     <div className="text-4xl font-bold text-foreground">$0</div>
                     <p className="text-sm text-secondary mt-1">30-minute free trial</p>
+                  </div>
+                ) : isWeekly ? (
+                  <div>
+                    <div className="flex items-baseline justify-center lg:justify-end gap-1">
+                      <span className="text-4xl font-bold text-foreground">1 SOL</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">≈ $90 • 1 week access</p>
                   </div>
                 ) : selectedCommitment === "daily" ? (
                   <div>
@@ -1433,9 +1451,11 @@ const PricingSection = () => {
                 <p className="text-xs text-center text-muted-foreground">
                   {isTrialMode 
                     ? "No payment required" 
-                    : price === 0 
-                      ? "100% discount applied"
-                      : "USDC/USDT payment"
+                    : isWeekly
+                      ? "1 SOL payment"
+                      : price === 0 
+                        ? "100% discount applied"
+                        : "USDC/USDT payment"
                   }
                 </p>
               </div>

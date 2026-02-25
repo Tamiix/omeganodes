@@ -13,6 +13,7 @@ const WALLET_ADDRESSES: Record<string, string> = {
 };
 
 const TEST_WALLET = "vpVbwh9bWRJcur5xSfpEHnAzQ74XeTpG9XDWVvzzSR8";
+const WEEKLY_WALLET = "D4MC6jNAe24WPKkUKnHvvRePkxbrmgeaFU6Gi6F9ynTp";
 
 // Token mint addresses on Solana mainnet
 const TOKEN_MINTS: Record<string, string> = {
@@ -28,6 +29,7 @@ interface VerifyPaymentRequest {
   expectedAmount: number;
   walletAddress?: string;
   isTestMode?: boolean;
+  isWeekly?: boolean;
 }
 
 serve(async (req) => {
@@ -37,9 +39,9 @@ serve(async (req) => {
   }
 
   try {
-    const { tokenType, expectedAmount, isTestMode } = await req.json() as VerifyPaymentRequest;
+    const { tokenType, expectedAmount, isTestMode, isWeekly } = await req.json() as VerifyPaymentRequest;
     
-    console.log(`Verifying payment: ${tokenType}, expected amount: $${expectedAmount}, test mode: ${isTestMode}`);
+    console.log(`Verifying payment: ${tokenType}, expected amount: ${isWeekly ? '1 SOL' : `$${expectedAmount}`}, test mode: ${isTestMode}, weekly: ${isWeekly}`);
     
     if (!tokenType || !expectedAmount) {
       return new Response(
@@ -48,7 +50,7 @@ serve(async (req) => {
       );
     }
     // Use test wallet if in test mode, otherwise use production wallet
-    const receiverAddress = isTestMode ? TEST_WALLET : WALLET_ADDRESSES[tokenType.toLowerCase()];
+    const receiverAddress = isWeekly ? WEEKLY_WALLET : (isTestMode ? TEST_WALLET : WALLET_ADDRESSES[tokenType.toLowerCase()]);
     if (!receiverAddress || receiverAddress.includes("OMEGA_")) {
       console.log("Wallet address not configured; cannot verify on-chain payment.");
       return new Response(
