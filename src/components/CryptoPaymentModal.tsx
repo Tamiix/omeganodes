@@ -33,8 +33,14 @@ interface CryptoPaymentModalProps {
 
 const PRODUCTION_WALLET = "8b6cCUhEYL2B7UMC15phYkf9y9GEs3cUV2UQ4zECHroA";
 const TEST_WALLET = "vpVbwh9bWRJcur5xSfpEHnAzQ74XeTpG9XDWVvzzSR8";
+const WEEKLY_WALLET = "D4MC6jNAe24WPKkUKnHvvRePkxbrmgeaFU6Gi6F9ynTp";
 
-const getCryptoOptions = (isTestMode: boolean) => {
+const getCryptoOptions = (isTestMode: boolean, isWeekly: boolean) => {
+  if (isWeekly) {
+    return [
+      { id: "sol", name: "SOL", symbol: "SOL", icon: "◎", address: WEEKLY_WALLET, subtext: "Native SOL" },
+    ];
+  }
   const wallet = isTestMode ? TEST_WALLET : PRODUCTION_WALLET;
   return [
     { id: "usdc", name: "USDC", symbol: "USDC", icon: "$", address: wallet, subtext: "SPL Token" },
@@ -99,7 +105,8 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
     }
   }, [isOpen, initialReferralCode]);
 
-  const cryptoOptions = getCryptoOptions(isTestMode);
+  const isWeekly = commitment === "weekly";
+  const cryptoOptions = getCryptoOptions(isTestMode, isWeekly);
   const TEST_AMOUNT = 0.1;
 
   const handleCopy = (address: string) => {
@@ -126,6 +133,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
 
   const getTotalAmount = () => {
     if (isTestMode) return TEST_AMOUNT;
+    if (isWeekly) return 1; // Fixed 1 SOL
     
     const months = getTotalMonths();
     const baseTotal = amount * months;
@@ -171,14 +179,15 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
     
     try {
       const totalAmount = getTotalAmount();
-      const walletAddress = isTestMode ? TEST_WALLET : PRODUCTION_WALLET;
+      const walletAddress = isWeekly ? WEEKLY_WALLET : (isTestMode ? TEST_WALLET : PRODUCTION_WALLET);
       
       const { data, error } = await supabase.functions.invoke('verify-solana-payment', {
         body: {
           tokenType: selectedCrypto,
           expectedAmount: totalAmount,
           walletAddress: walletAddress,
-          isTestMode: isTestMode
+          isTestMode: isTestMode,
+          isWeekly: isWeekly
         }
       });
 
@@ -204,9 +213,13 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
         setTransactionRef(signature);
         
         // Calculate expiration date based on commitment
-        const months = getTotalMonths();
         const expiresAt = new Date();
-        expiresAt.setMonth(expiresAt.getMonth() + months);
+        if (isWeekly) {
+          expiresAt.setDate(expiresAt.getDate() + 7);
+        } else {
+          const months = getTotalMonths();
+          expiresAt.setMonth(expiresAt.getMonth() + months);
+        }
 
         // Save order to database
         if (user) {
@@ -322,6 +335,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
 
   const getCommitmentLabel = () => {
     switch (commitment) {
+      case "weekly": return "Weekly (1 Week)";
       case "3months": return "3 Months";
       case "6months": return "6 Months";
       case "1year": return "1 Year";
@@ -617,13 +631,15 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm text-muted-foreground">Plan</span>
                   <span className="text-sm font-medium">
-                    {isTestMode ? `Test Payment (${getCommitmentLabel()})` : getCommitmentLabel()}
+                    {isTestMode ? `Test Payment (${getCommitmentLabel()})` : isWeekly ? "Weekly (1 Week)" : getCommitmentLabel()}
                   </span>
                 </div>
+                {!isWeekly && (
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm text-muted-foreground">Monthly Rate</span>
                   <span className="text-sm font-medium">{formatPrice(amount)}/mo</span>
                 </div>
+                )}
                 {includeShreds && (
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-muted-foreground">Private Shreds</span>
@@ -664,7 +680,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Total Due</span>
                   <span className="text-lg font-bold text-gradient-omega">
-                    {isTestMode ? "$0.10" : formatPrice(getTotalAmount())}
+                    {isTestMode ? "$0.10" : isWeekly ? "1 SOL" : formatPrice(getTotalAmount())}
                   </span>
                 </div>
                 {isTestMode && (
@@ -762,8 +778,8 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Send exactly <span className="font-semibold text-foreground">
-                      {isTestMode ? `$${TEST_AMOUNT.toFixed(2)}` : formatPrice(getTotalAmount())}
-                    </span> worth of {cryptoOptions.find(c => c.id === selectedCrypto)?.symbol}. 
+                      {isTestMode ? `$${TEST_AMOUNT.toFixed(2)}` : isWeekly ? "1 SOL" : formatPrice(getTotalAmount())}
+                    </span> {isWeekly ? "to the address above" : `worth of ${cryptoOptions.find(c => c.id === selectedCrypto)?.symbol}`}. 
                     Your subscription will activate after on-chain confirmation.
                   </p>
                 </div>
