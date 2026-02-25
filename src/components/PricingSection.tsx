@@ -968,9 +968,9 @@ const PricingSection = () => {
                 ) : isWeekly ? (
                   <div>
                     <div className="flex items-baseline justify-center lg:justify-end gap-1">
-                      <span className="text-4xl font-bold text-foreground">1 SOL</span>
+                      <span className="text-4xl font-bold text-foreground">{formatPrice(90)}</span>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">≈ $90 • 1 week access</p>
+                    <p className="text-sm text-muted-foreground mt-1">1 week access</p>
                   </div>
                 ) : selectedCommitment === "daily" ? (
                   <div>
@@ -1451,11 +1451,9 @@ const PricingSection = () => {
                 <p className="text-xs text-center text-muted-foreground">
                   {isTrialMode 
                     ? "No payment required" 
-                    : isWeekly
-                      ? "1 SOL payment"
-                      : price === 0 
-                        ? "100% discount applied"
-                        : "USDC/USDT payment"
+                    : price === 0 
+                      ? "100% discount applied"
+                      : "USDC/USDT payment"
                   }
                 </p>
               </div>
