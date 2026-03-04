@@ -34,7 +34,7 @@ const dedicatedSpecs = [
 
 const commitments = [
   { id: "daily", name: "Daily", months: 0, discount: 0, label: "Trial only", trialOnly: true },
-  { id: "weekly", name: "Weekly", months: 0, discount: 0, label: "~$90", sharedOnly: true },
+  { id: "weekly", name: "Weekly", months: 0, discount: 0, label: "~$120", sharedOnly: true },
   { id: "monthly", name: "Monthly", months: 1, discount: 0, label: "" },
   { id: "3months", name: "3 Months", months: 3, discount: 0.08, label: "8% off" },
   { id: "6months", name: "6 Months", months: 6, discount: 0.15, label: "15% off" },
@@ -224,8 +224,8 @@ const PricingSection = () => {
       addOnsPrice = stakeAddition + shredsAddition;
       beforeDiscount = basePrice + (additionalStakePackages * 350) + shredsAddition;
     } else if (isWeekly) {
-      // Weekly shared: fixed ~$90 (1 SOL)
-      serverPrice = 90;
+      // Weekly shared: fixed $120
+      serverPrice = 120;
       addOnsPrice = 0;
       beforeDiscount = 90;
     } else {
@@ -968,7 +968,7 @@ const PricingSection = () => {
                 ) : isWeekly ? (
                   <div>
                     <div className="flex items-baseline justify-center lg:justify-end gap-1">
-                      <span className="text-4xl font-bold text-foreground">{formatPrice(90)}</span>
+                      <span className="text-4xl font-bold text-foreground">{formatPrice(120)}</span>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">1 week access</p>
                   </div>

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Users, AlertTriangle } from 'lucide-react';
+import { Search, Users, AlertTriangle, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -27,7 +29,10 @@ interface UserRole {
 
 interface UserWithRoles extends UserProfile {
   roles: UserRole[];
+  hasActiveSub: boolean;
 }
+
+type SubFilter = 'all' | 'active' | 'inactive';
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -38,6 +43,7 @@ const Admin = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
+  const [subFilter, setSubFilter] = useState<SubFilter>('all');
 
   useEffect(() => {
     if (!authLoading) {
@@ -63,23 +69,34 @@ const Admin = () => {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const [profilesRes, rolesRes, ordersRes] = await Promise.all([
+        supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+        supabase.from('user_roles').select('*'),
+        supabase.from('orders').select('*').in('status', ['completed', 'active']),
+      ]);
 
-      if (profilesError) throw profilesError;
+      if (profilesRes.error) throw profilesRes.error;
+      if (rolesRes.error) throw rolesRes.error;
+      if (ordersRes.error) throw ordersRes.error;
 
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('*');
+      const now = new Date();
 
-      if (rolesError) throw rolesError;
+      const usersWithRoles: UserWithRoles[] = (profilesRes.data || []).map(profile => {
+        const userOrders = (ordersRes.data || []).filter(o => o.user_id === profile.user_id);
+        // Active sub = has a non-trial, non-test order that hasn't expired
+        const hasActiveSub = userOrders.some(o => {
+          if (o.is_test_order) return false;
+          if (o.commitment === 'trial' || o.payment_method === 'trial_code' || o.commitment === 'daily') return false;
+          if (o.expires_at && new Date(o.expires_at) < now) return false;
+          return true;
+        });
 
-      const usersWithRoles: UserWithRoles[] = (profiles || []).map(profile => ({
-        ...profile,
-        roles: (roles || []).filter(r => r.user_id === profile.user_id)
-      }));
+        return {
+          ...profile,
+          roles: (rolesRes.data || []).filter(r => r.user_id === profile.user_id),
+          hasActiveSub,
+        };
+      });
 
       setUsers(usersWithRoles as UserWithRoles[]);
     } catch (error) {
@@ -163,12 +180,19 @@ const Admin = () => {
     }
   };
 
-  const filteredUsers = users.filter(u => 
-    u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = users
+    .filter(u => 
+      u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .filter(u => {
+      if (subFilter === 'active') return u.hasActiveSub;
+      if (subFilter === 'inactive') return !u.hasActiveSub;
+      return true;
+    });
 
   const adminCount = users.filter(u => u.roles.some(r => r.role === 'admin')).length;
+  const activeSubCount = users.filter(u => u.hasActiveSub).length;
 
   if (authLoading || isLoading) {
     return (
@@ -189,16 +213,45 @@ const Admin = () => {
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <AdminStats totalUsers={users.length} adminCount={adminCount} />
 
-        {/* Search */}
-        <div className="relative mb-6">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search users by username or email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-card border-border"
-          />
+        {/* Search + Filters */}
+        <div className="space-y-3 mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search users by username or email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-card border-border"
+            />
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <Button
+              variant={subFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSubFilter('all')}
+              className="h-7 text-xs"
+            >
+              All ({users.length})
+            </Button>
+            <Button
+              variant={subFilter === 'active' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSubFilter('active')}
+              className="h-7 text-xs"
+            >
+              Active Sub ({activeSubCount})
+            </Button>
+            <Button
+              variant={subFilter === 'inactive' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSubFilter('inactive')}
+              className="h-7 text-xs"
+            >
+              No Active Sub ({users.length - activeSubCount})
+            </Button>
+          </div>
         </div>
 
         {/* Users List */}

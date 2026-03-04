@@ -24,6 +24,7 @@ interface UserProfile {
   email: string;
   created_at: string;
   roles: UserRole[];
+  hasActiveSub: boolean;
 }
 
 interface UserCardProps {
@@ -85,8 +86,17 @@ const UserCard = ({
                 </div>
               </div>
 
-              {/* Roles */}
+              {/* Roles & Sub Status */}
               <div className="flex items-center gap-2">
+                {userItem.hasActiveSub ? (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-medium border bg-green-500/20 text-green-400 border-green-500/30">
+                    active sub
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-medium border bg-muted text-muted-foreground border-border">
+                    no sub
+                  </span>
+                )}
                 {userItem.roles.filter(r => r.role === 'admin' || r.role === 'user').map(role => (
                   <span
                     key={role.id}

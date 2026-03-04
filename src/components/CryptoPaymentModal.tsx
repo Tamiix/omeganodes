@@ -128,7 +128,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
 
   const getTotalAmount = () => {
     if (isTestMode) return TEST_AMOUNT;
-    if (isWeekly) return 90; // Fixed $90 for 1 week
+    if (isWeekly) return 120; // Fixed $120 for 1 week
     
     const months = getTotalMonths();
     const baseTotal = amount * months;
@@ -675,7 +675,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Total Due</span>
                   <span className="text-lg font-bold text-gradient-omega">
-                    {isTestMode ? "$0.10" : isWeekly ? "$90.00" : formatPrice(getTotalAmount())}
+                    {isTestMode ? "$0.10" : isWeekly ? "$120.00" : formatPrice(getTotalAmount())}
                   </span>
                 </div>
                 {isTestMode && (
