@@ -2,6 +2,8 @@ import { motion } from "framer-motion";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import xLogo from "@/assets/x-logo.png";
+import stakewizLogo from "@/assets/stakewiz-logo.png";
 
 const links = [
   {
@@ -19,18 +21,14 @@ const links = [
     name: "Twitter / X",
     description: "Follow us for the latest announcements and news.",
     url: "https://x.com/omeganetworksio",
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-      </svg>
-    ),
-    color: "bg-foreground text-background",
+    iconUrl: xLogo,
+    color: "bg-foreground",
   },
   {
     name: "Validator",
     description: "View our Solana validator on StakeWiz.",
     url: "https://stakewiz.com/validator/EMVmh5hF6LT1sZM9G7dEX1bykRYEymWY2vtE7QHBBAW6",
-    iconUrl: "https://stakewiz.com/stakewiz192.png",
+    iconUrl: stakewizLogo,
     color: "bg-[#1a1a2e]",
   },
 ];
