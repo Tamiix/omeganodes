@@ -71,11 +71,11 @@ const OfficialLinks = () => {
                 transition={{ duration: 0.3, delay: i * 0.1 }}
                 className="flex items-center gap-4 p-4 rounded-lg border border-border bg-card hover:border-primary/50 transition-colors group"
               >
-                <div className={`w-12 h-12 rounded-lg ${link.color} flex items-center justify-center shrink-0 overflow-hidden p-2`}>
+                <div className="w-12 h-12 rounded-lg shrink-0 overflow-hidden">
                   {'iconUrl' in link && link.iconUrl ? (
-                    <img src={link.iconUrl} alt={link.name} className="w-full h-full object-contain rounded-md" />
+                    <img src={link.iconUrl} alt={link.name} className="w-12 h-12 object-cover" />
                   ) : (
-                    <span className="text-white">{link.icon}</span>
+                    <div className={`w-12 h-12 rounded-lg ${link.color} flex items-center justify-center text-white`}>{link.icon}</div>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
