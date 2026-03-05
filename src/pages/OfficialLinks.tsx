@@ -24,18 +24,14 @@ const links = [
         <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
       </svg>
     ),
-    color: "bg-foreground",
+    color: "bg-foreground text-background",
   },
   {
     name: "Validator",
     description: "View our Solana validator on StakeWiz.",
     url: "https://stakewiz.com/validator/EMVmh5hF6LT1sZM9G7dEX1bykRYEymWY2vtE7QHBBAW6",
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-      </svg>
-    ),
-    color: "bg-primary",
+    iconUrl: "https://stakewiz.com/stakewiz192.png",
+    color: "bg-[#1a1a2e]",
   },
 ];
 
@@ -77,8 +73,12 @@ const OfficialLinks = () => {
                 transition={{ duration: 0.3, delay: i * 0.1 }}
                 className="flex items-center gap-4 p-4 rounded-lg border border-border bg-card hover:border-primary/50 transition-colors group"
               >
-                <div className={`w-12 h-12 rounded-lg ${link.color} flex items-center justify-center text-white shrink-0`}>
-                  {link.icon}
+                <div className={`w-12 h-12 rounded-lg ${link.color} flex items-center justify-center text-white shrink-0 overflow-hidden`}>
+                  {'iconUrl' in link && link.iconUrl ? (
+                    <img src={link.iconUrl} alt={link.name} className="w-8 h-8 object-contain" />
+                  ) : (
+                    link.icon
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-foreground">{link.name}</div>
