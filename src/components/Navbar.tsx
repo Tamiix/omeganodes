@@ -54,6 +54,9 @@ const Navbar = () => {
             <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               FAQ
             </a>
+            <a href="/links" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Links
+            </a>
           </div>
 
           {/* Desktop CTAs */}
@@ -133,6 +136,9 @@ const Navbar = () => {
             </a>
             <a href="#faq" onClick={() => setIsOpen(false)} className="block py-2 text-sm text-muted-foreground hover:text-foreground">
               FAQ
+            </a>
+            <a href="/links" onClick={() => setIsOpen(false)} className="block py-2 text-sm text-muted-foreground hover:text-foreground">
+              Links
             </a>
             
             <div className="border-t border-border my-2" />
