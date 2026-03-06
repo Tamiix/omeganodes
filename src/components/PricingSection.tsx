@@ -569,8 +569,10 @@ const PricingSection = () => {
         is_test_order: false
       });
 
-      // Note: Discount code usage increment would be handled by the backend
-      // For now, we'll skip the increment since there's no RPC function set up
+      // Increment discount code usage
+      if (appliedDiscount?.code) {
+        await supabase.rpc('increment_discount_code_usage', { p_code: appliedDiscount.code });
+      }
 
       // Send Discord notification
       await supabase.functions.invoke('discord-order-notification', {

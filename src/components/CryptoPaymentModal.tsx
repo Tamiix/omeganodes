@@ -255,6 +255,11 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
               console.error("Failed to save order:", orderError);
             }
 
+            // Increment discount code usage
+            if (!orderError && appliedDiscount?.code) {
+              await supabase.rpc('increment_discount_code_usage', { p_code: appliedDiscount.code });
+            }
+
             // Create referral record if a referral code was used
             if (!orderError && orderData && referralInfo) {
               // Commission is 10% of the discounted amount
