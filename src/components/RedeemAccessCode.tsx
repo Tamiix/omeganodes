@@ -39,51 +39,42 @@ const RedeemAccessCode = () => {
   const handleRedeem = async () => {
     if (!code.trim() || !user) return;
     
+    // Get Discord ID from profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('discord_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const discordId = profile?.discord_id || '0';
+    
     setIsRedeeming(true);
     setError(null);
     
     try {
-      // First, check if code exists and is valid
-      const { data: codeData, error: fetchError } = await supabase
-        .from('access_codes')
-        .select('*')
-        .eq('code', code.trim().toUpperCase())
-        .eq('is_redeemed', false)
-        .maybeSingle();
+      const { data, error: rpcError } = await supabase.rpc('redeem_access_code', {
+        p_code: code.trim().toUpperCase(),
+        p_discord_id: discordId,
+      });
 
-      if (fetchError) throw fetchError;
-      
-      if (!codeData) {
-        setError('Invalid or already redeemed code');
+      if (rpcError) throw rpcError;
+
+      const result = data as { success: boolean; error?: string; duration_type?: string; duration_hours?: number; expires_at?: string };
+
+      if (!result.success) {
+        setError(result.error || 'Invalid or already redeemed code');
         return;
       }
 
-      // Calculate expiration
-      const now = new Date();
-      const expiresAt = new Date(now.getTime() + (codeData.duration_hours * 60 * 60 * 1000));
-
-      // Redeem the code
-      const { error: updateError } = await supabase
-        .from('access_codes')
-        .update({
-          is_redeemed: true,
-          redeemed_by: user.id,
-          redeemed_at: now.toISOString(),
-          access_expires_at: expiresAt.toISOString(),
-        })
-        .eq('id', codeData.id);
-
-      if (updateError) throw updateError;
-
       setRedeemed({
-        duration_type: codeData.duration_type,
-        duration_hours: codeData.duration_hours,
-        access_expires_at: expiresAt.toISOString(),
+        duration_type: result.duration_type!,
+        duration_hours: result.duration_hours!,
+        access_expires_at: result.expires_at!,
       });
 
       toast({
         title: '🎉 Code Redeemed!',
-        description: `You now have ${DURATION_LABELS[codeData.duration_type]} of trial access`,
+        description: `You now have ${DURATION_LABELS[result.duration_type!] || result.duration_type} of trial access`,
       });
       
     } catch (error) {
