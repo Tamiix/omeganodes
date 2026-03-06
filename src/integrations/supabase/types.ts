@@ -382,6 +382,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_discount_code_usage: {
+        Args: { p_code: string }
+        Returns: undefined
+      }
       is_owner: { Args: { _user_id: string }; Returns: boolean }
       redeem_access_code: {
         Args: { p_code: string; p_discord_id: string }

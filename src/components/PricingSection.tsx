@@ -34,7 +34,7 @@ const dedicatedSpecs = [
 
 const commitments = [
   { id: "daily", name: "Daily", months: 0, discount: 0, label: "Trial only", trialOnly: true },
-  { id: "weekly", name: "Weekly", months: 0, discount: 0, label: "~$120", sharedOnly: true },
+  { id: "weekly", name: "Weekly", months: 0, discount: 0, label: "", sharedOnly: true },
   { id: "monthly", name: "Monthly", months: 1, discount: 0, label: "" },
   { id: "3months", name: "3 Months", months: 3, discount: 0.08, label: "8% off" },
   { id: "6months", name: "6 Months", months: 6, discount: 0.15, label: "15% off" },
@@ -227,7 +227,7 @@ const PricingSection = () => {
       // Weekly shared: fixed $120
       serverPrice = 120;
       addOnsPrice = 0;
-      beforeDiscount = 90;
+      beforeDiscount = 120;
     } else {
       const basePrice = 300;
       const commitment = commitments.find(c => c.id === selectedCommitment);
@@ -569,8 +569,10 @@ const PricingSection = () => {
         is_test_order: false
       });
 
-      // Note: Discount code usage increment would be handled by the backend
-      // For now, we'll skip the increment since there's no RPC function set up
+      // Increment discount code usage
+      if (appliedDiscount?.code) {
+        await supabase.rpc('increment_discount_code_usage', { p_code: appliedDiscount.code });
+      }
 
       // Send Discord notification
       await supabase.functions.invoke('discord-order-notification', {
@@ -967,10 +969,21 @@ const PricingSection = () => {
                   </div>
                 ) : isWeekly ? (
                   <div>
+                    {(appliedDiscount || referralBanner) && price < 120 && (
+                      <div className="text-lg text-muted-foreground line-through">
+                        {formatPrice(120)}
+                      </div>
+                    )}
                     <div className="flex items-baseline justify-center lg:justify-end gap-1">
-                      <span className="text-4xl font-bold text-foreground">{formatPrice(120)}</span>
+                      <span className="text-4xl font-bold text-foreground">{formatPrice(price)}</span>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">1 week access</p>
+                    {referralBanner && (
+                      <div className="flex items-center justify-center lg:justify-end gap-1.5 mt-1.5">
+                        <Gift className="w-3.5 h-3.5 text-secondary" />
+                        <span className="text-xs font-medium text-secondary">10% referral discount applied</span>
+                      </div>
+                    )}
                   </div>
                 ) : selectedCommitment === "daily" ? (
                   <div>

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Users, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { Search, Users, CheckCircle, Clock, XCircle, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -22,6 +23,8 @@ interface CustomerOrder {
   commitment: string;
   server_type: string;
   location: string;
+  is_test_order: boolean;
+  payment_method: string;
 }
 
 interface CustomerProfile {
@@ -35,7 +38,10 @@ interface CustomerData {
   orders: CustomerOrder[];
   activeOrdersCount: number;
   totalSpent: number;
+  hasActiveSub: boolean;
 }
+
+type SubFilter = 'all' | 'active' | 'inactive';
 
 const Customers = () => {
   const navigate = useNavigate();
@@ -46,6 +52,7 @@ const Customers = () => {
   const [customers, setCustomers] = useState<CustomerData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [subFilter, setSubFilter] = useState<SubFilter>('all');
 
   useEffect(() => {
     if (!authLoading) {
@@ -71,7 +78,6 @@ const Customers = () => {
   const fetchCustomers = async () => {
     setIsLoading(true);
     try {
-      // Fetch all orders with status 'completed' or 'active'
       const { data: orders, error: ordersError } = await supabase
         .from('orders')
         .select('*')
@@ -80,14 +86,13 @@ const Customers = () => {
 
       if (ordersError) throw ordersError;
 
-      // Fetch profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*');
 
       if (profilesError) throw profilesError;
 
-      // Group orders by user
+      const now = new Date();
       const customerMap = new Map<string, CustomerData>();
 
       (orders || []).forEach(order => {
@@ -103,7 +108,8 @@ const Customers = () => {
             },
             orders: [],
             activeOrdersCount: 0,
-            totalSpent: 0
+            totalSpent: 0,
+            hasActiveSub: false
           });
         }
 
@@ -114,9 +120,18 @@ const Customers = () => {
           customer.activeOrdersCount++;
           customer.totalSpent += Number(order.amount_usd);
         }
+
+        // Check active sub (same logic as Admin page)
+        if (!order.is_test_order && 
+            order.commitment !== 'trial' && 
+            order.payment_method !== 'trial_code' && 
+            order.commitment !== 'daily' &&
+            (order.status === 'completed' || order.status === 'active') &&
+            (!order.expires_at || new Date(order.expires_at) >= now)) {
+          customer.hasActiveSub = true;
+        }
       });
 
-      // Filter to only customers with at least one order
       const customersArray = Array.from(customerMap.values())
         .filter(c => c.orders.length > 0)
         .sort((a, b) => b.totalSpent - a.totalSpent);
@@ -134,10 +149,18 @@ const Customers = () => {
     }
   };
 
-  const filteredCustomers = customers.filter(c => 
-    c.profile.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.profile.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCustomers = customers
+    .filter(c => 
+      c.profile.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.profile.email.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .filter(c => {
+      if (subFilter === 'active') return c.hasActiveSub;
+      if (subFilter === 'inactive') return !c.hasActiveSub;
+      return true;
+    });
+
+  const activeCustomerCount = customers.filter(c => c.hasActiveSub).length;
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -214,16 +237,45 @@ const Customers = () => {
           </Card>
         </div>
 
-        {/* Search */}
-        <div className="relative mb-6">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search customers by username or email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-card border-border"
-          />
+        {/* Search + Filters */}
+        <div className="space-y-3 mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search customers by username or email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-card border-border"
+            />
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <Button
+              variant={subFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSubFilter('all')}
+              className="h-7 text-xs"
+            >
+              All ({customers.length})
+            </Button>
+            <Button
+              variant={subFilter === 'active' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSubFilter('active')}
+              className="h-7 text-xs"
+            >
+              Active Sub ({activeCustomerCount})
+            </Button>
+            <Button
+              variant={subFilter === 'inactive' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSubFilter('inactive')}
+              className="h-7 text-xs"
+            >
+              No Active Sub ({customers.length - activeCustomerCount})
+            </Button>
+          </div>
         </div>
 
         {/* Customers List */}
@@ -244,7 +296,14 @@ const Customers = () => {
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h3 className="font-semibold text-foreground">{customer.profile.username}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-foreground">{customer.profile.username}</h3>
+                        {customer.hasActiveSub ? (
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium border bg-green-500/20 text-green-400 border-green-500/30">active sub</span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium border bg-muted text-muted-foreground border-border">no sub</span>
+                        )}
+                      </div>
                       <p className="text-sm text-muted-foreground">{customer.profile.email}</p>
                     </div>
                     <div className="text-right">

@@ -128,7 +128,19 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
 
   const getTotalAmount = () => {
     if (isTestMode) return TEST_AMOUNT;
-    if (isWeekly) return 120; // Fixed $120 for 1 week
+    if (isWeekly) {
+      let weeklyTotal = 120;
+      // Apply discount code to weekly
+      if (appliedDiscount) {
+        if (appliedDiscount.discount_type === 'percentage') {
+          weeklyTotal = Math.max(0, weeklyTotal - Math.round(weeklyTotal * (appliedDiscount.discount_value / 100)));
+        } else {
+          weeklyTotal = Math.max(0, weeklyTotal - appliedDiscount.discount_value);
+        }
+      }
+      const referralDiscount = referralInfo ? Math.round(weeklyTotal * 0.10 * 100) / 100 : 0;
+      return Math.max(0, weeklyTotal - referralDiscount);
+    }
     
     const months = getTotalMonths();
     const baseTotal = amount * months;
@@ -241,6 +253,11 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
             
             if (orderError) {
               console.error("Failed to save order:", orderError);
+            }
+
+            // Increment discount code usage
+            if (!orderError && appliedDiscount?.code) {
+              await supabase.rpc('increment_discount_code_usage', { p_code: appliedDiscount.code });
             }
 
             // Create referral record if a referral code was used
