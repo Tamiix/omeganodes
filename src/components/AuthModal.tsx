@@ -84,15 +84,11 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
             setErrors({ general: error.message });
           }
         } else {
-          setSuccessMessage('Account created successfully! You can now sign in.');
+          setSuccessMessage('Account created! Please check your email to verify your account before signing in.');
           toast({
             title: 'Account created!',
-            description: 'Welcome to Omega Networks',
+            description: 'Check your email to verify your account.',
           });
-          setTimeout(() => {
-            onOpenChange(false);
-            resetForm();
-          }, 1500);
         }
       } else {
         const result = signInSchema.safeParse({ email, password });
@@ -275,7 +271,8 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
                     I agree to the{' '}
                     <a href="/terms" target="_blank" className="text-primary hover:underline">
                       Terms & Conditions
-                    </a>
+                    </a>{' '}
+                    and consent to receiving promotional emails
                   </label>
                 </div>
                 {errors.terms && (
