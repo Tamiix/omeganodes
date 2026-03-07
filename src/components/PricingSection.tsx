@@ -33,7 +33,7 @@ const dedicatedSpecs = [
 ];
 
 const commitments = [
-  { id: "daily", name: "Daily", months: 0, discount: 0, label: "Trial only", trialOnly: true },
+  { id: "trial", name: "Trial", months: 0, discount: 0, label: "Trial only", trialOnly: true },
   { id: "weekly", name: "Weekly", months: 0, discount: 0, label: "", sharedOnly: true },
   { id: "monthly", name: "Monthly", months: 1, discount: 0, label: "" },
   { id: "3months", name: "3 Months", months: 3, discount: 0.08, label: "8% off" },
