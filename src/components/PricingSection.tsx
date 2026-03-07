@@ -33,7 +33,7 @@ const dedicatedSpecs = [
 ];
 
 const commitments = [
-  { id: "daily", name: "Daily", months: 0, discount: 0, label: "Trial only", trialOnly: true },
+  { id: "trial", name: "Trial", months: 0, discount: 0, label: "Trial only", trialOnly: true },
   { id: "weekly", name: "Weekly", months: 0, discount: 0, label: "", sharedOnly: true },
   { id: "monthly", name: "Monthly", months: 1, discount: 0, label: "" },
   { id: "3months", name: "3 Months", months: 3, discount: 0.08, label: "8% off" },
@@ -120,8 +120,8 @@ const PricingSection = () => {
   const isWeekly = selectedCommitment === "weekly";
   const [swqosStakePackages, setSwqosStakePackages] = useState(1);
   
-  // Check if commitment discount is active (any commitment other than monthly, daily, or weekly)
-  const hasCommitmentDiscount = selectedCommitment !== "monthly" && selectedCommitment !== "daily" && selectedCommitment !== "weekly";
+  // Check if commitment discount is active (any commitment other than monthly, trial, or weekly)
+  const hasCommitmentDiscount = selectedCommitment !== "monthly" && selectedCommitment !== "trial" && selectedCommitment !== "weekly";
   
   // Get the final location for dedicated servers
   const getFinalLocation = () => {
@@ -174,15 +174,15 @@ const PricingSection = () => {
     }
   }, []);
 
-  // Clear discount code when switching to a commitment with discount, or when switching to daily
+  // Clear discount code when switching to a commitment with discount, or when switching to trial
   useEffect(() => {
-    if ((hasCommitmentDiscount || selectedCommitment === "daily") && appliedDiscount) {
+    if ((hasCommitmentDiscount || selectedCommitment === "trial") && appliedDiscount) {
       setAppliedDiscount(null);
       setDiscountCode("");
       setDiscountError("");
     }
-    // Also turn off trial mode when switching to daily
-    if (selectedCommitment === "daily" && isTrialMode) {
+    // Also turn off trial mode when switching to trial
+    if (selectedCommitment === "trial" && isTrialMode) {
       setIsTrialMode(false);
     }
   }, [hasCommitmentDiscount, selectedCommitment]);
@@ -985,7 +985,7 @@ const PricingSection = () => {
                       </div>
                     )}
                   </div>
-                ) : selectedCommitment === "daily" ? (
+                ) : selectedCommitment === "trial" ? (
                   <div>
                     <div className="text-lg text-muted-foreground line-through">{formatPrice(300)}</div>
                     <div className="text-4xl font-bold text-foreground">$0</div>
@@ -1025,7 +1025,7 @@ const PricingSection = () => {
               className="lg:col-span-2 space-y-3"
             >
               {/* Free Trial - Shared Only (only show if trials are enabled) */}
-              {!isDedicated && trialsEnabled && selectedCommitment !== "daily" && (
+              {!isDedicated && trialsEnabled && selectedCommitment !== "trial" && (
                 <div 
                   onClick={() => setIsTrialMode(!isTrialMode)}
                   className={`p-4 rounded-lg border cursor-pointer transition-all ${
@@ -1414,7 +1414,7 @@ const PricingSection = () => {
                 </div>
 
                 {/* CTA Button */}
-                {selectedCommitment === "daily" && !redeemedTrial ? (
+                {selectedCommitment === "trial" && !redeemedTrial ? (
                   <div className="p-4 rounded-lg border border-dashed border-amber-500/50 bg-amber-500/5 text-center">
                     <Gift className="w-5 h-5 text-amber-500 mx-auto mb-2" />
                     <p className="text-sm font-medium text-foreground">Trial Code Required</p>
