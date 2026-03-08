@@ -12,11 +12,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-    if (!RESEND_API_KEY) {
-      throw new Error("RESEND_API_KEY is not configured");
-    }
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const authHeader = req.headers.get("Authorization")!;
@@ -64,55 +59,33 @@ Deno.serve(async (req) => {
       );
     }
 
-    const results: { email: string; success: boolean; error?: string }[] = [];
+    // Insert all recipients into the email queue
+    const rows = recipients.map((email: string) => ({
+      recipient: email,
+      subject,
+      html_content: htmlContent,
+      from_name: fromName || "OmegaNodes",
+      status: "pending",
+      created_by: user.id,
+    }));
 
-    // Send emails in batches of 10
-    for (let i = 0; i < recipients.length; i += 10) {
-      const batch = recipients.slice(i, i + 10);
-      const promises = batch.map(async (email: string) => {
-        try {
-          const res = await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${RESEND_API_KEY}`,
-            },
-            body: JSON.stringify({
-              from: `${fromName || "OmegaNodes"} <noreply@omegatest.xyz>`,
-              to: [email],
-              subject,
-              html: htmlContent,
-            }),
-          });
+    const { error: insertError } = await serviceClient
+      .from("email_queue")
+      .insert(rows);
 
-          if (!res.ok) {
-            const errBody = await res.text();
-            throw new Error(`Resend API error [${res.status}]: ${errBody}`);
-          }
-
-          results.push({ email, success: true });
-        } catch (err) {
-          const errMsg = err instanceof Error ? err.message : "Unknown error";
-          console.error(`Failed to send to ${email}: ${errMsg}`);
-          results.push({
-            email,
-            success: false,
-            error: errMsg,
-          });
-        }
-      });
-      await Promise.all(promises);
+    if (insertError) {
+      throw new Error(`Failed to queue emails: ${insertError.message}`);
     }
 
-    const sent = results.filter((r) => r.success).length;
-    const failed = results.filter((r) => !r.success).length;
-
     return new Response(
-      JSON.stringify({ sent, failed, total: recipients.length, results }),
+      JSON.stringify({
+        queued: recipients.length,
+        message: `${recipients.length} emails queued. They will be sent in batches of 10 per minute.`,
+      }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("Error sending promotional email:", error);
+    console.error("Error queuing promotional email:", error);
     const msg = error instanceof Error ? error.message : "Unknown error";
     return new Response(JSON.stringify({ error: msg }), {
       status: 500,
