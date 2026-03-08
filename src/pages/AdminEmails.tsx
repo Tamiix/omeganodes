@@ -447,7 +447,53 @@ const AdminEmails = () => {
            </Card>
         )}
 
-        {/* Template Picker */}
+        {/* Failed Emails Detail */}
+        {failedEmails.length > 0 && (
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-3 cursor-pointer" onClick={() => setShowFailed(!showFailed)}>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-foreground text-base">
+                  <XCircle className="w-4 h-4 text-destructive" />
+                  Failed Emails ({failedEmails.length})
+                </CardTitle>
+                {showFailed ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+              </div>
+            </CardHeader>
+            {showFailed && (
+              <CardContent className="pt-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Recipient</TableHead>
+                      <TableHead>Error</TableHead>
+                      <TableHead className="w-[80px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {failedEmails.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="text-sm font-mono">{item.recipient}</TableCell>
+                        <TableCell className="text-xs text-destructive max-w-[300px] truncate">{item.error || 'Unknown error'}</TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={retryingId === item.id}
+                            onClick={() => retryOneEmail(item.id)}
+                            className="h-7 gap-1"
+                          >
+                            {retryingId === item.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                            Retry
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            )}
+          </Card>
+        )}
         <div className="space-y-3">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Start from a template</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
