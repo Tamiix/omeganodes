@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Shield, Users, UserCheck, Tag, Clock, Gift } from 'lucide-react';
+import { ArrowLeft, Shield, Users, UserCheck, Tag, Clock, Gift, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const AdminHeader = () => {
@@ -10,6 +10,7 @@ const AdminHeader = () => {
   const isDiscountCodesPage = location.pathname === '/admin/discount-codes';
   const isAccessCodesPage = location.pathname === '/admin/access-codes';
   const isReferralsPage = location.pathname === '/admin/referrals';
+  const isEmailsPage = location.pathname === '/admin/emails';
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
@@ -38,7 +39,7 @@ const AdminHeader = () => {
           {/* Navigation Tabs - horizontally scrollable on mobile */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
             <Button
-              variant={!isCustomersPage && !isDiscountCodesPage && !isAccessCodesPage && !isReferralsPage ? "default" : "ghost"}
+              variant={!isCustomersPage && !isDiscountCodesPage && !isAccessCodesPage && !isReferralsPage && !isEmailsPage ? "default" : "ghost"}
               size="sm"
               onClick={() => navigate('/admin')}
               className="gap-1.5 shrink-0 text-xs sm:text-sm h-8"
@@ -81,6 +82,15 @@ const AdminHeader = () => {
             >
               <Gift className="w-3.5 h-3.5" />
               Referrals
+            </Button>
+            <Button
+              variant={isEmailsPage ? "default" : "ghost"}
+              size="sm"
+              onClick={() => navigate('/admin/emails')}
+              className="gap-1.5 shrink-0 text-xs sm:text-sm h-8"
+            >
+              <Mail className="w-3.5 h-3.5" />
+              Emails
             </Button>
           </div>
         </div>
