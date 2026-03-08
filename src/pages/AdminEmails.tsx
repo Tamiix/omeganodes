@@ -216,6 +216,20 @@ const AdminEmails = () => {
     setShowHtml(false);
   };
 
+  const applyDiscountTemplate = () => {
+    setSelectedTemplate('discount');
+    setSubject('💰 Exclusive Discount on OmegaNodes');
+    setHtmlContent(buildDiscountHtml(sharedCode, dedicatedCode, sharedDiscount, dedicatedDiscount));
+    setShowHtml(false);
+  };
+
+  // Re-generate discount HTML when codes change
+  useEffect(() => {
+    if (selectedTemplate === 'discount') {
+      setHtmlContent(buildDiscountHtml(sharedCode, dedicatedCode, sharedDiscount, dedicatedDiscount));
+    }
+  }, [sharedCode, dedicatedCode, sharedDiscount, dedicatedDiscount, selectedTemplate]);
+
   const handleSend = async () => {
     if (!subject.trim() || !htmlContent.trim()) {
       toast({ title: 'Missing fields', description: 'Subject and content are required.', variant: 'destructive' });
