@@ -1,18 +1,20 @@
 project_id = "mmkornqvbafkricqixgk"
 
-[auth.external.discord]
-enabled = true
-client_id = "env(DISCORD_CLIENT_ID)"
-secret = "env(DISCORD_CLIENT_SECRET)"
+[auth]
+  [auth.external]
+    [auth.external.discord]
+      client_id = "env(DISCORD_CLIENT_ID)"
+      enabled = true
+      secret = "env(DISCORD_CLIENT_SECRET)"
 
-[functions.verify-solana-payment]
-verify_jwt = false
-
-[functions.discord-order-notification]
-verify_jwt = false
-
-[functions.validate-trial]
-verify_jwt = false
-
-[functions.discord-registration-notification]
-verify_jwt = false
+[functions]
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.discord-order-notification]
+    verify_jwt = false
+  [functions.discord-registration-notification]
+    verify_jwt = false
+  [functions.validate-trial]
+    verify_jwt = false
+  [functions.verify-solana-payment]
+    verify_jwt = false
