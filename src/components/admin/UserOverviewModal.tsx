@@ -325,6 +325,22 @@ const UserOverviewModal = ({ isOpen, onClose, user, onUserDeleted }: UserOvervie
                     {role.role}
                   </Badge>
                 ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDeleteUser}
+                  disabled={deletingUser}
+                  className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                >
+                  {deletingUser ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Delete User
+                    </>
+                  )}
+                </Button>
                 <button
                   onClick={onClose}
                   className="p-2 rounded-lg hover:bg-muted transition-colors"
