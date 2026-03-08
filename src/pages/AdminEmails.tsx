@@ -177,7 +177,16 @@ const AdminEmails = () => {
   }, [user, isAdmin, authLoading, navigate, toast]);
 
   useEffect(() => {
-    if (user && isAdmin) fetchRecipientCounts();
+    if (user && isAdmin) {
+      fetchRecipientCounts();
+      // Check if there's an active queue on load
+      fetchQueueStatus().then(() => {
+        if (pollRef.current === null) {
+          // fetchQueueStatus will have set queueStatus - start polling if there are pending items
+          startPolling();
+        }
+      });
+    }
   }, [user, isAdmin]);
 
   // Rebuild HTML whenever fields or discount codes change
