@@ -170,6 +170,7 @@ const UserCard = ({
         isOpen={isOverviewOpen}
         onClose={() => setIsOverviewOpen(false)}
         user={userItem}
+        onUserDeleted={onUserDeleted}
       />
     </>
   );
