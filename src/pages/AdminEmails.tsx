@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, Users, UserCheck, Mail, Loader2, Eye } from 'lucide-react';
+import { Send, Users, UserCheck, Mail, Loader2, Eye, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -18,7 +17,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
-type Audience = 'all' | 'active' | 'inactive';
+type Audience = 'single' | 'all' | 'active' | 'inactive';
 
 const AdminEmails = () => {
   const navigate = useNavigate();
@@ -28,9 +27,10 @@ const AdminEmails = () => {
   const [subject, setSubject] = useState('');
   const [htmlContent, setHtmlContent] = useState('');
   const [fromName, setFromName] = useState('OmegaNodes');
-  const [audience, setAudience] = useState<Audience>('all');
+  const [audience, setAudience] = useState<Audience>('single');
+  const [singleEmail, setSingleEmail] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const [recipientCount, setRecipientCount] = useState<{ all: number; active: number; inactive: number }>({ all: 0, active: 0, inactive: 0 });
+  const [recipientCount, setRecipientCount] = useState({ all: 0, active: 0, inactive: 0 });
   const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
@@ -81,6 +81,10 @@ const AdminEmails = () => {
   };
 
   const getRecipients = async (): Promise<string[]> => {
+    if (audience === 'single') {
+      return [singleEmail.trim()];
+    }
+
     const [profilesRes, ordersRes] = await Promise.all([
       supabase.from('profiles').select('user_id, email'),
       supabase.from('orders').select('user_id, status, is_test_order, commitment, payment_method, expires_at').in('status', ['completed', 'active']),
@@ -112,12 +116,18 @@ const AdminEmails = () => {
       return;
     }
 
+    if (audience === 'single' && !singleEmail.trim()) {
+      toast({ title: 'Missing email', description: 'Enter a recipient email address.', variant: 'destructive' });
+      return;
+    }
+
     setIsSending(true);
     try {
       const recipients = await getRecipients();
 
       if (recipients.length === 0) {
         toast({ title: 'No recipients', description: 'No users match the selected audience.', variant: 'destructive' });
+        setIsSending(false);
         return;
       }
 
@@ -153,7 +163,11 @@ const AdminEmails = () => {
 
   if (!isAdmin) return null;
 
-  const currentCount = recipientCount[audience];
+  const sendLabel = audience === 'single'
+    ? `Send to ${singleEmail.trim() || '...'}`
+    : `Send to ${recipientCount[audience]} ${recipientCount[audience] === 1 ? 'user' : 'users'}`;
+
+  const canSend = subject.trim() && htmlContent.trim() && (audience !== 'single' || singleEmail.trim());
 
   return (
     <div className="min-h-screen bg-background">
@@ -172,6 +186,15 @@ const AdminEmails = () => {
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Audience</label>
               <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={audience === 'single' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setAudience('single')}
+                  className="gap-1.5"
+                >
+                  <User className="w-3.5 h-3.5" />
+                  Single User
+                </Button>
                 <Button
                   variant={audience === 'all' ? 'default' : 'outline'}
                   size="sm"
@@ -201,6 +224,20 @@ const AdminEmails = () => {
                 </Button>
               </div>
             </div>
+
+            {/* Single Email Input */}
+            {audience === 'single' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Recipient Email</label>
+                <Input
+                  type="email"
+                  value={singleEmail}
+                  onChange={(e) => setSingleEmail(e.target.value)}
+                  placeholder="user@example.com"
+                  className="bg-background border-border"
+                />
+              </div>
+            )}
 
             {/* From Name */}
             <div className="space-y-2">
@@ -252,8 +289,8 @@ const AdminEmails = () => {
                   <DialogHeader>
                     <DialogTitle>Email Preview</DialogTitle>
                   </DialogHeader>
-                  <div className="border border-border rounded-lg p-4 bg-white">
-                    <div className="text-sm text-gray-500 mb-2">
+                  <div className="border border-border rounded-lg p-4" style={{ backgroundColor: '#ffffff' }}>
+                    <div className="text-sm mb-2" style={{ color: '#6b7280' }}>
                       <strong>Subject:</strong> {subject || '(no subject)'}
                     </div>
                     <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
@@ -263,7 +300,7 @@ const AdminEmails = () => {
 
               <Button
                 onClick={handleSend}
-                disabled={isSending || !subject.trim() || !htmlContent.trim()}
+                disabled={isSending || !canSend}
                 className="gap-1.5"
               >
                 {isSending ? (
@@ -271,7 +308,7 @@ const AdminEmails = () => {
                 ) : (
                   <Send className="w-4 h-4" />
                 )}
-                Send to {currentCount} {currentCount === 1 ? 'user' : 'users'}
+                {sendLabel}
               </Button>
             </div>
           </CardContent>
