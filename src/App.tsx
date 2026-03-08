@@ -37,6 +37,7 @@ const App = () => (
               <Route path="/admin/discount-codes" element={<DiscountCodes />} />
               <Route path="/admin/access-codes" element={<AccessCodes />} />
               <Route path="/admin/referrals" element={<AdminReferrals />} />
+              <Route path="/admin/emails" element={<AdminEmails />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/links" element={<OfficialLinks />} />
               <Route path="/referral" element={<Referral />} />

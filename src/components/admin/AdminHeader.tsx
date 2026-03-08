@@ -83,6 +83,15 @@ const AdminHeader = () => {
               <Gift className="w-3.5 h-3.5" />
               Referrals
             </Button>
+            <Button
+              variant={isEmailsPage ? "default" : "ghost"}
+              size="sm"
+              onClick={() => navigate('/admin/emails')}
+              className="gap-1.5 shrink-0 text-xs sm:text-sm h-8"
+            >
+              <Mail className="w-3.5 h-3.5" />
+              Emails
+            </Button>
           </div>
         </div>
       </div>
