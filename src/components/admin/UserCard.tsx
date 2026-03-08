@@ -34,6 +34,7 @@ interface UserCardProps {
   onRevokeAdmin: (userId: string) => Promise<void>;
   updatingUser: string | null;
   index: number;
+  onUserDeleted?: () => void;
 }
 
 const UserCard = ({ 
