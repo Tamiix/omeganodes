@@ -92,10 +92,12 @@ Deno.serve(async (req) => {
 
           results.push({ email, success: true });
         } catch (err) {
+          const errMsg = err instanceof Error ? err.message : "Unknown error";
+          console.error(`Failed to send to ${email}: ${errMsg}`);
           results.push({
             email,
             success: false,
-            error: err instanceof Error ? err.message : "Unknown error",
+            error: errMsg,
           });
         }
       });
