@@ -123,6 +123,49 @@ const AdminEmails = () => {
     sharedCode: '', sharedDiscount: '', dedicatedCode: '', dedicatedDiscount: '',
   });
 
+  // Queue status tracking
+  const [queueStatus, setQueueStatus] = useState<{ pending: number; sending: number; sent: number; failed: number; total: number } | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const fetchQueueStatus = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('email_queue')
+        .select('status');
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        setQueueStatus(null);
+        if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+        return;
+      }
+      const counts = { pending: 0, sending: 0, sent: 0, failed: 0, total: data.length };
+      data.forEach((r: any) => {
+        if (r.status === 'pending') counts.pending++;
+        else if (r.status === 'sending') counts.sending++;
+        else if (r.status === 'sent') counts.sent++;
+        else if (r.status === 'failed') counts.failed++;
+      });
+      setQueueStatus(counts);
+      // Stop polling when queue is fully processed
+      if (counts.pending === 0 && counts.sending === 0 && pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    } catch (err) {
+      console.error('Error fetching queue status:', err);
+    }
+  }, []);
+
+  const startPolling = useCallback(() => {
+    fetchQueueStatus();
+    if (pollRef.current) clearInterval(pollRef.current);
+    pollRef.current = setInterval(fetchQueueStatus, 5000);
+  }, [fetchQueueStatus]);
+
+  useEffect(() => {
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+  }, []);
+
   useEffect(() => {
     if (!authLoading) {
       if (!user) navigate('/');
