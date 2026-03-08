@@ -295,7 +295,25 @@ const AdminEmails = () => {
         <div className="space-y-3">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Start from a template</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {templates.map((t) => (
+            {/* Discount template card */}
+            <button
+              onClick={() => applyDiscountTemplate()}
+              className={`text-left p-4 rounded-lg border transition-all ${
+                selectedTemplate === 'discount'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border bg-card hover:border-primary/30'
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className={selectedTemplate === 'discount' ? 'text-primary' : 'text-muted-foreground'}><Percent className="w-4 h-4" /></span>
+                <span className="text-sm font-medium text-foreground">Discount Launch</span>
+              </div>
+              <p className="text-xs text-muted-foreground line-clamp-2">
+                Separate codes for Shared and Dedicated servers.
+              </p>
+            </button>
+            {/* Other templates */}
+            {staticTemplates.map((t) => (
               <button
                 key={t.id}
                 onClick={() => applyTemplate(t)}
@@ -310,7 +328,6 @@ const AdminEmails = () => {
                   <span className="text-sm font-medium text-foreground">{t.label}</span>
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-2">
-                  {t.id === 'discount' && 'Pre-built layout with discount code block and CTA.'}
                   {t.id === 'announcement' && 'Clean announcement with feature list and button.'}
                   {t.id === 'custom' && 'Blank branded template. Write your own content.'}
                 </p>
@@ -318,6 +335,59 @@ const AdminEmails = () => {
             ))}
           </div>
         </div>
+
+        {/* Discount Code Inputs - shown when discount template is selected */}
+        {selectedTemplate === 'discount' && (
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-foreground text-base">
+                <Tag className="w-4 h-4 text-primary" />
+                Discount Codes
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-3 p-4 rounded-lg border border-border bg-background">
+                  <p className="text-sm font-medium text-foreground">Shared Servers</p>
+                  <div className="space-y-2">
+                    <Input
+                      value={sharedCode}
+                      onChange={(e) => setSharedCode(e.target.value)}
+                      placeholder="e.g. SHARED20"
+                      className="bg-card border-border font-mono uppercase"
+                    />
+                    <Input
+                      value={sharedDiscount}
+                      onChange={(e) => setSharedDiscount(e.target.value)}
+                      placeholder="e.g. 20% off"
+                      className="bg-card border-border text-sm"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-3 p-4 rounded-lg border border-border bg-background">
+                  <p className="text-sm font-medium text-foreground">Dedicated Servers</p>
+                  <div className="space-y-2">
+                    <Input
+                      value={dedicatedCode}
+                      onChange={(e) => setDedicatedCode(e.target.value)}
+                      placeholder="e.g. DEDI15"
+                      className="bg-card border-border font-mono uppercase"
+                    />
+                    <Input
+                      value={dedicatedDiscount}
+                      onChange={(e) => setDedicatedDiscount(e.target.value)}
+                      placeholder="e.g. 15% off"
+                      className="bg-card border-border text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Leave a field empty to exclude that server type from the email.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Compose */}
         <Card className="bg-card border-border">
