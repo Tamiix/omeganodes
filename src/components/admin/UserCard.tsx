@@ -43,7 +43,8 @@ const UserCard = ({
   onGrantAdmin, 
   onRevokeAdmin, 
   updatingUser,
-  index 
+  index,
+  onUserDeleted
 }: UserCardProps) => {
   const [isOverviewOpen, setIsOverviewOpen] = useState(false);
 
