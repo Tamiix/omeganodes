@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, Users, UserCheck, Mail, Loader2, User, Tag, Percent, Sparkles, Code, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Send, Users, UserCheck, Mail, Loader2, User, Tag, Percent, Sparkles, Code, CheckCircle, XCircle, Clock, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -126,6 +127,9 @@ const AdminEmails = () => {
   // Queue status tracking
   const [queueStatus, setQueueStatus] = useState<{ pending: number; sending: number; sent: number; failed: number; total: number } | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [failedEmails, setFailedEmails] = useState<{ id: string; recipient: string; error: string | null; created_at: string }[]>([]);
+  const [showFailed, setShowFailed] = useState(false);
+  const [retryingId, setRetryingId] = useState<string | null>(null);
 
   const fetchQueueStatus = useCallback(async () => {
     try {
@@ -156,11 +160,45 @@ const AdminEmails = () => {
     }
   }, []);
 
+  const fetchFailedEmails = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('email_queue')
+        .select('id, recipient, error, created_at')
+        .eq('status', 'failed')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setFailedEmails(data || []);
+    } catch (err) {
+      console.error('Error fetching failed emails:', err);
+    }
+  }, []);
+
+  const retryOneEmail = async (id: string) => {
+    setRetryingId(id);
+    try {
+      const { error } = await supabase
+        .from('email_queue')
+        .update({ status: 'pending', error: null } as any)
+        .eq('id', id);
+      if (error) throw error;
+      setFailedEmails(prev => prev.filter(e => e.id !== id));
+      toast({ title: 'Re-queued', description: 'Email will be retried shortly.' });
+      startPolling();
+    } catch (err) {
+      console.error(err);
+      toast({ title: 'Error', description: 'Failed to retry email.', variant: 'destructive' });
+    } finally {
+      setRetryingId(null);
+    }
+  };
+
   const startPolling = useCallback(() => {
     fetchQueueStatus();
+    fetchFailedEmails();
     if (pollRef.current) clearInterval(pollRef.current);
-    pollRef.current = setInterval(fetchQueueStatus, 5000);
-  }, [fetchQueueStatus]);
+    pollRef.current = setInterval(() => { fetchQueueStatus(); fetchFailedEmails(); }, 5000);
+  }, [fetchQueueStatus, fetchFailedEmails]);
 
   useEffect(() => {
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
@@ -179,10 +217,9 @@ const AdminEmails = () => {
   useEffect(() => {
     if (user && isAdmin) {
       fetchRecipientCounts();
-      // Check if there's an active queue on load
+      fetchFailedEmails();
       fetchQueueStatus().then(() => {
         if (pollRef.current === null) {
-          // fetchQueueStatus will have set queueStatus - start polling if there are pending items
           startPolling();
         }
       });
@@ -409,7 +446,53 @@ const AdminEmails = () => {
            </Card>
         )}
 
-        {/* Template Picker */}
+        {/* Failed Emails Detail */}
+        {failedEmails.length > 0 && (
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-3 cursor-pointer" onClick={() => setShowFailed(!showFailed)}>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-foreground text-base">
+                  <XCircle className="w-4 h-4 text-destructive" />
+                  Failed Emails ({failedEmails.length})
+                </CardTitle>
+                {showFailed ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+              </div>
+            </CardHeader>
+            {showFailed && (
+              <CardContent className="pt-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Recipient</TableHead>
+                      <TableHead>Error</TableHead>
+                      <TableHead className="w-[80px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {failedEmails.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="text-sm font-mono">{item.recipient}</TableCell>
+                        <TableCell className="text-xs text-destructive max-w-[300px] truncate">{item.error || 'Unknown error'}</TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={retryingId === item.id}
+                            onClick={() => retryOneEmail(item.id)}
+                            className="h-7 gap-1"
+                          >
+                            {retryingId === item.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                            Retry
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            )}
+          </Card>
+        )}
         <div className="space-y-3">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Start from a template</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
