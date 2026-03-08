@@ -30,8 +30,7 @@ const wrapHtml = (content: string) => `<!DOCTYPE html>
 <img src="${LOGO_URL}" width="40" height="40" alt="OmegaNodes" style="display:block;margin-bottom:28px;" />
 ${content}
 <p style="font-size:12px;color:#555;margin-top:40px;border-top:1px solid #2a2a40;padding-top:20px;">
-OmegaNodes &mdash; Solana Node Infrastructure<br/>
-<a href="https://omeganodes.io" style="color:#7C6FF7;text-decoration:none;">omeganodes.io</a></p>
+OmegaNodes - Solana Node Infrastructure</p>
 </div></body></html>`;
 
 interface DiscountState {
@@ -50,11 +49,11 @@ interface ContentFields {
 
 const buildDiscountHtml = (d: DiscountState, fields: ContentFields) => {
   const sharedBlock = d.sharedCode ? `<div style="${codeBlockStyle}margin-bottom:12px;">
-    <p style="${planLabelStyle}">Shared Servers${d.sharedDiscount ? ` — ${d.sharedDiscount}` : ''}</p>
+    <p style="${planLabelStyle}">Shared Servers${d.sharedDiscount ? ` - ${d.sharedDiscount}` : ''}</p>
     <p style="${codeLabelStyle}">Discount code</p>
     <p style="${codeValueStyle}">${d.sharedCode.toUpperCase()}</p></div>` : '';
   const dedicatedBlock = d.dedicatedCode ? `<div style="${codeBlockStyle}">
-    <p style="${planLabelStyle}">Dedicated Servers${d.dedicatedDiscount ? ` — ${d.dedicatedDiscount}` : ''}</p>
+    <p style="${planLabelStyle}">Dedicated Servers${d.dedicatedDiscount ? ` - ${d.dedicatedDiscount}` : ''}</p>
     <p style="${codeLabelStyle}">Discount code</p>
     <p style="${codeValueStyle}">${d.dedicatedCode.toUpperCase()}</p></div>` : '';
 
