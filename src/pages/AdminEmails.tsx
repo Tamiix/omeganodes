@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, Users, UserCheck, Mail, Loader2, User, Tag, Percent, Sparkles, Code } from 'lucide-react';
+import { Send, Users, UserCheck, Mail, Loader2, User, Tag, Percent, Sparkles, Code, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -122,6 +123,49 @@ const AdminEmails = () => {
     sharedCode: '', sharedDiscount: '', dedicatedCode: '', dedicatedDiscount: '',
   });
 
+  // Queue status tracking
+  const [queueStatus, setQueueStatus] = useState<{ pending: number; sending: number; sent: number; failed: number; total: number } | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const fetchQueueStatus = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('email_queue')
+        .select('status');
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        setQueueStatus(null);
+        if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+        return;
+      }
+      const counts = { pending: 0, sending: 0, sent: 0, failed: 0, total: data.length };
+      data.forEach((r: any) => {
+        if (r.status === 'pending') counts.pending++;
+        else if (r.status === 'sending') counts.sending++;
+        else if (r.status === 'sent') counts.sent++;
+        else if (r.status === 'failed') counts.failed++;
+      });
+      setQueueStatus(counts);
+      // Stop polling when queue is fully processed
+      if (counts.pending === 0 && counts.sending === 0 && pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    } catch (err) {
+      console.error('Error fetching queue status:', err);
+    }
+  }, []);
+
+  const startPolling = useCallback(() => {
+    fetchQueueStatus();
+    if (pollRef.current) clearInterval(pollRef.current);
+    pollRef.current = setInterval(fetchQueueStatus, 5000);
+  }, [fetchQueueStatus]);
+
+  useEffect(() => {
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+  }, []);
+
   useEffect(() => {
     if (!authLoading) {
       if (!user) navigate('/');
@@ -133,7 +177,16 @@ const AdminEmails = () => {
   }, [user, isAdmin, authLoading, navigate, toast]);
 
   useEffect(() => {
-    if (user && isAdmin) fetchRecipientCounts();
+    if (user && isAdmin) {
+      fetchRecipientCounts();
+      // Check if there's an active queue on load
+      fetchQueueStatus().then(() => {
+        if (pollRef.current === null) {
+          // fetchQueueStatus will have set queueStatus - start polling if there are pending items
+          startPolling();
+        }
+      });
+    }
   }, [user, isAdmin]);
 
   // Rebuild HTML whenever fields or discount codes change
@@ -239,6 +292,7 @@ const AdminEmails = () => {
       if (error) throw error;
 
       toast({ title: 'Emails queued!', description: `${data.queued} emails queued. They'll be sent in batches of 10 per minute.` });
+      startPolling();
     } catch (err) {
       console.error('Error sending emails:', err);
       toast({ title: 'Error', description: 'Failed to send emails.', variant: 'destructive' });
@@ -270,6 +324,43 @@ const AdminEmails = () => {
       <AdminHeader />
 
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-4xl space-y-6">
+        {/* Queue Status */}
+        {queueStatus && queueStatus.total > 0 && (
+          <Card className="bg-card border-border">
+            <CardContent className="pt-5 pb-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {queueStatus.pending > 0 || queueStatus.sending > 0 ? (
+                    <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                  ) : queueStatus.failed > 0 ? (
+                    <XCircle className="w-4 h-4 text-destructive" />
+                  ) : (
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                  )}
+                  <span className="text-sm font-medium text-foreground">
+                    {queueStatus.pending > 0 || queueStatus.sending > 0
+                      ? 'Sending emails...'
+                      : queueStatus.failed > 0
+                        ? `Done - ${queueStatus.failed} failed`
+                        : 'All emails sent!'}
+                  </span>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {queueStatus.sent + queueStatus.failed} / {queueStatus.total}
+                </span>
+              </div>
+              <Progress value={((queueStatus.sent + queueStatus.failed) / queueStatus.total) * 100} className="h-2" />
+              <div className="flex gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {queueStatus.pending + queueStatus.sending} pending</span>
+                <span className="flex items-center gap-1"><CheckCircle className="w-3 h-3 text-green-500" /> {queueStatus.sent} sent</span>
+                {queueStatus.failed > 0 && (
+                  <span className="flex items-center gap-1"><XCircle className="w-3 h-3 text-destructive" /> {queueStatus.failed} failed</span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Template Picker */}
         <div className="space-y-3">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Start from a template</h2>
