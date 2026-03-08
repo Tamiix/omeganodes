@@ -24,11 +24,11 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
     <Body style={main}>
       <Container style={container}>
         <Img
-          src="https://mmkornqvbafkricqixgk.supabase.co/storage/v1/object/public/email-assets/omega-logo.png"
+          src="https://mmkornqvbafkricqixgk.supabase.co/storage/v1/object/public/email-assets/omega-logo-new.png"
           width="40"
           height="40"
           alt="OmegaNodes"
-          style={{ marginBottom: '24px' }}
+          style={{ display: 'block', marginBottom: '28px' }}
         />
         <Heading style={h1}>Verification code</Heading>
         <Text style={text}>Use this code to confirm your identity:</Text>
@@ -43,17 +43,17 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
 
 export default ReauthenticationEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: "'Inter', system-ui, sans-serif" }
-const container = { padding: '32px 28px' }
+const main = { backgroundColor: '#0f0f1a', fontFamily: "'Inter', system-ui, sans-serif" }
+const container = { maxWidth: '560px', margin: '0 auto', padding: '40px 28px' }
 const h1 = {
   fontSize: '22px',
   fontWeight: 'bold' as const,
-  color: '#1a1a2e',
-  margin: '0 0 16px',
+  color: '#ffffff',
+  margin: '0 0 12px',
 }
 const text = {
   fontSize: '14px',
-  color: '#7f8494',
+  color: '#a0a3b1',
   lineHeight: '1.6',
   margin: '0 0 28px',
 }
@@ -61,8 +61,8 @@ const codeStyle = {
   fontFamily: "'JetBrains Mono', Courier, monospace",
   fontSize: '24px',
   fontWeight: 'bold' as const,
-  color: '#5B4EE4',
+  color: '#7C6FF7',
   margin: '0 0 32px',
   letterSpacing: '4px',
 }
-const footer = { fontSize: '12px', color: '#999999', margin: '32px 0 0' }
+const footer = { fontSize: '12px', color: '#555555', margin: '40px 0 0', borderTop: '1px solid #2a2a40', paddingTop: '20px' }
