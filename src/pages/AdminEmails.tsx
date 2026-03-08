@@ -45,24 +45,40 @@ const buildHtml = (content: string) => `
 </body>
 </html>`;
 
-const templates: EmailTemplate[] = [
-  {
-    id: 'discount',
-    label: 'Discount Launch',
-    icon: <Percent className="w-4 h-4" />,
-    subject: '💰 Exclusive Discount on OmegaNodes',
-    body: buildHtml(`
-      <h1 style="font-size:22px;font-weight:700;color:#1a1a2e;margin:0 0 12px;">Exclusive deal, just for you</h1>
-      <p style="font-size:14px;color:#7f8494;line-height:1.6;margin:0 0 24px;">
-        We're running a limited-time discount on all our Solana node plans. Use the code below at checkout to save.
-      </p>
-      <div style="background:#f4f3ff;border:1px solid #e0dff5;border-radius:8px;padding:20px;text-align:center;margin-bottom:24px;">
-        <p style="font-size:12px;color:#7f8494;margin:0 0 6px;text-transform:uppercase;letter-spacing:1px;">Your discount code</p>
-        <p style="font-size:28px;font-weight:700;color:#5B4EE4;margin:0;letter-spacing:3px;font-family:'JetBrains Mono',monospace;">CODE HERE</p>
-      </div>
-      <a href="https://omeganodes.io/#pricing" style="display:inline-block;background:#5B4EE4;color:#fff;font-size:14px;font-weight:600;border-radius:8px;padding:12px 24px;text-decoration:none;">View Plans</a>
-    `),
-  },
+const codeBlockStyle = `background:#f4f3ff;border:1px solid #e0dff5;border-radius:8px;padding:16px;text-align:center;`;
+const codeLabelStyle = `font-size:11px;color:#7f8494;margin:0 0 4px;text-transform:uppercase;letter-spacing:1px;`;
+const codeValueStyle = `font-size:24px;font-weight:700;color:#5B4EE4;margin:0;letter-spacing:3px;font-family:'JetBrains Mono',monospace;`;
+const planLabelStyle = `font-size:13px;font-weight:600;color:#1a1a2e;margin:0 0 2px;`;
+
+const buildDiscountHtml = (sharedCode: string, dedicatedCode: string, sharedDiscount: string, dedicatedDiscount: string) => {
+  const sharedBlock = sharedCode ? `
+    <div style="${codeBlockStyle}margin-bottom:12px;">
+      <p style="${planLabelStyle}">Shared Servers${sharedDiscount ? ` — ${sharedDiscount}` : ''}</p>
+      <p style="${codeLabelStyle}">Discount code</p>
+      <p style="${codeValueStyle}">${sharedCode.toUpperCase()}</p>
+    </div>` : '';
+
+  const dedicatedBlock = dedicatedCode ? `
+    <div style="${codeBlockStyle}">
+      <p style="${planLabelStyle}">Dedicated Servers${dedicatedDiscount ? ` — ${dedicatedDiscount}` : ''}</p>
+      <p style="${codeLabelStyle}">Discount code</p>
+      <p style="${codeValueStyle}">${dedicatedCode.toUpperCase()}</p>
+    </div>` : '';
+
+  return buildHtml(`
+    <h1 style="font-size:22px;font-weight:700;color:#1a1a2e;margin:0 0 12px;">Exclusive deal, just for you</h1>
+    <p style="font-size:14px;color:#7f8494;line-height:1.6;margin:0 0 24px;">
+      We're running a limited-time discount on our Solana node plans. Use the codes below at checkout to save.
+    </p>
+    <div style="margin-bottom:24px;">
+      ${sharedBlock}
+      ${dedicatedBlock}
+    </div>
+    <a href="https://omeganodes.io/#pricing" style="display:inline-block;background:#5B4EE4;color:#fff;font-size:14px;font-weight:600;border-radius:8px;padding:12px 24px;text-decoration:none;">View Plans</a>
+  `);
+};
+
+const staticTemplates: EmailTemplate[] = [
   {
     id: 'announcement',
     label: 'Announcement',
@@ -111,6 +127,10 @@ const AdminEmails = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [showHtml, setShowHtml] = useState(false);
+  const [sharedCode, setSharedCode] = useState('');
+  const [dedicatedCode, setDedicatedCode] = useState('');
+  const [sharedDiscount, setSharedDiscount] = useState('');
+  const [dedicatedDiscount, setDedicatedDiscount] = useState('');
 
   useEffect(() => {
     if (!authLoading) {
@@ -196,6 +216,20 @@ const AdminEmails = () => {
     setShowHtml(false);
   };
 
+  const applyDiscountTemplate = () => {
+    setSelectedTemplate('discount');
+    setSubject('💰 Exclusive Discount on OmegaNodes');
+    setHtmlContent(buildDiscountHtml(sharedCode, dedicatedCode, sharedDiscount, dedicatedDiscount));
+    setShowHtml(false);
+  };
+
+  // Re-generate discount HTML when codes change
+  useEffect(() => {
+    if (selectedTemplate === 'discount') {
+      setHtmlContent(buildDiscountHtml(sharedCode, dedicatedCode, sharedDiscount, dedicatedDiscount));
+    }
+  }, [sharedCode, dedicatedCode, sharedDiscount, dedicatedDiscount, selectedTemplate]);
+
   const handleSend = async () => {
     if (!subject.trim() || !htmlContent.trim()) {
       toast({ title: 'Missing fields', description: 'Subject and content are required.', variant: 'destructive' });
@@ -261,7 +295,25 @@ const AdminEmails = () => {
         <div className="space-y-3">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Start from a template</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {templates.map((t) => (
+            {/* Discount template card */}
+            <button
+              onClick={() => applyDiscountTemplate()}
+              className={`text-left p-4 rounded-lg border transition-all ${
+                selectedTemplate === 'discount'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border bg-card hover:border-primary/30'
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className={selectedTemplate === 'discount' ? 'text-primary' : 'text-muted-foreground'}><Percent className="w-4 h-4" /></span>
+                <span className="text-sm font-medium text-foreground">Discount Launch</span>
+              </div>
+              <p className="text-xs text-muted-foreground line-clamp-2">
+                Separate codes for Shared and Dedicated servers.
+              </p>
+            </button>
+            {/* Other templates */}
+            {staticTemplates.map((t) => (
               <button
                 key={t.id}
                 onClick={() => applyTemplate(t)}
@@ -276,7 +328,6 @@ const AdminEmails = () => {
                   <span className="text-sm font-medium text-foreground">{t.label}</span>
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-2">
-                  {t.id === 'discount' && 'Pre-built layout with discount code block and CTA.'}
                   {t.id === 'announcement' && 'Clean announcement with feature list and button.'}
                   {t.id === 'custom' && 'Blank branded template. Write your own content.'}
                 </p>
@@ -284,6 +335,59 @@ const AdminEmails = () => {
             ))}
           </div>
         </div>
+
+        {/* Discount Code Inputs - shown when discount template is selected */}
+        {selectedTemplate === 'discount' && (
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-foreground text-base">
+                <Tag className="w-4 h-4 text-primary" />
+                Discount Codes
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-3 p-4 rounded-lg border border-border bg-background">
+                  <p className="text-sm font-medium text-foreground">Shared Servers</p>
+                  <div className="space-y-2">
+                    <Input
+                      value={sharedCode}
+                      onChange={(e) => setSharedCode(e.target.value)}
+                      placeholder="e.g. SHARED20"
+                      className="bg-card border-border font-mono uppercase"
+                    />
+                    <Input
+                      value={sharedDiscount}
+                      onChange={(e) => setSharedDiscount(e.target.value)}
+                      placeholder="e.g. 20% off"
+                      className="bg-card border-border text-sm"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-3 p-4 rounded-lg border border-border bg-background">
+                  <p className="text-sm font-medium text-foreground">Dedicated Servers</p>
+                  <div className="space-y-2">
+                    <Input
+                      value={dedicatedCode}
+                      onChange={(e) => setDedicatedCode(e.target.value)}
+                      placeholder="e.g. DEDI15"
+                      className="bg-card border-border font-mono uppercase"
+                    />
+                    <Input
+                      value={dedicatedDiscount}
+                      onChange={(e) => setDedicatedDiscount(e.target.value)}
+                      placeholder="e.g. 15% off"
+                      className="bg-card border-border text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Leave a field empty to exclude that server type from the email.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Compose */}
         <Card className="bg-card border-border">
