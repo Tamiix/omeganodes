@@ -127,6 +127,10 @@ const AdminEmails = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [showHtml, setShowHtml] = useState(false);
+  const [sharedCode, setSharedCode] = useState('');
+  const [dedicatedCode, setDedicatedCode] = useState('');
+  const [sharedDiscount, setSharedDiscount] = useState('');
+  const [dedicatedDiscount, setDedicatedDiscount] = useState('');
 
   useEffect(() => {
     if (!authLoading) {
