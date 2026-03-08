@@ -410,7 +410,7 @@ const AdminEmails = () => {
                 {htmlContent.trim() && (
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-muted-foreground">Preview</label>
-                    <div className="border border-border rounded-lg overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
+                    <div className="border border-border rounded-lg overflow-hidden" style={{ backgroundColor: '#0f0f1a' }}>
                       <iframe srcDoc={htmlContent} title="Email Preview" className="w-full border-0" style={{ height: '480px', pointerEvents: 'none' }} sandbox="" />
                     </div>
                   </div>
