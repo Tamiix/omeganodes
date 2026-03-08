@@ -72,7 +72,7 @@ const buildGenericHtml = (fields: ContentFields) => {
 
 const templateDefaults: Record<string, { subject: string; fields: ContentFields; discount?: DiscountState }> = {
   discount: {
-    subject: '💰 Exclusive Discount on OmegaNodes',
+    subject: 'Your exclusive discount on OmegaNodes',
     fields: {
       headline: 'Exclusive deal, just for you',
       message: "We're running a limited-time discount on our Solana node plans. Use the codes below at checkout to save.",
@@ -82,7 +82,7 @@ const templateDefaults: Record<string, { subject: string; fields: ContentFields;
     discount: { sharedCode: '', sharedDiscount: '', dedicatedCode: '', dedicatedDiscount: '' },
   },
   announcement: {
-    subject: '🚀 Big News from OmegaNodes',
+    subject: 'News from OmegaNodes',
     fields: {
       headline: 'Something new is here',
       message: "We've been working on something exciting and we're ready to share it with you.",
