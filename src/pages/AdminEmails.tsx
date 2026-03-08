@@ -217,10 +217,9 @@ const AdminEmails = () => {
   useEffect(() => {
     if (user && isAdmin) {
       fetchRecipientCounts();
-      // Check if there's an active queue on load
+      fetchFailedEmails();
       fetchQueueStatus().then(() => {
         if (pollRef.current === null) {
-          // fetchQueueStatus will have set queueStatus - start polling if there are pending items
           startPolling();
         }
       });
