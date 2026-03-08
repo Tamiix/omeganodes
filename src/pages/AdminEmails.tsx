@@ -353,12 +353,60 @@ const AdminEmails = () => {
               <div className="flex gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {queueStatus.pending + queueStatus.sending} pending</span>
                 <span className="flex items-center gap-1"><CheckCircle className="w-3 h-3 text-green-500" /> {queueStatus.sent} sent</span>
-                {queueStatus.failed > 0 && (
-                  <span className="flex items-center gap-1"><XCircle className="w-3 h-3 text-destructive" /> {queueStatus.failed} failed</span>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+              {queueStatus.failed > 0 && (
+                   <span className="flex items-center gap-1"><XCircle className="w-3 h-3 text-destructive" /> {queueStatus.failed} failed</span>
+                 )}
+               </div>
+               {/* Retry / Clear buttons when queue is done */}
+               {queueStatus.pending === 0 && queueStatus.sending === 0 && (
+                 <div className="flex gap-2 pt-1">
+                   {queueStatus.failed > 0 && (
+                     <Button
+                       size="sm"
+                       variant="outline"
+                       onClick={async () => {
+                         try {
+                           const { error } = await supabase
+                             .from('email_queue')
+                             .update({ status: 'pending', error: null } as any)
+                             .eq('status', 'failed');
+                           if (error) throw error;
+                           toast({ title: 'Retrying', description: `${queueStatus.failed} failed emails re-queued.` });
+                           startPolling();
+                         } catch (err) {
+                           console.error(err);
+                           toast({ title: 'Error', description: 'Failed to retry emails.', variant: 'destructive' });
+                         }
+                       }}
+                     >
+                       <Send className="w-3 h-3 mr-1" /> Retry {queueStatus.failed} failed
+                     </Button>
+                   )}
+                   <Button
+                     size="sm"
+                     variant="ghost"
+                     className="text-muted-foreground"
+                     onClick={async () => {
+                       try {
+                         const { error } = await supabase
+                           .from('email_queue')
+                           .delete()
+                           .in('status', ['sent', 'failed']);
+                         if (error) throw error;
+                         setQueueStatus(null);
+                         toast({ title: 'Cleared', description: 'Queue history cleared.' });
+                       } catch (err) {
+                         console.error(err);
+                         toast({ title: 'Error', description: 'Failed to clear queue.', variant: 'destructive' });
+                       }
+                     }}
+                   >
+                     Clear history
+                   </Button>
+                 </div>
+               )}
+             </CardContent>
+           </Card>
         )}
 
         {/* Template Picker */}

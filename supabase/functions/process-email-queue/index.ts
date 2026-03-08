@@ -49,10 +49,17 @@ Deno.serve(async (req) => {
       .update({ status: "sending" })
       .in("id", ids);
 
+    const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
     let sent = 0;
     let failed = 0;
 
-    for (const item of pending) {
+    for (let i = 0; i < pending.length; i++) {
+      const item = pending[i];
+
+      // Wait 600ms between sends to stay under Resend's 2 req/s limit
+      if (i > 0) await delay(600);
+
       try {
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
