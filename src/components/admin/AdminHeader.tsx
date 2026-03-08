@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Shield, Users, UserCheck, Tag, Clock, Gift } from 'lucide-react';
+import { ArrowLeft, Shield, Users, UserCheck, Tag, Clock, Gift, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const AdminHeader = () => {
