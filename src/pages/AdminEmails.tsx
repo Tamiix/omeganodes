@@ -238,8 +238,7 @@ const AdminEmails = () => {
       });
       if (error) throw error;
 
-      toast({ title: 'Emails sent!', description: `${data.sent} sent, ${data.failed} failed out of ${data.total} recipients.` });
-      if (data.failed > 0) console.warn('Failed emails:', data.results.filter((r: any) => !r.success));
+      toast({ title: 'Emails queued!', description: `${data.queued} emails queued. They'll be sent in batches of 10 per minute.` });
     } catch (err) {
       console.error('Error sending emails:', err);
       toast({ title: 'Error', description: 'Failed to send emails.', variant: 'destructive' });

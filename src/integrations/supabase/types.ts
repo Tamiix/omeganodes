@@ -166,6 +166,45 @@ export type Database = {
         }
         Relationships: []
       }
+      email_queue: {
+        Row: {
+          created_at: string
+          created_by: string
+          error: string | null
+          from_name: string
+          html_content: string
+          id: string
+          recipient: string
+          sent_at: string | null
+          status: string
+          subject: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          error?: string | null
+          from_name?: string
+          html_content: string
+          id?: string
+          recipient: string
+          sent_at?: string | null
+          status?: string
+          subject: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          error?: string | null
+          from_name?: string
+          html_content?: string
+          id?: string
+          recipient?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           amount_usd: number
