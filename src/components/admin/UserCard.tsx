@@ -34,6 +34,7 @@ interface UserCardProps {
   onRevokeAdmin: (userId: string) => Promise<void>;
   updatingUser: string | null;
   index: number;
+  onUserDeleted?: () => void;
 }
 
 const UserCard = ({ 
@@ -42,7 +43,8 @@ const UserCard = ({
   onGrantAdmin, 
   onRevokeAdmin, 
   updatingUser,
-  index 
+  index,
+  onUserDeleted
 }: UserCardProps) => {
   const [isOverviewOpen, setIsOverviewOpen] = useState(false);
 
@@ -168,6 +170,7 @@ const UserCard = ({
         isOpen={isOverviewOpen}
         onClose={() => setIsOverviewOpen(false)}
         user={userItem}
+        onUserDeleted={onUserDeleted}
       />
     </>
   );
