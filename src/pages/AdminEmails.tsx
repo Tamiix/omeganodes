@@ -45,24 +45,40 @@ const buildHtml = (content: string) => `
 </body>
 </html>`;
 
-const templates: EmailTemplate[] = [
-  {
-    id: 'discount',
-    label: 'Discount Launch',
-    icon: <Percent className="w-4 h-4" />,
-    subject: '💰 Exclusive Discount on OmegaNodes',
-    body: buildHtml(`
-      <h1 style="font-size:22px;font-weight:700;color:#1a1a2e;margin:0 0 12px;">Exclusive deal, just for you</h1>
-      <p style="font-size:14px;color:#7f8494;line-height:1.6;margin:0 0 24px;">
-        We're running a limited-time discount on all our Solana node plans. Use the code below at checkout to save.
-      </p>
-      <div style="background:#f4f3ff;border:1px solid #e0dff5;border-radius:8px;padding:20px;text-align:center;margin-bottom:24px;">
-        <p style="font-size:12px;color:#7f8494;margin:0 0 6px;text-transform:uppercase;letter-spacing:1px;">Your discount code</p>
-        <p style="font-size:28px;font-weight:700;color:#5B4EE4;margin:0;letter-spacing:3px;font-family:'JetBrains Mono',monospace;">CODE HERE</p>
-      </div>
-      <a href="https://omeganodes.io/#pricing" style="display:inline-block;background:#5B4EE4;color:#fff;font-size:14px;font-weight:600;border-radius:8px;padding:12px 24px;text-decoration:none;">View Plans</a>
-    `),
-  },
+const codeBlockStyle = `background:#f4f3ff;border:1px solid #e0dff5;border-radius:8px;padding:16px;text-align:center;`;
+const codeLabelStyle = `font-size:11px;color:#7f8494;margin:0 0 4px;text-transform:uppercase;letter-spacing:1px;`;
+const codeValueStyle = `font-size:24px;font-weight:700;color:#5B4EE4;margin:0;letter-spacing:3px;font-family:'JetBrains Mono',monospace;`;
+const planLabelStyle = `font-size:13px;font-weight:600;color:#1a1a2e;margin:0 0 2px;`;
+
+const buildDiscountHtml = (sharedCode: string, dedicatedCode: string, sharedDiscount: string, dedicatedDiscount: string) => {
+  const sharedBlock = sharedCode ? `
+    <div style="${codeBlockStyle}margin-bottom:12px;">
+      <p style="${planLabelStyle}">Shared Servers${sharedDiscount ? ` — ${sharedDiscount}` : ''}</p>
+      <p style="${codeLabelStyle}">Discount code</p>
+      <p style="${codeValueStyle}">${sharedCode.toUpperCase()}</p>
+    </div>` : '';
+
+  const dedicatedBlock = dedicatedCode ? `
+    <div style="${codeBlockStyle}">
+      <p style="${planLabelStyle}">Dedicated Servers${dedicatedDiscount ? ` — ${dedicatedDiscount}` : ''}</p>
+      <p style="${codeLabelStyle}">Discount code</p>
+      <p style="${codeValueStyle}">${dedicatedCode.toUpperCase()}</p>
+    </div>` : '';
+
+  return buildHtml(`
+    <h1 style="font-size:22px;font-weight:700;color:#1a1a2e;margin:0 0 12px;">Exclusive deal, just for you</h1>
+    <p style="font-size:14px;color:#7f8494;line-height:1.6;margin:0 0 24px;">
+      We're running a limited-time discount on our Solana node plans. Use the codes below at checkout to save.
+    </p>
+    <div style="margin-bottom:24px;">
+      ${sharedBlock}
+      ${dedicatedBlock}
+    </div>
+    <a href="https://omeganodes.io/#pricing" style="display:inline-block;background:#5B4EE4;color:#fff;font-size:14px;font-weight:600;border-radius:8px;padding:12px 24px;text-decoration:none;">View Plans</a>
+  `);
+};
+
+const staticTemplates: EmailTemplate[] = [
   {
     id: 'announcement',
     label: 'Announcement',
