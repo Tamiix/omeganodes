@@ -10,6 +10,7 @@ const AdminHeader = () => {
   const isDiscountCodesPage = location.pathname === '/admin/discount-codes';
   const isAccessCodesPage = location.pathname === '/admin/access-codes';
   const isReferralsPage = location.pathname === '/admin/referrals';
+  const isEmailsPage = location.pathname === '/admin/emails';
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
