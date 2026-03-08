@@ -276,6 +276,7 @@ const Admin = () => {
                 onRevokeAdmin={revokeAdmin}
                 updatingUser={updatingUser}
                 index={index}
+                onUserDeleted={fetchUsers}
               />
             ))
           )}
