@@ -80,7 +80,7 @@ interface UserOverviewModalProps {
   onUserDeleted?: () => void;
 }
 
-const UserOverviewModal = ({ isOpen, onClose, user }: UserOverviewModalProps) => {
+const UserOverviewModal = ({ isOpen, onClose, user, onUserDeleted }: UserOverviewModalProps) => {
   const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
@@ -88,6 +88,43 @@ const UserOverviewModal = ({ isOpen, onClose, user }: UserOverviewModalProps) =>
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string>("🇩🇪 Frankfurt V2");
   const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
+  const [deletingUser, setDeletingUser] = useState(false);
+
+  const handleDeleteUser = async () => {
+    if (!confirm(`Are you sure you want to permanently delete ${user.username}'s account? This will remove ALL their data and cannot be undone.`)) {
+      return;
+    }
+    if (!confirm(`FINAL WARNING: This will delete the user "${user.email}" and all associated orders, referrals, and data. Continue?`)) {
+      return;
+    }
+
+    setDeletingUser(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke('delete-user', {
+        body: { user_id: user.user_id },
+      });
+
+      if (res.error) throw res.error;
+      if (res.data?.error) throw new Error(res.data.error);
+
+      toast({
+        title: 'User deleted',
+        description: `${user.username}'s account has been permanently deleted.`,
+      });
+      onClose();
+      onUserDeleted?.();
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete user',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeletingUser(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
