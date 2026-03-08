@@ -77,6 +77,7 @@ interface UserOverviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: UserProfile;
+  onUserDeleted?: () => void;
 }
 
 const UserOverviewModal = ({ isOpen, onClose, user }: UserOverviewModalProps) => {
