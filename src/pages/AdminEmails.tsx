@@ -25,13 +25,13 @@ const planLabelStyle = `font-size:13px;font-weight:600;color:#ffffff;margin:0 0 
 
 const wrapHtml = (content: string) => `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background-color:#ffffff;font-family:'Inter',system-ui,sans-serif;">
+<body style="margin:0;padding:0;background-color:#0f0f1a;font-family:'Inter',system-ui,sans-serif;">
 <div style="max-width:560px;margin:0 auto;padding:40px 28px;">
 <img src="${LOGO_URL}" width="40" height="40" alt="OmegaNodes" style="display:block;margin-bottom:28px;" />
 ${content}
-<p style="font-size:12px;color:#999;margin-top:40px;border-top:1px solid #eee;padding-top:20px;">
+<p style="font-size:12px;color:#555;margin-top:40px;border-top:1px solid #2a2a40;padding-top:20px;">
 OmegaNodes &mdash; Solana Node Infrastructure<br/>
-<a href="https://omeganodes.io" style="color:#5B4EE4;text-decoration:none;">omeganodes.io</a></p>
+<a href="https://omeganodes.io" style="color:#7C6FF7;text-decoration:none;">omeganodes.io</a></p>
 </div></body></html>`;
 
 interface DiscountState {
