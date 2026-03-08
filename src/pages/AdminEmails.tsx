@@ -13,25 +13,25 @@ import AdminHeader from '@/components/admin/AdminHeader';
 type Audience = 'single' | 'all' | 'active' | 'inactive';
 type TemplateType = 'discount' | 'announcement' | 'custom' | null;
 
-const LOGO_URL = 'https://mmkornqvbafkricqixgk.supabase.co/storage/v1/object/public/email-assets/omega-logo.png';
+const LOGO_URL = 'https://mmkornqvbafkricqixgk.supabase.co/storage/v1/object/public/email-assets/omega-logo-new.png';
 
-const h1Style = `font-size:22px;font-weight:700;color:#1a1a2e;margin:0 0 12px;`;
-const pStyle = `font-size:14px;color:#7f8494;line-height:1.6;margin:0 0 24px;`;
+const h1Style = `font-size:22px;font-weight:700;color:#ffffff;margin:0 0 12px;`;
+const pStyle = `font-size:14px;color:#a0a3b1;line-height:1.6;margin:0 0 24px;`;
 const btnStyle = `display:inline-block;background:#5B4EE4;color:#fff;font-size:14px;font-weight:600;border-radius:8px;padding:12px 24px;text-decoration:none;`;
-const codeBlockStyle = `background:#f4f3ff;border:1px solid #e0dff5;border-radius:8px;padding:16px;text-align:center;`;
-const codeLabelStyle = `font-size:11px;color:#7f8494;margin:0 0 4px;text-transform:uppercase;letter-spacing:1px;`;
-const codeValueStyle = `font-size:24px;font-weight:700;color:#5B4EE4;margin:0;letter-spacing:3px;font-family:'JetBrains Mono',monospace;`;
-const planLabelStyle = `font-size:13px;font-weight:600;color:#1a1a2e;margin:0 0 2px;`;
+const codeBlockStyle = `background:#1e1e30;border:1px solid #2a2a40;border-radius:8px;padding:16px;text-align:center;`;
+const codeLabelStyle = `font-size:11px;color:#a0a3b1;margin:0 0 4px;text-transform:uppercase;letter-spacing:1px;`;
+const codeValueStyle = `font-size:24px;font-weight:700;color:#7C6FF7;margin:0;letter-spacing:3px;font-family:'JetBrains Mono',monospace;`;
+const planLabelStyle = `font-size:13px;font-weight:600;color:#ffffff;margin:0 0 2px;`;
 
 const wrapHtml = (content: string) => `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background-color:#ffffff;font-family:'Inter',system-ui,sans-serif;">
+<body style="margin:0;padding:0;background-color:#0f0f1a;font-family:'Inter',system-ui,sans-serif;">
 <div style="max-width:560px;margin:0 auto;padding:40px 28px;">
 <img src="${LOGO_URL}" width="40" height="40" alt="OmegaNodes" style="display:block;margin-bottom:28px;" />
 ${content}
-<p style="font-size:12px;color:#999;margin-top:40px;border-top:1px solid #eee;padding-top:20px;">
+<p style="font-size:12px;color:#555;margin-top:40px;border-top:1px solid #2a2a40;padding-top:20px;">
 OmegaNodes &mdash; Solana Node Infrastructure<br/>
-<a href="https://omeganodes.io" style="color:#5B4EE4;text-decoration:none;">omeganodes.io</a></p>
+<a href="https://omeganodes.io" style="color:#7C6FF7;text-decoration:none;">omeganodes.io</a></p>
 </div></body></html>`;
 
 interface DiscountState {
@@ -72,7 +72,7 @@ const buildGenericHtml = (fields: ContentFields) => {
 
 const templateDefaults: Record<string, { subject: string; fields: ContentFields; discount?: DiscountState }> = {
   discount: {
-    subject: '💰 Exclusive Discount on OmegaNodes',
+    subject: 'Your exclusive discount on OmegaNodes',
     fields: {
       headline: 'Exclusive deal, just for you',
       message: "We're running a limited-time discount on our Solana node plans. Use the codes below at checkout to save.",
@@ -82,7 +82,7 @@ const templateDefaults: Record<string, { subject: string; fields: ContentFields;
     discount: { sharedCode: '', sharedDiscount: '', dedicatedCode: '', dedicatedDiscount: '' },
   },
   announcement: {
-    subject: '🚀 Big News from OmegaNodes',
+    subject: 'News from OmegaNodes',
     fields: {
       headline: 'Something new is here',
       message: "We've been working on something exciting and we're ready to share it with you.",
@@ -410,7 +410,7 @@ const AdminEmails = () => {
                 {htmlContent.trim() && (
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-muted-foreground">Preview</label>
-                    <div className="border border-border rounded-lg overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
+                    <div className="border border-border rounded-lg overflow-hidden" style={{ backgroundColor: '#0f0f1a' }}>
                       <iframe srcDoc={htmlContent} title="Email Preview" className="w-full border-0" style={{ height: '480px', pointerEvents: 'none' }} sandbox="" />
                     </div>
                   </div>
