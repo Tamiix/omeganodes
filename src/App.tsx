@@ -17,6 +17,7 @@ import Referral from "./pages/Referral";
 import AdminReferrals from "./pages/AdminReferrals";
 import RefRedirect from "./pages/RefRedirect";
 import OfficialLinks from "./pages/OfficialLinks";
+import AdminEmails from "./pages/AdminEmails";
 
 const queryClient = new QueryClient();
 
