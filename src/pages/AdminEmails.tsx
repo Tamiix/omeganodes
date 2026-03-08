@@ -13,15 +13,15 @@ import AdminHeader from '@/components/admin/AdminHeader';
 type Audience = 'single' | 'all' | 'active' | 'inactive';
 type TemplateType = 'discount' | 'announcement' | 'custom' | null;
 
-const LOGO_URL = 'https://mmkornqvbafkricqixgk.supabase.co/storage/v1/object/public/email-assets/omega-logo.png';
+const LOGO_URL = 'https://mmkornqvbafkricqixgk.supabase.co/storage/v1/object/public/email-assets/omega-logo-new.png';
 
-const h1Style = `font-size:22px;font-weight:700;color:#1a1a2e;margin:0 0 12px;`;
-const pStyle = `font-size:14px;color:#7f8494;line-height:1.6;margin:0 0 24px;`;
+const h1Style = `font-size:22px;font-weight:700;color:#ffffff;margin:0 0 12px;`;
+const pStyle = `font-size:14px;color:#a0a3b1;line-height:1.6;margin:0 0 24px;`;
 const btnStyle = `display:inline-block;background:#5B4EE4;color:#fff;font-size:14px;font-weight:600;border-radius:8px;padding:12px 24px;text-decoration:none;`;
-const codeBlockStyle = `background:#f4f3ff;border:1px solid #e0dff5;border-radius:8px;padding:16px;text-align:center;`;
-const codeLabelStyle = `font-size:11px;color:#7f8494;margin:0 0 4px;text-transform:uppercase;letter-spacing:1px;`;
-const codeValueStyle = `font-size:24px;font-weight:700;color:#5B4EE4;margin:0;letter-spacing:3px;font-family:'JetBrains Mono',monospace;`;
-const planLabelStyle = `font-size:13px;font-weight:600;color:#1a1a2e;margin:0 0 2px;`;
+const codeBlockStyle = `background:#1e1e30;border:1px solid #2a2a40;border-radius:8px;padding:16px;text-align:center;`;
+const codeLabelStyle = `font-size:11px;color:#a0a3b1;margin:0 0 4px;text-transform:uppercase;letter-spacing:1px;`;
+const codeValueStyle = `font-size:24px;font-weight:700;color:#7C6FF7;margin:0;letter-spacing:3px;font-family:'JetBrains Mono',monospace;`;
+const planLabelStyle = `font-size:13px;font-weight:600;color:#ffffff;margin:0 0 2px;`;
 
 const wrapHtml = (content: string) => `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
