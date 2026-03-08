@@ -160,11 +160,45 @@ const AdminEmails = () => {
     }
   }, []);
 
+  const fetchFailedEmails = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('email_queue')
+        .select('id, recipient, error, created_at')
+        .eq('status', 'failed')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setFailedEmails(data || []);
+    } catch (err) {
+      console.error('Error fetching failed emails:', err);
+    }
+  }, []);
+
+  const retryOneEmail = async (id: string) => {
+    setRetryingId(id);
+    try {
+      const { error } = await supabase
+        .from('email_queue')
+        .update({ status: 'pending', error: null } as any)
+        .eq('id', id);
+      if (error) throw error;
+      setFailedEmails(prev => prev.filter(e => e.id !== id));
+      toast({ title: 'Re-queued', description: 'Email will be retried shortly.' });
+      startPolling();
+    } catch (err) {
+      console.error(err);
+      toast({ title: 'Error', description: 'Failed to retry email.', variant: 'destructive' });
+    } finally {
+      setRetryingId(null);
+    }
+  };
+
   const startPolling = useCallback(() => {
     fetchQueueStatus();
+    fetchFailedEmails();
     if (pollRef.current) clearInterval(pollRef.current);
-    pollRef.current = setInterval(fetchQueueStatus, 5000);
-  }, [fetchQueueStatus]);
+    pollRef.current = setInterval(() => { fetchQueueStatus(); fetchFailedEmails(); }, 5000);
+  }, [fetchQueueStatus, fetchFailedEmails]);
 
   useEffect(() => {
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
