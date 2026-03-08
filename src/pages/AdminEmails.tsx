@@ -315,6 +315,43 @@ const AdminEmails = () => {
       <AdminHeader />
 
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-4xl space-y-6">
+        {/* Queue Status */}
+        {queueStatus && queueStatus.total > 0 && (
+          <Card className="bg-card border-border">
+            <CardContent className="pt-5 pb-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {queueStatus.pending > 0 || queueStatus.sending > 0 ? (
+                    <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                  ) : queueStatus.failed > 0 ? (
+                    <XCircle className="w-4 h-4 text-destructive" />
+                  ) : (
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                  )}
+                  <span className="text-sm font-medium text-foreground">
+                    {queueStatus.pending > 0 || queueStatus.sending > 0
+                      ? 'Sending emails...'
+                      : queueStatus.failed > 0
+                        ? `Done - ${queueStatus.failed} failed`
+                        : 'All emails sent!'}
+                  </span>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {queueStatus.sent + queueStatus.failed} / {queueStatus.total}
+                </span>
+              </div>
+              <Progress value={((queueStatus.sent + queueStatus.failed) / queueStatus.total) * 100} className="h-2" />
+              <div className="flex gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {queueStatus.pending + queueStatus.sending} pending</span>
+                <span className="flex items-center gap-1"><CheckCircle className="w-3 h-3 text-green-500" /> {queueStatus.sent} sent</span>
+                {queueStatus.failed > 0 && (
+                  <span className="flex items-center gap-1"><XCircle className="w-3 h-3 text-destructive" /> {queueStatus.failed} failed</span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Template Picker */}
         <div className="space-y-3">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Start from a template</h2>
