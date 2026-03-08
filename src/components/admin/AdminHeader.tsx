@@ -39,7 +39,7 @@ const AdminHeader = () => {
           {/* Navigation Tabs - horizontally scrollable on mobile */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
             <Button
-              variant={!isCustomersPage && !isDiscountCodesPage && !isAccessCodesPage && !isReferralsPage ? "default" : "ghost"}
+              variant={!isCustomersPage && !isDiscountCodesPage && !isAccessCodesPage && !isReferralsPage && !isEmailsPage ? "default" : "ghost"}
               size="sm"
               onClick={() => navigate('/admin')}
               className="gap-1.5 shrink-0 text-xs sm:text-sm h-8"
