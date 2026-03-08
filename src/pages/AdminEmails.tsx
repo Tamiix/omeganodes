@@ -127,6 +127,9 @@ const AdminEmails = () => {
   // Queue status tracking
   const [queueStatus, setQueueStatus] = useState<{ pending: number; sending: number; sent: number; failed: number; total: number } | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [failedEmails, setFailedEmails] = useState<{ id: string; recipient: string; error: string | null; created_at: string }[]>([]);
+  const [showFailed, setShowFailed] = useState(false);
+  const [retryingId, setRetryingId] = useState<string | null>(null);
 
   const fetchQueueStatus = useCallback(async () => {
     try {
