@@ -337,6 +337,12 @@ const Customers = () => {
                           <div className="text-right">
                             <p className="text-sm font-medium text-foreground">{formatPrice(Number(order.amount_usd))}/mo</p>
                             <p className="text-xs text-muted-foreground">{order.commitment}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                              {order.expires_at && (
+                                <span> → {new Date(order.expires_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                              )}
+                            </p>
                           </div>
                         </div>
                       ))}
