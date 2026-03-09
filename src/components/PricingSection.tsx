@@ -22,13 +22,13 @@ const dedicatedSpecs = [
     id: "epyc-9354p", 
     cpu: "AMD EPYC 9354p", 
     memory: "1024GB RAM", 
-    price: 1500
+    price: 1725
   },
   { 
     id: "epyc-9374f", 
     cpu: "AMD EPYC 9374F", 
     memory: "1024GB RAM", 
-    price: 1650
+    price: 1900
   },
 ];
 
