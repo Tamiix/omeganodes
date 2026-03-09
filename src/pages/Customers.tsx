@@ -99,6 +99,9 @@ const Customers = () => {
         const profile = (profiles || []).find(p => p.user_id === order.user_id);
         if (!profile) return;
 
+        // Skip expired orders
+        if (order.expires_at && new Date(order.expires_at) < now) return;
+
         if (!customerMap.has(order.user_id)) {
           customerMap.set(order.user_id, {
             profile: {
@@ -126,8 +129,7 @@ const Customers = () => {
             order.commitment !== 'trial' && 
             order.payment_method !== 'trial_code' && 
             order.commitment !== 'daily' &&
-            (order.status === 'completed' || order.status === 'active') &&
-            (!order.expires_at || new Date(order.expires_at) >= now)) {
+            (order.status === 'completed' || order.status === 'active')) {
           customer.hasActiveSub = true;
         }
       });
@@ -335,6 +337,12 @@ const Customers = () => {
                           <div className="text-right">
                             <p className="text-sm font-medium text-foreground">{formatPrice(Number(order.amount_usd))}/mo</p>
                             <p className="text-xs text-muted-foreground">{order.commitment}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                              {order.expires_at && (
+                                <span> → {new Date(order.expires_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                              )}
+                            </p>
                           </div>
                         </div>
                       ))}
