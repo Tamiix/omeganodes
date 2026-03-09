@@ -99,6 +99,9 @@ const Customers = () => {
         const profile = (profiles || []).find(p => p.user_id === order.user_id);
         if (!profile) return;
 
+        // Skip expired orders
+        if (order.expires_at && new Date(order.expires_at) < now) return;
+
         if (!customerMap.has(order.user_id)) {
           customerMap.set(order.user_id, {
             profile: {
@@ -126,8 +129,7 @@ const Customers = () => {
             order.commitment !== 'trial' && 
             order.payment_method !== 'trial_code' && 
             order.commitment !== 'daily' &&
-            (order.status === 'completed' || order.status === 'active') &&
-            (!order.expires_at || new Date(order.expires_at) >= now)) {
+            (order.status === 'completed' || order.status === 'active')) {
           customer.hasActiveSub = true;
         }
       });
