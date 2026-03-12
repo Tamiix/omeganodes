@@ -62,7 +62,7 @@ const SHREDS_PRICE = 800; // USD per month
 
 type PaymentStep = "select" | "processing" | "success" | "failed" | "partial";
 
-const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tps = 50, serverType = "shared", location = "all", rentAccessEnabled = false, isTestMode = false, discordUserId = "", appliedDiscount = null, includeShredsFromPricing = false, additionalStakePackages = 0, initialReferralCode }: CryptoPaymentModalProps) => {
+const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, planName, rps = 100, tps = 50, serverType = "shared", location = "all", rentAccessEnabled = false, isTestMode = false, discordUserId = "", appliedDiscount = null, includeShredsFromPricing = false, additionalStakePackages = 0, initialReferralCode }: CryptoPaymentModalProps) => {
   const [selectedCrypto, setSelectedCrypto] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [paymentStep, setPaymentStep] = useState<PaymentStep>("select");
