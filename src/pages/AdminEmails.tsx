@@ -79,9 +79,9 @@ const buildGenericHtml = (fields: ContentFields) => {
 
 const templateDefaults: Record<string, { subject: string; fields: ContentFields; discount?: DiscountState }> = {
   discount: {
-    subject: 'Your exclusive discount on OmegaNodes',
+    subject: 'Limited-time discount on OmegaNodes',
     fields: {
-      headline: 'Exclusive deal, just for you',
+      headline: 'Save on your next plan',
       message: "We're running a limited-time discount on our Solana node plans. Use the codes below at checkout to save.",
       buttonText: 'View Plans',
       buttonUrl: 'https://omeganodes.io/#pricing',
