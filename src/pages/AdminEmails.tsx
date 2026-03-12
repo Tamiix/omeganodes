@@ -66,6 +66,8 @@ const buildDiscountHtml = (d: DiscountState, fields: ContentFields) => {
 
   const sharedBlock = d.sharedCode ? codeCard('Shared Servers', d.sharedDiscount, d.sharedCode) : '';
   const dedicatedBlock = d.dedicatedCode ? codeCard('Dedicated Servers', d.dedicatedDiscount, d.dedicatedCode) : '';
+  const swqosBlock = d.swqosCode ? codeCard('swQoS Stake', d.swqosDiscount, d.swqosCode) : '';
+  const shredsBlock = d.shredsCode ? codeCard('Private Shreds', d.shredsDiscount, d.shredsCode) : '';
 
   return wrapHtml(`
 <h1 style="font-size:26px;font-weight:800;color:#ffffff;margin:0 0 12px;line-height:1.2;">${fields.headline}</h1>
