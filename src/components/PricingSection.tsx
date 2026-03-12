@@ -189,10 +189,12 @@ const PricingSection = () => {
 
   // Clear discount code when switching server type if code doesn't apply
   useEffect(() => {
-    if (appliedDiscount && appliedDiscount.applicable_to !== 'both' && appliedDiscount.applicable_to !== selectedServerType) {
+    if (appliedDiscount && appliedDiscount.applicable_to !== 'all' && appliedDiscount.applicable_to !== 'both' && appliedDiscount.applicable_to !== selectedServerType) {
+      // 'both' only covers shared+dedicated, not swqos
+      if (appliedDiscount.applicable_to === 'both' && (selectedServerType === 'shared' || selectedServerType === 'dedicated')) return;
       setAppliedDiscount(null);
       setDiscountCode("");
-      setDiscountError(`Code was removed - only valid for ${appliedDiscount.applicable_to} servers`);
+      setDiscountError(`Code was removed - only valid for ${appliedDiscount.applicable_to} plans`);
     }
   }, [selectedServerType]);
 
