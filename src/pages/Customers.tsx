@@ -142,7 +142,7 @@ const Customers = () => {
       });
 
       const customersArray = Array.from(customerMap.values())
-        .filter(c => c.orders.length > 0)
+        .filter(c => c.orders.length > 0 || c.totalSpent > 0)
         .sort((a, b) => b.totalSpent - a.totalSpent);
 
       setCustomers(customersArray);
