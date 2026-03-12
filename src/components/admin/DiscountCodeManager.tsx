@@ -48,7 +48,7 @@ const DiscountCodeManager = () => {
   const [formDiscountValue, setFormDiscountValue] = useState('');
   const [formExpiresAt, setFormExpiresAt] = useState('');
   const [formMaxUses, setFormMaxUses] = useState('');
-  const [formApplicableTo, setFormApplicableTo] = useState<'shared' | 'dedicated' | 'both'>('both');
+  const [formApplicableTo, setFormApplicableTo] = useState<'shared' | 'dedicated' | 'both' | 'swqos' | 'all'>('both');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
