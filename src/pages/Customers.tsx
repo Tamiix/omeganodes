@@ -99,8 +99,7 @@ const Customers = () => {
         const profile = (profiles || []).find(p => p.user_id === order.user_id);
         if (!profile) return;
 
-        // Skip expired orders
-        if (order.expires_at && new Date(order.expires_at) < now) return;
+        const isExpired = order.expires_at && new Date(order.expires_at) < now;
 
         if (!customerMap.has(order.user_id)) {
           customerMap.set(order.user_id, {
@@ -117,20 +116,28 @@ const Customers = () => {
         }
 
         const customer = customerMap.get(order.user_id)!;
-        customer.orders.push(order);
         
+        // Always count towards total spent (all-time sales)
         if (order.status === 'completed' || order.status === 'active') {
-          customer.activeOrdersCount++;
           customer.totalSpent += Number(order.amount_usd);
         }
 
-        // Check active sub (same logic as Admin page)
-        if (!order.is_test_order && 
-            order.commitment !== 'trial' && 
-            order.payment_method !== 'trial_code' && 
-            order.commitment !== 'daily' &&
-            (order.status === 'completed' || order.status === 'active')) {
-          customer.hasActiveSub = true;
+        // Only add non-expired orders to the visible list
+        if (!isExpired) {
+          customer.orders.push(order);
+          
+          if (order.status === 'completed' || order.status === 'active') {
+            customer.activeOrdersCount++;
+          }
+
+          // Check active sub (same logic as Admin page)
+          if (!order.is_test_order && 
+              order.commitment !== 'trial' && 
+              order.payment_method !== 'trial_code' && 
+              order.commitment !== 'daily' &&
+              (order.status === 'completed' || order.status === 'active')) {
+            customer.hasActiveSub = true;
+          }
         }
       });
 
