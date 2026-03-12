@@ -133,7 +133,7 @@ const AdminEmails = () => {
     headline: '', message: '', buttonText: '', buttonUrl: '',
   });
   const [discount, setDiscount] = useState<DiscountState>({
-    sharedCode: '', sharedDiscount: '', dedicatedCode: '', dedicatedDiscount: '',
+    sharedCode: '', sharedDiscount: '', dedicatedCode: '', dedicatedDiscount: '', swqosCode: '', swqosDiscount: '', shredsCode: '', shredsDiscount: '',
   });
 
   // Queue status tracking
