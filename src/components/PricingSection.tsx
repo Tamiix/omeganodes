@@ -62,7 +62,7 @@ interface AppliedDiscount {
   code: string;
   discount_type: 'percentage' | 'flat';
   discount_value: number;
-  applicable_to: 'shared' | 'dedicated' | 'both';
+  applicable_to: string;
 }
 
 const dedicatedLocations = [
@@ -189,10 +189,12 @@ const PricingSection = () => {
 
   // Clear discount code when switching server type if code doesn't apply
   useEffect(() => {
-    if (appliedDiscount && appliedDiscount.applicable_to !== 'both' && appliedDiscount.applicable_to !== selectedServerType) {
+    if (appliedDiscount && appliedDiscount.applicable_to !== 'all' && appliedDiscount.applicable_to !== 'both' && appliedDiscount.applicable_to !== selectedServerType) {
+      // 'both' only covers shared+dedicated, not swqos
+      if (appliedDiscount.applicable_to === 'both' && (selectedServerType === 'shared' || selectedServerType === 'dedicated')) return;
       setAppliedDiscount(null);
       setDiscountCode("");
-      setDiscountError(`Code was removed - only valid for ${appliedDiscount.applicable_to} servers`);
+      setDiscountError(`Code was removed - only valid for ${appliedDiscount.applicable_to} plans`);
     }
   }, [selectedServerType]);
 
@@ -302,7 +304,7 @@ const PricingSection = () => {
         code: result.code,
         discount_type: result.discount_type as 'percentage' | 'flat',
         discount_value: result.discount_value,
-        applicable_to: result.applicable_to as 'shared' | 'dedicated' | 'both'
+        applicable_to: result.applicable_to
       });
       setDiscountError("");
     } catch (err) {
@@ -385,7 +387,7 @@ const PricingSection = () => {
           code: result.code,
           discount_type: result.discount_type as 'percentage' | 'flat',
           discount_value: result.discount_value,
-          applicable_to: result.applicable_to as 'shared' | 'dedicated' | 'both'
+          applicable_to: result.applicable_to
         });
         setDiscountError("");
         setUnifiedCode("");

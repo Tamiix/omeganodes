@@ -31,7 +31,7 @@ interface DiscountCode {
   current_uses: number;
   is_active: boolean;
   created_at: string;
-  applicable_to: 'shared' | 'dedicated' | 'both';
+  applicable_to: 'shared' | 'dedicated' | 'both' | 'swqos' | 'all';
 }
 
 const DiscountCodeManager = () => {
@@ -48,7 +48,7 @@ const DiscountCodeManager = () => {
   const [formDiscountValue, setFormDiscountValue] = useState('');
   const [formExpiresAt, setFormExpiresAt] = useState('');
   const [formMaxUses, setFormMaxUses] = useState('');
-  const [formApplicableTo, setFormApplicableTo] = useState<'shared' | 'dedicated' | 'both'>('both');
+  const [formApplicableTo, setFormApplicableTo] = useState<'shared' | 'dedicated' | 'both' | 'swqos' | 'all'>('both');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -338,9 +338,13 @@ const DiscountCodeManager = () => {
                           ? 'bg-blue-500/10 text-blue-500' 
                           : code.applicable_to === 'dedicated' 
                             ? 'bg-purple-500/10 text-purple-500'
-                            : 'bg-muted text-muted-foreground'
+                            : code.applicable_to === 'swqos'
+                              ? 'bg-cyan-500/10 text-cyan-500'
+                              : code.applicable_to === 'all'
+                                ? 'bg-green-500/10 text-green-500'
+                                : 'bg-muted text-muted-foreground'
                       }`}>
-                        {code.applicable_to === 'shared' ? 'Shared Only' : code.applicable_to === 'dedicated' ? 'Dedicated Only' : 'All Plans'}
+                        {code.applicable_to === 'shared' ? 'Shared Only' : code.applicable_to === 'dedicated' ? 'Dedicated Only' : code.applicable_to === 'swqos' ? 'swQoS Only' : code.applicable_to === 'all' ? 'All Plans' : 'Shared & Dedicated'}
                       </span>
 
                       {/* Status Badges */}
@@ -527,19 +531,25 @@ const DiscountCodeManager = () => {
               <label className="block text-sm font-medium text-foreground mb-2">
                 Applicable To *
               </label>
-              <Select value={formApplicableTo} onValueChange={(v) => setFormApplicableTo(v as 'shared' | 'dedicated' | 'both')}>
+              <Select value={formApplicableTo} onValueChange={(v) => setFormApplicableTo(v as 'shared' | 'dedicated' | 'both' | 'swqos' | 'all')}>
                 <SelectTrigger className="bg-muted/30 border-border">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="all">
+                    All Plans (Shared, Dedicated & swQoS)
+                  </SelectItem>
                   <SelectItem value="both">
-                    All Plans (Shared & Dedicated)
+                    Shared & Dedicated
                   </SelectItem>
                   <SelectItem value="shared">
                     Shared Only
                   </SelectItem>
                   <SelectItem value="dedicated">
                     Dedicated Only
+                  </SelectItem>
+                  <SelectItem value="swqos">
+                    swQoS Only
                   </SelectItem>
                 </SelectContent>
               </Select>
