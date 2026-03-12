@@ -43,6 +43,10 @@ interface DiscountState {
   sharedDiscount: string;
   dedicatedCode: string;
   dedicatedDiscount: string;
+  swqosCode: string;
+  swqosDiscount: string;
+  shredsCode: string;
+  shredsDiscount: string;
 }
 
 interface ContentFields {
