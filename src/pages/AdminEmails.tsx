@@ -43,6 +43,10 @@ interface DiscountState {
   sharedDiscount: string;
   dedicatedCode: string;
   dedicatedDiscount: string;
+  swqosCode: string;
+  swqosDiscount: string;
+  shredsCode: string;
+  shredsDiscount: string;
 }
 
 interface ContentFields {
@@ -62,11 +66,13 @@ const buildDiscountHtml = (d: DiscountState, fields: ContentFields) => {
 
   const sharedBlock = d.sharedCode ? codeCard('Shared Servers', d.sharedDiscount, d.sharedCode) : '';
   const dedicatedBlock = d.dedicatedCode ? codeCard('Dedicated Servers', d.dedicatedDiscount, d.dedicatedCode) : '';
+  const swqosBlock = d.swqosCode ? codeCard('swQoS Stake', d.swqosDiscount, d.swqosCode) : '';
+  const shredsBlock = d.shredsCode ? codeCard('Private Shreds', d.shredsDiscount, d.shredsCode) : '';
 
   return wrapHtml(`
 <h1 style="font-size:26px;font-weight:800;color:#ffffff;margin:0 0 12px;line-height:1.2;">${fields.headline}</h1>
 <p style="font-size:15px;color:#8a8aa3;line-height:1.7;margin:0 0 28px;">${fields.message}</p>
-<div style="margin-bottom:28px;">${sharedBlock}${dedicatedBlock}</div>
+<div style="margin-bottom:28px;">${sharedBlock}${dedicatedBlock}${swqosBlock}${shredsBlock}</div>
 <a href="${fields.buttonUrl}" style="display:inline-block;background:linear-gradient(135deg,#5B4EE4,#7C6FF7);color:#fff;font-size:14px;font-weight:600;border-radius:10px;padding:14px 32px;text-decoration:none;box-shadow:0 4px 20px rgba(91,78,228,0.35);">${fields.buttonText}</a>`);
 };
 
@@ -86,7 +92,7 @@ const templateDefaults: Record<string, { subject: string; fields: ContentFields;
       buttonText: 'View Plans',
       buttonUrl: 'https://omeganodes.io/#pricing',
     },
-    discount: { sharedCode: '', sharedDiscount: '', dedicatedCode: '', dedicatedDiscount: '' },
+    discount: { sharedCode: '', sharedDiscount: '', dedicatedCode: '', dedicatedDiscount: '', swqosCode: '', swqosDiscount: '', shredsCode: '', shredsDiscount: '' },
   },
   announcement: {
     subject: 'News from OmegaNodes',
@@ -127,7 +133,7 @@ const AdminEmails = () => {
     headline: '', message: '', buttonText: '', buttonUrl: '',
   });
   const [discount, setDiscount] = useState<DiscountState>({
-    sharedCode: '', sharedDiscount: '', dedicatedCode: '', dedicatedDiscount: '',
+    sharedCode: '', sharedDiscount: '', dedicatedCode: '', dedicatedDiscount: '', swqosCode: '', swqosDiscount: '', shredsCode: '', shredsDiscount: '',
   });
 
   // Queue status tracking
@@ -543,8 +549,18 @@ const AdminEmails = () => {
                       <Input value={discount.dedicatedCode} onChange={(e) => updateDiscount('dedicatedCode', e.target.value)} placeholder="e.g. DEDI15" className="bg-card border-border font-mono uppercase" />
                       <Input value={discount.dedicatedDiscount} onChange={(e) => updateDiscount('dedicatedDiscount', e.target.value)} placeholder="e.g. 15% off" className="bg-card border-border text-sm" />
                     </div>
+                    <div className="space-y-3 p-4 rounded-lg border border-border bg-background">
+                      <p className="text-sm font-medium text-foreground">swQoS Stake</p>
+                      <Input value={discount.swqosCode} onChange={(e) => updateDiscount('swqosCode', e.target.value)} placeholder="e.g. STAKE10" className="bg-card border-border font-mono uppercase" />
+                      <Input value={discount.swqosDiscount} onChange={(e) => updateDiscount('swqosDiscount', e.target.value)} placeholder="e.g. 10% off" className="bg-card border-border text-sm" />
+                    </div>
+                    <div className="space-y-3 p-4 rounded-lg border border-border bg-background">
+                      <p className="text-sm font-medium text-foreground">Private Shreds</p>
+                      <Input value={discount.shredsCode} onChange={(e) => updateDiscount('shredsCode', e.target.value)} placeholder="e.g. SHREDS15" className="bg-card border-border font-mono uppercase" />
+                      <Input value={discount.shredsDiscount} onChange={(e) => updateDiscount('shredsDiscount', e.target.value)} placeholder="e.g. 15% off" className="bg-card border-border text-sm" />
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-3">Leave a field empty to exclude that server type.</p>
+                  <p className="text-xs text-muted-foreground mt-3">Leave a field empty to exclude that product from the email.</p>
                 </CardContent>
               </Card>
             )}
