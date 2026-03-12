@@ -387,7 +387,7 @@ const PricingSection = () => {
           code: result.code,
           discount_type: result.discount_type as 'percentage' | 'flat',
           discount_value: result.discount_value,
-          applicable_to: result.applicable_to as 'shared' | 'dedicated' | 'both'
+          applicable_to: result.applicable_to
         });
         setDiscountError("");
         setUnifiedCode("");
