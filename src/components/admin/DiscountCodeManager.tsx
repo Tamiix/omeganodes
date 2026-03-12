@@ -527,19 +527,25 @@ const DiscountCodeManager = () => {
               <label className="block text-sm font-medium text-foreground mb-2">
                 Applicable To *
               </label>
-              <Select value={formApplicableTo} onValueChange={(v) => setFormApplicableTo(v as 'shared' | 'dedicated' | 'both')}>
+              <Select value={formApplicableTo} onValueChange={(v) => setFormApplicableTo(v as 'shared' | 'dedicated' | 'both' | 'swqos' | 'all')}>
                 <SelectTrigger className="bg-muted/30 border-border">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="all">
+                    All Plans (Shared, Dedicated & swQoS)
+                  </SelectItem>
                   <SelectItem value="both">
-                    All Plans (Shared & Dedicated)
+                    Shared & Dedicated
                   </SelectItem>
                   <SelectItem value="shared">
                     Shared Only
                   </SelectItem>
                   <SelectItem value="dedicated">
                     Dedicated Only
+                  </SelectItem>
+                  <SelectItem value="swqos">
+                    swQoS Only
                   </SelectItem>
                 </SelectContent>
               </Select>
