@@ -31,7 +31,7 @@ interface DiscountCode {
   current_uses: number;
   is_active: boolean;
   created_at: string;
-  applicable_to: 'shared' | 'dedicated' | 'both';
+  applicable_to: 'shared' | 'dedicated' | 'both' | 'swqos' | 'all';
 }
 
 const DiscountCodeManager = () => {
