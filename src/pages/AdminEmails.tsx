@@ -72,7 +72,7 @@ const buildDiscountHtml = (d: DiscountState, fields: ContentFields) => {
   return wrapHtml(`
 <h1 style="font-size:26px;font-weight:800;color:#ffffff;margin:0 0 12px;line-height:1.2;">${fields.headline}</h1>
 <p style="font-size:15px;color:#8a8aa3;line-height:1.7;margin:0 0 28px;">${fields.message}</p>
-<div style="margin-bottom:28px;">${sharedBlock}${dedicatedBlock}</div>
+<div style="margin-bottom:28px;">${sharedBlock}${dedicatedBlock}${swqosBlock}${shredsBlock}</div>
 <a href="${fields.buttonUrl}" style="display:inline-block;background:linear-gradient(135deg,#5B4EE4,#7C6FF7);color:#fff;font-size:14px;font-weight:600;border-radius:10px;padding:14px 32px;text-decoration:none;box-shadow:0 4px 20px rgba(91,78,228,0.35);">${fields.buttonText}</a>`);
 };
 
