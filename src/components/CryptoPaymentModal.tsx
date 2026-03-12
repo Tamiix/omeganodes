@@ -18,6 +18,7 @@ interface CryptoPaymentModalProps {
   onClose: () => void;
   amount: number;
   commitment: string;
+  planName?: string;
   rps?: number;
   tps?: number;
   serverType?: string;
