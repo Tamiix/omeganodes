@@ -17,22 +17,25 @@ type TemplateType = 'discount' | 'announcement' | 'custom' | null;
 
 const LOGO_URL = 'https://mmkornqvbafkricqixgk.supabase.co/storage/v1/object/public/email-assets/omega-logo-new.png';
 
-const h1Style = `font-size:22px;font-weight:700;color:#ffffff;margin:0 0 12px;`;
-const pStyle = `font-size:14px;color:#a0a3b1;line-height:1.6;margin:0 0 24px;`;
-const btnStyle = `display:inline-block;background:#5B4EE4;color:#fff;font-size:14px;font-weight:600;border-radius:8px;padding:12px 24px;text-decoration:none;`;
-const codeBlockStyle = `background:#1e1e30;border:1px solid #2a2a40;border-radius:8px;padding:16px;text-align:center;`;
-const codeLabelStyle = `font-size:11px;color:#a0a3b1;margin:0 0 4px;text-transform:uppercase;letter-spacing:1px;`;
-const codeValueStyle = `font-size:24px;font-weight:700;color:#7C6FF7;margin:0;letter-spacing:3px;font-family:'JetBrains Mono',monospace;`;
-const planLabelStyle = `font-size:13px;font-weight:600;color:#ffffff;margin:0 0 2px;`;
-
 const wrapHtml = (content: string) => `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background-color:#0f0f1a;font-family:'Inter',system-ui,sans-serif;">
-<div style="max-width:560px;margin:0 auto;padding:40px 28px;">
-<img src="${LOGO_URL}" width="40" height="40" alt="OmegaNodes" style="display:block;margin-bottom:28px;" />
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+</style>
+</head>
+<body style="margin:0;padding:0;background-color:#0a0a14;font-family:'Inter',system-ui,sans-serif;">
+<div style="max-width:560px;margin:0 auto;padding:48px 32px;">
+
+<!-- Logo -->
+<img src="${LOGO_URL}" width="36" height="36" alt="OmegaNodes" style="display:block;margin-bottom:32px;" />
+
 ${content}
-<p style="font-size:12px;color:#555;margin-top:40px;border-top:1px solid #2a2a40;padding-top:20px;">
-OmegaNodes - Solana Node Infrastructure</p>
+
+<!-- Footer -->
+<div style="margin-top:48px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.06);">
+<p style="font-size:11px;color:#555;margin:0;">OmegaNodes &middot; Solana Node Infrastructure</p>
+</div>
+
 </div></body></html>`;
 
 interface DiscountState {
@@ -50,25 +53,28 @@ interface ContentFields {
 }
 
 const buildDiscountHtml = (d: DiscountState, fields: ContentFields) => {
-  const sharedBlock = d.sharedCode ? `<div style="${codeBlockStyle}margin-bottom:12px;">
-    <p style="${planLabelStyle}">Shared Servers${d.sharedDiscount ? ` - ${d.sharedDiscount}` : ''}</p>
-    <p style="${codeLabelStyle}">Discount code</p>
-    <p style="${codeValueStyle}">${d.sharedCode.toUpperCase()}</p></div>` : '';
-  const dedicatedBlock = d.dedicatedCode ? `<div style="${codeBlockStyle}">
-    <p style="${planLabelStyle}">Dedicated Servers${d.dedicatedDiscount ? ` - ${d.dedicatedDiscount}` : ''}</p>
-    <p style="${codeLabelStyle}">Discount code</p>
-    <p style="${codeValueStyle}">${d.dedicatedCode.toUpperCase()}</p></div>` : '';
+  const codeCard = (label: string, detail: string, code: string) => `
+<div style="background:linear-gradient(135deg,#13132a 0%,#1a1a35 100%);border:1px solid rgba(91,78,228,0.2);border-radius:12px;padding:20px 24px;margin-bottom:12px;">
+  <p style="font-size:14px;font-weight:600;color:#fff;margin:0 0 12px;">${label}${detail ? ` &mdash; ${detail}` : ''}</p>
+  <p style="font-size:10px;font-weight:600;color:#6b6b8a;margin:0 0 6px;text-transform:uppercase;letter-spacing:1.5px;">Discount code</p>
+  <p style="font-size:28px;font-weight:800;color:#7C6FF7;margin:0;letter-spacing:4px;font-family:'JetBrains Mono',monospace;">${code.toUpperCase()}</p>
+</div>`;
 
-  return wrapHtml(`<h1 style="${h1Style}">${fields.headline}</h1>
-<p style="${pStyle}">${fields.message}</p>
-<div style="margin-bottom:24px;">${sharedBlock}${dedicatedBlock}</div>
-<a href="${fields.buttonUrl}" style="${btnStyle}">${fields.buttonText}</a>`);
+  const sharedBlock = d.sharedCode ? codeCard('Shared Servers', d.sharedDiscount, d.sharedCode) : '';
+  const dedicatedBlock = d.dedicatedCode ? codeCard('Dedicated Servers', d.dedicatedDiscount, d.dedicatedCode) : '';
+
+  return wrapHtml(`
+<h1 style="font-size:26px;font-weight:800;color:#ffffff;margin:0 0 12px;line-height:1.2;">${fields.headline}</h1>
+<p style="font-size:15px;color:#8a8aa3;line-height:1.7;margin:0 0 28px;">${fields.message}</p>
+<div style="margin-bottom:28px;">${sharedBlock}${dedicatedBlock}</div>
+<a href="${fields.buttonUrl}" style="display:inline-block;background:linear-gradient(135deg,#5B4EE4,#7C6FF7);color:#fff;font-size:14px;font-weight:600;border-radius:10px;padding:14px 32px;text-decoration:none;box-shadow:0 4px 20px rgba(91,78,228,0.35);">${fields.buttonText}</a>`);
 };
 
 const buildGenericHtml = (fields: ContentFields) => {
-  return wrapHtml(`<h1 style="${h1Style}">${fields.headline}</h1>
-<p style="${pStyle}">${fields.message.replace(/\n/g, '<br/>')}</p>
-<a href="${fields.buttonUrl}" style="${btnStyle}">${fields.buttonText}</a>`);
+  return wrapHtml(`
+<h1 style="font-size:26px;font-weight:800;color:#ffffff;margin:0 0 12px;line-height:1.2;">${fields.headline}</h1>
+<p style="font-size:15px;color:#8a8aa3;line-height:1.7;margin:0 0 28px;">${fields.message.replace(/\n/g, '<br/>')}</p>
+<a href="${fields.buttonUrl}" style="display:inline-block;background:linear-gradient(135deg,#5B4EE4,#7C6FF7);color:#fff;font-size:14px;font-weight:600;border-radius:10px;padding:14px 32px;text-decoration:none;box-shadow:0 4px 20px rgba(91,78,228,0.35);">${fields.buttonText}</a>`);
 };
 
 const templateDefaults: Record<string, { subject: string; fields: ContentFields; discount?: DiscountState }> = {
