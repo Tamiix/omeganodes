@@ -62,7 +62,7 @@ interface AppliedDiscount {
   code: string;
   discount_type: 'percentage' | 'flat';
   discount_value: number;
-  applicable_to: 'shared' | 'dedicated' | 'both';
+  applicable_to: string;
 }
 
 const dedicatedLocations = [
