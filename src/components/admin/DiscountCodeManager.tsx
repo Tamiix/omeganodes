@@ -338,9 +338,13 @@ const DiscountCodeManager = () => {
                           ? 'bg-blue-500/10 text-blue-500' 
                           : code.applicable_to === 'dedicated' 
                             ? 'bg-purple-500/10 text-purple-500'
-                            : 'bg-muted text-muted-foreground'
+                            : code.applicable_to === 'swqos'
+                              ? 'bg-cyan-500/10 text-cyan-500'
+                              : code.applicable_to === 'all'
+                                ? 'bg-green-500/10 text-green-500'
+                                : 'bg-muted text-muted-foreground'
                       }`}>
-                        {code.applicable_to === 'shared' ? 'Shared Only' : code.applicable_to === 'dedicated' ? 'Dedicated Only' : 'All Plans'}
+                        {code.applicable_to === 'shared' ? 'Shared Only' : code.applicable_to === 'dedicated' ? 'Dedicated Only' : code.applicable_to === 'swqos' ? 'swQoS Only' : code.applicable_to === 'all' ? 'All Plans' : 'Shared & Dedicated'}
                       </span>
 
                       {/* Status Badges */}
