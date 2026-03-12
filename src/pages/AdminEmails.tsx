@@ -549,8 +549,18 @@ const AdminEmails = () => {
                       <Input value={discount.dedicatedCode} onChange={(e) => updateDiscount('dedicatedCode', e.target.value)} placeholder="e.g. DEDI15" className="bg-card border-border font-mono uppercase" />
                       <Input value={discount.dedicatedDiscount} onChange={(e) => updateDiscount('dedicatedDiscount', e.target.value)} placeholder="e.g. 15% off" className="bg-card border-border text-sm" />
                     </div>
+                    <div className="space-y-3 p-4 rounded-lg border border-border bg-background">
+                      <p className="text-sm font-medium text-foreground">swQoS Stake</p>
+                      <Input value={discount.swqosCode} onChange={(e) => updateDiscount('swqosCode', e.target.value)} placeholder="e.g. STAKE10" className="bg-card border-border font-mono uppercase" />
+                      <Input value={discount.swqosDiscount} onChange={(e) => updateDiscount('swqosDiscount', e.target.value)} placeholder="e.g. 10% off" className="bg-card border-border text-sm" />
+                    </div>
+                    <div className="space-y-3 p-4 rounded-lg border border-border bg-background">
+                      <p className="text-sm font-medium text-foreground">Private Shreds</p>
+                      <Input value={discount.shredsCode} onChange={(e) => updateDiscount('shredsCode', e.target.value)} placeholder="e.g. SHREDS15" className="bg-card border-border font-mono uppercase" />
+                      <Input value={discount.shredsDiscount} onChange={(e) => updateDiscount('shredsDiscount', e.target.value)} placeholder="e.g. 15% off" className="bg-card border-border text-sm" />
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-3">Leave a field empty to exclude that server type.</p>
+                  <p className="text-xs text-muted-foreground mt-3">Leave a field empty to exclude that product from the email.</p>
                 </CardContent>
               </Card>
             )}
