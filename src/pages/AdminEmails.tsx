@@ -92,7 +92,7 @@ const templateDefaults: Record<string, { subject: string; fields: ContentFields;
       buttonText: 'View Plans',
       buttonUrl: 'https://omeganodes.io/#pricing',
     },
-    discount: { sharedCode: '', sharedDiscount: '', dedicatedCode: '', dedicatedDiscount: '' },
+    discount: { sharedCode: '', sharedDiscount: '', dedicatedCode: '', dedicatedDiscount: '', swqosCode: '', swqosDiscount: '', shredsCode: '', shredsDiscount: '' },
   },
   announcement: {
     subject: 'News from OmegaNodes',
