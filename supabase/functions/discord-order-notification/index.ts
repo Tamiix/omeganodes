@@ -5,7 +5,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Webhook URL stored securely as environment variable
 const DISCORD_WEBHOOK_URL = Deno.env.get('DISCORD_ORDER_WEBHOOK_URL') || '';
 
 interface OrderDetails {
@@ -32,212 +31,155 @@ interface OrderDetails {
   privateShredsEnabled?: boolean;
 }
 
+function buildEmbed(order: OrderDetails) {
+  const isFreeOrder = order.totalAmount === 0 && !order.isTrial;
+  const isDedicated = order.serverType === "dedicated" || order.serverType === "Dedicated";
+  const isSwQoS = order.serverType === "swqos";
+
+  // Clean title and accent color
+  let title: string;
+  let color: number;
+
+  if (order.isTrial) {
+    title = "Trial Activated";
+    color = 0x3B82F6; // blue
+  } else if (order.isTestMode) {
+    title = "Test Order";
+    color = 0xEAB308; // yellow
+  } else if (isFreeOrder) {
+    title = "Free Order (100% Discount)";
+    color = 0x8B5CF6; // purple
+  } else if (isDedicated) {
+    title = "Dedicated Server Order";
+    color = 0xF59E0B; // amber
+  } else if (isSwQoS) {
+    title = "swQoS Order";
+    color = 0x06B6D4; // cyan
+  } else {
+    title = "Shared Server Order";
+    color = 0x22C55E; // green
+  }
+
+  // Product line — shows what was actually ordered
+  const product = order.plan || order.serverType || "Unknown";
+
+  // Order details as a compact block
+  const detailLines: string[] = [];
+  detailLines.push(`**Product:** ${product}`);
+  if (!order.isTrial) {
+    detailLines.push(`**Term:** ${order.commitment}`);
+  }
+
+  // Add-ons (only relevant ones)
+  if (isDedicated) {
+    const hasShreds = order.includeShreds || order.privateShredsEnabled;
+    if (hasShreds) detailLines.push(`**Private Shreds:** Yes`);
+    const stakePackages = order.additionalStakePackages || 0;
+    if (stakePackages > 0) {
+      const totalStake = 50000 + (stakePackages * 100000);
+      detailLines.push(`**Extra Stake:** ${stakePackages}x (${totalStake.toLocaleString()} SOL)`);
+    }
+    if (order.swqosTier !== null && order.swqosTier !== undefined) {
+      detailLines.push(`**swQoS:** ${order.swqosLabel || "Selected"}`);
+    }
+  }
+  if (order.rentAccessEnabled) {
+    detailLines.push(`**Rent Access:** Enabled`);
+  }
+
+  // Payment
+  let amountStr: string;
+  if (order.isTrial) {
+    amountStr = "Free Trial";
+  } else if (isFreeOrder) {
+    amountStr = "$0.00 (100% off)";
+  } else {
+    amountStr = `$${(order.totalAmount || 0).toLocaleString()}`;
+  }
+  detailLines.push(`**Amount:** ${amountStr}`);
+
+  if (order.discountCode) {
+    detailLines.push(`**Discount:** \`${order.discountCode}\``);
+  }
+
+  // Transaction
+  if (!order.isTrial && order.transactionSignature) {
+    const sig = order.transactionSignature;
+    if (sig.startsWith("FREE-") || sig.startsWith("TEST-") || sig.startsWith("TRIAL-")) {
+      detailLines.push(`**Ref:** \`${sig}\``);
+    } else {
+      const url = `https://solscan.io/tx/${sig}`;
+      detailLines.push(`**Tx:** [\`${sig.slice(0, 8)}...${sig.slice(-8)}\`](${url})`);
+    }
+  }
+
+  // Customer
+  detailLines.push(`**Email:** ${order.email || "N/A"}`);
+  if (order.discordId) {
+    detailLines.push(`**Discord:** <@${order.discordId}>`);
+  }
+
+  const fields = [
+    {
+      name: "\u200b",
+      value: detailLines.join("\n"),
+      inline: false
+    }
+  ];
+
+  // Footer
+  let footerText: string;
+  if (order.isTrial) {
+    footerText = "Trial — expires in 30 minutes";
+  } else if (order.isTestMode) {
+    footerText = "Test order — not real";
+  } else {
+    footerText = "OmegaNode";
+  }
+
+  return {
+    title,
+    color,
+    fields,
+    footer: { text: footerText },
+    timestamp: new Date().toISOString()
+  };
+}
+
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const orderDetails: OrderDetails = await req.json();
-    
     console.log("Sending Discord notification for order:", orderDetails);
 
-    const isFreeOrder = orderDetails.totalAmount === 0 && !orderDetails.isTrial;
-    const hasDiscount = !!orderDetails.discountCode;
-
-    // Determine title, color, and emoji based on order type
-    let title: string;
-    let color: number;
-    let thumbnailUrl: string;
-    
-    if (orderDetails.isTrial) {
-      title = "🎁 New Trial Activated";
-      color = 3447003; // Blue
-      thumbnailUrl = "https://cdn-icons-png.flaticon.com/512/2991/2991195.png";
-    } else if (orderDetails.isTestMode) {
-      title = "🧪 Test Order Created";
-      color = 16776960; // Yellow
-      thumbnailUrl = "https://cdn-icons-png.flaticon.com/512/2991/2991148.png";
-    } else if (isFreeOrder) {
-      title = "🎉 Free Order (100% Discount)";
-      color = 10181046; // Purple
-      thumbnailUrl = "https://cdn-icons-png.flaticon.com/512/3135/3135706.png";
-    } else if (orderDetails.serverType === "dedicated" || orderDetails.serverType === "Dedicated") {
-      title = "🚀 New Dedicated Server Order";
-      color = 15844367; // Gold
-      thumbnailUrl = "https://cdn-icons-png.flaticon.com/512/2991/2991112.png";
-    } else {
-      title = "✨ New Shared Server Order";
-      color = 5763719; // Green
-      thumbnailUrl = "https://cdn-icons-png.flaticon.com/512/2991/2991112.png";
-    }
-
-    // Build plan details - don't show "Term" for trial code redemptions
-    const planLines = [
-      `> **Type:** ${orderDetails.serverType}`,
-      `> **Plan:** ${orderDetails.plan}`,
-    ];
-    
-    // Only add Term for non-trial orders
-    if (!orderDetails.isTrial) {
-      planLines.push(`> **Term:** ${orderDetails.commitment}`);
-    }
-
-    // Build add-ons section for dedicated servers
-    const addOnLines: string[] = [];
     const isDedicated = orderDetails.serverType === "dedicated" || orderDetails.serverType === "Dedicated";
-    
-    if (isDedicated) {
-      // Check for shreds (from either field name)
-      const hasShreds = orderDetails.includeShreds || orderDetails.privateShredsEnabled;
-      addOnLines.push(`> **Private Shreds:** ${hasShreds ? "✅ Yes (+$800/mo)" : "❌ No"}`);
-      
-      // Check for additional stake packages
-      const stakePackages = orderDetails.additionalStakePackages || 0;
-      if (stakePackages > 0) {
-        const totalStake = 50000 + (stakePackages * 100000);
-        addOnLines.push(`> **Extra Stake:** ✅ ${stakePackages}x packages (${totalStake.toLocaleString()} SOL total)`);
-      } else {
-        addOnLines.push(`> **Extra Stake:** ❌ Base only (50,000 SOL)`);
-      }
-      
-      // Legacy swQoS support
-      if (orderDetails.swqosTier !== null && orderDetails.swqosTier !== undefined) {
-        addOnLines.push(`> **swQoS:** ✅ ${orderDetails.swqosLabel || "Selected"}`);
-      }
-    }
 
-    // Rent access
-    if (orderDetails.rentAccessEnabled) {
-      addOnLines.push(`> **Rent Access:** ✅ Enabled (+15%)`);
-    }
+    // Staff pings
+    let pingMessage = isDedicated
+      ? "||<@404356986340114442> <@545046451219070980>||"
+      : "||<@404356986340114442>||";
 
-    // Build payment section
-    const paymentLines: string[] = [];
-    if (orderDetails.isTrial) {
-      paymentLines.push(`> **Amount:** \`FREE TRIAL\``);
-    } else if (isFreeOrder) {
-      paymentLines.push(`> **Amount:** \`$0.00\` (100% discounted)`);
-    } else {
-      paymentLines.push(`> **Amount:** \`$${(orderDetails.totalAmount || 0).toLocaleString()}\``);
-    }
+    // Label
+    let label = "NEW ORDER";
+    if (orderDetails.isTrial) label = "TRIAL REQUEST";
+    else if (orderDetails.isTestMode) label = "TEST ORDER";
+    else if (orderDetails.totalAmount === 0 && !orderDetails.isTrial) label = "FREE ORDER";
+    else if (isDedicated) label = "DEDICATED SERVER";
 
-    // Discount code info
-    if (hasDiscount) {
-      paymentLines.push(`> **Discount Code:** 🏷️ \`${orderDetails.discountCode}\``);
-    } else {
-      paymentLines.push(`> **Discount Code:** None used`);
-    }
-
-    // Transaction link - add Solscan link for real crypto payments
-    if (!orderDetails.isTrial && orderDetails.transactionSignature) {
-      if (orderDetails.transactionSignature.startsWith("FREE-")) {
-        paymentLines.push(`> **Reference:** \`${orderDetails.transactionSignature}\``);
-      } else if (orderDetails.transactionSignature.startsWith("TEST-") || orderDetails.transactionSignature.startsWith("TRIAL-")) {
-        paymentLines.push(`> **Reference:** \`${orderDetails.transactionSignature}\``);
-      } else {
-        // Real crypto payment - add prominent Solscan link
-        const solscanUrl = `https://solscan.io/tx/${orderDetails.transactionSignature}`;
-        paymentLines.push(`> **Transaction:** [\`${orderDetails.transactionSignature.slice(0, 8)}...${orderDetails.transactionSignature.slice(-8)}\`](${solscanUrl})`);
-        paymentLines.push(`> 🔗 **[Verify on Solscan](${solscanUrl})**`);
-      }
-    }
-
-    const fields = [
-      {
-        name: "📦 Server Details",
-        value: planLines.join("\n"),
-        inline: false
-      }
-    ];
-
-    // Add add-ons field if there are any
-    if (addOnLines.length > 0) {
-      fields.push({
-        name: "➕ Add-ons & Options",
-        value: addOnLines.join("\n"),
-        inline: false
-      });
-    }
-
-    fields.push({
-      name: "💳 Payment Information",
-      value: paymentLines.join("\n"),
-      inline: false
-    });
-
-    fields.push({
-      name: "👤 Customer Details",
-      value: [
-        `> **Email:** ${orderDetails.email || "Not provided"}`,
-        `> **Discord:** ${orderDetails.discordId ? `<@${orderDetails.discordId}>` : "Not provided"}`
-      ].join("\n"),
-      inline: false
-    });
-
-    const embed = {
-      title,
-      color,
-      thumbnail: {
-        url: thumbnailUrl
-      },
-      fields,
-      footer: {
-        text: orderDetails.isTrial 
-          ? "🕐 Trial expires in 30 minutes" 
-          : orderDetails.isTestMode 
-            ? "⚠️ This is a TEST order - not real" 
-            : isFreeOrder
-              ? "🎉 100% discount applied"
-              : "OmegaNode • Powered by Solana",
-        icon_url: "https://cdn-icons-png.flaticon.com/512/2991/2991112.png"
-      },
-      timestamp: new Date().toISOString()
-    };
-
-    // Build content with staff pings based on order type
-    // 545046451219070980 - only for dedicated orders
-    // 404356986340114442 - for all orders including dedicated
-    let pingMessage = "";
-    if (isDedicated) {
-      // Both users for dedicated orders
-      pingMessage = "||<@404356986340114442> <@545046451219070980>||";
-    } else {
-      // Only first user for non-dedicated orders
-      pingMessage = "||<@404356986340114442>||";
-    }
-    
-    let contentMessage = pingMessage;
-    
-    // Add order type indicator
-    if (orderDetails.isTrial) {
-      contentMessage = "**🎁 TRIAL REQUEST**\n" + contentMessage;
-    } else if (orderDetails.isTestMode) {
-      contentMessage = "**🧪 TEST ORDER**\n" + contentMessage;
-    } else if (isFreeOrder) {
-      contentMessage = "**🎉 FREE ORDER (Discount Code)**\n" + contentMessage;
-    } else if (isDedicated) {
-      contentMessage = "**🚀 DEDICATED SERVER**\n" + contentMessage;
-    } else {
-      contentMessage = "**✨ NEW ORDER**\n" + contentMessage;
-    }
-    
+    let content = `**${label}**\n${pingMessage}`;
     if (orderDetails.discordId) {
-      contentMessage += `\n\n📋 **Customer Discord ID:** \`${orderDetails.discordId}\``;
+      content += `\n\nCustomer Discord ID: \`${orderDetails.discordId}\``;
     }
 
-    const discordPayload = {
-      content: contentMessage,
-      embeds: [embed]
-    };
+    const embed = buildEmbed(orderDetails);
 
     const discordResponse = await fetch(DISCORD_WEBHOOK_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(discordPayload),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content, embeds: [embed] }),
     });
 
     if (!discordResponse.ok) {
@@ -250,10 +192,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ success: true }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
 
   } catch (error: unknown) {
@@ -261,10 +200,7 @@ serve(async (req) => {
     console.error("Error sending Discord notification:", error);
     return new Response(
       JSON.stringify({ error: errorMessage }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500 
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });

@@ -18,6 +18,7 @@ interface CryptoPaymentModalProps {
   onClose: () => void;
   amount: number;
   commitment: string;
+  planName?: string;
   rps?: number;
   tps?: number;
   serverType?: string;
@@ -61,7 +62,7 @@ const SHREDS_PRICE = 800; // USD per month
 
 type PaymentStep = "select" | "processing" | "success" | "failed" | "partial";
 
-const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tps = 50, serverType = "shared", location = "all", rentAccessEnabled = false, isTestMode = false, discordUserId = "", appliedDiscount = null, includeShredsFromPricing = false, additionalStakePackages = 0, initialReferralCode }: CryptoPaymentModalProps) => {
+const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, planName, rps = 100, tps = 50, serverType = "shared", location = "all", rentAccessEnabled = false, isTestMode = false, discordUserId = "", appliedDiscount = null, includeShredsFromPricing = false, additionalStakePackages = 0, initialReferralCode }: CryptoPaymentModalProps) => {
   const [selectedCrypto, setSelectedCrypto] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [paymentStep, setPaymentStep] = useState<PaymentStep>("select");
@@ -287,7 +288,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, rps = 100, tp
         try {
           await supabase.functions.invoke('discord-order-notification', {
             body: {
-              plan: getCommitmentLabel(),
+              plan: planName || getCommitmentLabel(),
               commitment: commitment,
               serverType: serverType === "dedicated" ? "Dedicated" : "Shared",
               email: user?.email || "Not logged in",

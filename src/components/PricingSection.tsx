@@ -1512,6 +1512,7 @@ const PricingSection = () => {
         onClose={() => setIsPaymentOpen(false)}
         amount={price}
         commitment={selectedCommitment}
+        planName={isSwQoS ? `swQoS (${swqosStakePackages * 100}K SOL)` : isDedicated ? `Dedicated (${dedicatedSpecs.find(s => s.id === selectedDedicatedSpec)?.cpu || 'Custom'})` : 'Shared'}
         serverType={selectedServerType}
         location={isDedicated ? getFinalLocation() : isSwQoS ? "N/A" : "all"}
         rentAccessEnabled={isSwQoS ? false : rentAccessEnabled}
