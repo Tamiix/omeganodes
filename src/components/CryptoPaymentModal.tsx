@@ -288,7 +288,7 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, planName, rps
         try {
           await supabase.functions.invoke('discord-order-notification', {
             body: {
-              plan: getCommitmentLabel(),
+              plan: planName || getCommitmentLabel(),
               commitment: commitment,
               serverType: serverType === "dedicated" ? "Dedicated" : "Shared",
               email: user?.email || "Not logged in",
