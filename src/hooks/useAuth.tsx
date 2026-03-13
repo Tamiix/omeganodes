@@ -148,17 +148,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     });
     
-    // If signup was successful, send Discord notification
+    // If signup was successful, send Discord notification + welcome offer
     if (!error) {
       try {
-        await supabase.functions.invoke('discord-registration-notification', {
-          body: {
-            email: email,
-            registerDate: new Date().toISOString()
-          }
-        });
+        await Promise.allSettled([
+          supabase.functions.invoke('discord-registration-notification', {
+            body: {
+              email: email,
+              registerDate: new Date().toISOString()
+            }
+          }),
+          supabase.functions.invoke('send-welcome-offer', {
+            body: {
+              email: email,
+              userId: 'system'
+            }
+          })
+        ]);
       } catch (notificationError) {
-        console.error('Failed to send registration notification:', notificationError);
+        console.error('Failed to send registration notifications:', notificationError);
       }
     }
     

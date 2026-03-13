@@ -18,3 +18,5 @@ project_id = "mmkornqvbafkricqixgk"
     verify_jwt = false
   [functions.verify-solana-payment]
     verify_jwt = false
+  [functions.send-welcome-offer]
+    verify_jwt = false
