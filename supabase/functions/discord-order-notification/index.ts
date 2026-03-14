@@ -158,7 +158,10 @@ serve(async (req) => {
     const isDedicated = orderDetails.serverType === "dedicated" || orderDetails.serverType === "Dedicated";
 
     // Staff pings
-    let pingMessage = isDedicated
+    const isSwQoS = orderDetails.serverType === "swqos";
+    const hasShreds = orderDetails.includeShreds || orderDetails.privateShredsEnabled;
+    const needsSecondPing = isDedicated || isSwQoS || hasShreds;
+    let pingMessage = needsSecondPing
       ? "||<@404356986340114442> <@545046451219070980>||"
       : "||<@404356986340114442>||";
 

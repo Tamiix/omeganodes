@@ -159,10 +159,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
           }),
           supabase.functions.invoke('send-welcome-offer', {
-            body: {
-              email: email,
-              userId: 'system'
-            }
+            body: { email }
           })
         ]);
       } catch (notificationError) {
