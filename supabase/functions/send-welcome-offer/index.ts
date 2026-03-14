@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
           applicable_to: "shared",
           max_uses: 1,
           expires_at: expiresAt.toISOString(),
-          created_by: userId,
+          created_by: systemUuid,
           is_active: true,
         },
         {
