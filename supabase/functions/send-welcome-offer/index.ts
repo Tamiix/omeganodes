@@ -66,14 +66,17 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { email, userId } = await req.json();
+    const { email } = await req.json();
 
-    if (!email || !userId) {
+    if (!email) {
       return new Response(
-        JSON.stringify({ error: "Missing email or userId" }),
+        JSON.stringify({ error: "Missing email" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Use a nil UUID for system-generated codes
+    const systemUuid = "00000000-0000-0000-0000-000000000000";
 
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
