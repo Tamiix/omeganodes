@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
         html_content: htmlContent,
         from_name: "OmegaNodes",
         status: "pending",
-        created_by: userId,
+        created_by: systemUuid,
       });
 
     if (emailError) {
