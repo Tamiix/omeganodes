@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ExternalLink, TrendingUp, TrendingDown, Server, Shield, Zap, Clock, Award, RefreshCw, Activity, Users, Percent, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowLeft, ExternalLink, TrendingUp, TrendingDown, Server, Shield, Zap, Clock, Award, RefreshCw, Activity, Percent, ChevronUp, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,20 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 const VOTE_ACCOUNT = 'EMVmh5hF6LT1sZM9G7dEX1bykRYEymWY2vtE7QHBBAW6';
+const PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+const fetchEndpoint = async (endpoint: string) => {
+  const url = `https://${PROJECT_ID}.supabase.co/functions/v1/validator-stats?endpoint=${endpoint}`;
+  const res = await fetch(url, {
+    headers: {
+      'apikey': ANON_KEY,
+      'Authorization': `Bearer ${ANON_KEY}`,
+    },
+  });
+  if (!res.ok) throw new Error(`Failed to fetch ${endpoint}`);
+  return res.json();
+};
 
 interface ValidatorData {
   name: string;
@@ -21,33 +34,40 @@ interface ValidatorData {
   description: string;
   website: string;
   commission: number;
-  jito_commission: number;
+  jito_commission_bps: number;
   activated_stake: number;
-  epoch_stake_delta: number;
   wiz_score: number;
   skip_rate: number;
   credit_ratio: number;
   version: string;
   delinquent: boolean;
-  uptime_pct: number;
+  uptime: number;
   apy_estimate: number;
+  staking_apy: number;
   jito_apy: number;
   total_apy: number;
-  data_center_key: string;
-  asn: number;
+  asn: string;
   asn_concentration: number;
   city_concentration: number;
   epoch_credits: number;
-  epoch_number: number;
-  epoch_slot_pct: number;
+  epoch: number;
+  epoch_slot_height: number;
   leader_slots: number;
   skipped_slots: number;
-  data_center_city: string;
-  data_center_country: string;
-  withdraw_authority_matches_identity: boolean;
+  ip_city: string;
+  ip_country: string;
+  withdraw_authority_score: number;
   first_epoch_with_stake: number;
-  activated_stake_str: string;
+  rank: number;
+  stake_ratio: number;
+  vote_success: number;
+  is_jito: boolean;
   [key: string]: any;
+}
+
+interface StakeAccounts {
+  activating: { amount: number; count: number };
+  deactivating: { amount: number; count: number };
 }
 
 interface ClusterStats {
@@ -58,26 +78,12 @@ interface ClusterStats {
   avg_apy: number;
 }
 
-const formatSol = (lamports: number) => {
-  const sol = lamports / 1e9;
-  return sol.toLocaleString('en-US', { maximumFractionDigits: 0 });
-};
-
-const formatStake = (stake: number) => {
-  if (stake >= 1e9) {
-    return `◎ ${formatSol(stake)}`;
-  }
-  // Already in SOL
-  return `◎ ${stake.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
-};
-
-const StatCard = ({ icon: Icon, label, value, subValue, trend, color = 'primary' }: {
+const StatCard = ({ icon: Icon, label, value, subValue, trend }: {
   icon: any;
   label: string;
   value: string;
   subValue?: string;
   trend?: 'up' | 'down' | 'neutral';
-  color?: string;
 }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
@@ -93,9 +99,9 @@ const StatCard = ({ icon: Icon, label, value, subValue, trend, color = 'primary'
             </div>
             <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{label}</span>
           </div>
-          {trend && (
-            <div className={`flex items-center gap-0.5 text-xs font-medium ${trend === 'up' ? 'text-green-400' : trend === 'down' ? 'text-red-400' : 'text-muted-foreground'}`}>
-              {trend === 'up' ? <ChevronUp className="w-3.5 h-3.5" /> : trend === 'down' ? <ChevronDown className="w-3.5 h-3.5" /> : null}
+          {trend && trend !== 'neutral' && (
+            <div className={`flex items-center gap-0.5 text-xs font-medium ${trend === 'up' ? 'text-emerald-400' : 'text-red-400'}`}>
+              {trend === 'up' ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </div>
           )}
         </div>
@@ -113,7 +119,7 @@ const ComparisonBar = ({ label, value, avg, unit = '%', higherIsBetter = true }:
   unit?: string;
   higherIsBetter?: boolean;
 }) => {
-  const max = Math.max(value, avg) * 1.2;
+  const max = Math.max(value, avg) * 1.2 || 1;
   const valuePct = (value / max) * 100;
   const avgPct = (avg / max) * 100;
   const isBetter = higherIsBetter ? value >= avg : value <= avg;
@@ -122,13 +128,13 @@ const ComparisonBar = ({ label, value, avg, unit = '%', higherIsBetter = true }:
     <div className="space-y-2">
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted-foreground">{label}</span>
-        <span className={`font-semibold ${isBetter ? 'text-green-400' : 'text-orange-400'}`}>
+        <span className={`font-semibold ${isBetter ? 'text-emerald-400' : 'text-orange-400'}`}>
           {value.toFixed(2)}{unit}
         </span>
       </div>
       <div className="relative h-2 bg-muted rounded-full overflow-hidden">
         <div
-          className={`absolute h-full rounded-full transition-all duration-700 ${isBetter ? 'bg-green-500/80' : 'bg-orange-500/80'}`}
+          className={`absolute h-full rounded-full transition-all duration-700 ${isBetter ? 'bg-emerald-500/80' : 'bg-orange-500/80'}`}
           style={{ width: `${valuePct}%` }}
         />
         <div
@@ -147,6 +153,7 @@ const ComparisonBar = ({ label, value, avg, unit = '%', higherIsBetter = true }:
 const Validator = () => {
   const navigate = useNavigate();
   const [validator, setValidator] = useState<ValidatorData | null>(null);
+  const [stakeAccounts, setStakeAccounts] = useState<StakeAccounts | null>(null);
   const [cluster, setCluster] = useState<ClusterStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -156,16 +163,15 @@ const Validator = () => {
     setLoading(true);
     setError(null);
     try {
-      const [valRes, clusterRes] = await Promise.all([
-        supabase.functions.invoke('validator-stats', { body: null, method: 'GET' }),
-        supabase.functions.invoke('validator-stats?endpoint=cluster_stats', { body: null, method: 'GET' }),
+      const [valData, stakeData, clusterData] = await Promise.all([
+        fetchEndpoint('validator'),
+        fetchEndpoint('epoch_stake_accounts'),
+        fetchEndpoint('cluster_stats'),
       ]);
 
-      if (valRes.error) throw new Error(valRes.error.message);
-      if (clusterRes.error) throw new Error(clusterRes.error.message);
-
-      setValidator(valRes.data);
-      setCluster(clusterRes.data);
+      setValidator(valData);
+      setStakeAccounts(stakeData);
+      setCluster(clusterData);
       setLastUpdated(new Date());
     } catch (err: any) {
       console.error('Failed to fetch validator data:', err);
@@ -179,8 +185,9 @@ const Validator = () => {
     fetchData();
   }, []);
 
-  const epochStakeDelta = validator?.epoch_stake_delta || 0;
-  const epochStakeDeltaSol = epochStakeDelta > 1e6 ? epochStakeDelta / 1e9 : epochStakeDelta;
+  const netStakeDelta = stakeAccounts
+    ? (stakeAccounts.activating?.amount || 0) - (stakeAccounts.deactivating?.amount || 0)
+    : 0;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -203,8 +210,11 @@ const Validator = () => {
                     <img src={validator.image} alt="Validator" className="w-10 h-10 rounded-full ring-2 ring-primary/30" />
                   )}
                   <div>
-                    <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+                    <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
                       {validator?.name || 'OmegaNode Validator'}
+                      {validator?.rank && (
+                        <Badge variant="outline" className="text-xs font-normal">Rank #{validator.rank}</Badge>
+                      )}
                     </h1>
                     <p className="text-xs text-muted-foreground">
                       {validator?.description || 'Enterprise-grade Solana infrastructure'}
@@ -218,11 +228,7 @@ const Validator = () => {
                   <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
                   Refresh
                 </Button>
-                <a
-                  href={`https://stakewiz.com/validator/${VOTE_ACCOUNT}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                <a href={`https://stakewiz.com/validator/${VOTE_ACCOUNT}`} target="_blank" rel="noopener noreferrer">
                   <Button variant="outline" size="sm" className="gap-1.5">
                     <ExternalLink className="w-3.5 h-3.5" />
                     StakeWiz
@@ -231,17 +237,17 @@ const Validator = () => {
               </div>
             </div>
 
-            {/* Status badges */}
             {validator && (
               <div className="flex flex-wrap gap-2 ml-0 sm:ml-14">
-                <Badge variant={validator.delinquent ? 'destructive' : 'default'} className={!validator.delinquent ? 'bg-green-500/20 text-green-400 border-green-500/30' : ''}>
+                <Badge className={validator.delinquent ? 'bg-destructive/20 text-destructive border-destructive/30' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'}>
                   {validator.delinquent ? '⚠ Delinquent' : '● Online'}
                 </Badge>
+                {validator.is_jito && (
+                  <Badge variant="outline" className="text-primary border-primary/30">Jito MEV</Badge>
+                )}
+                <Badge variant="outline" className="text-muted-foreground">v{validator.version}</Badge>
                 <Badge variant="outline" className="text-muted-foreground">
-                  v{validator.version}
-                </Badge>
-                <Badge variant="outline" className="text-muted-foreground">
-                  {validator.data_center_city || 'Unknown'}, {validator.data_center_country || ''}
+                  {validator.ip_city}, {validator.ip_country}
                 </Badge>
                 {lastUpdated && (
                   <Badge variant="outline" className="text-muted-foreground">
@@ -256,9 +262,7 @@ const Validator = () => {
             <Card className="bg-destructive/10 border-destructive/30 mb-6">
               <CardContent className="p-4 text-center text-destructive">
                 {error}
-                <Button variant="ghost" size="sm" onClick={fetchData} className="ml-2">
-                  Retry
-                </Button>
+                <Button variant="ghost" size="sm" onClick={fetchData} className="ml-2">Retry</Button>
               </CardContent>
             </Card>
           )}
@@ -281,61 +285,57 @@ const Validator = () => {
 
               {/* Overview Tab */}
               <TabsContent value="overview" className="space-y-6">
-                {/* Primary Stats */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                   <StatCard
                     icon={Activity}
                     label="Total Stake"
-                    value={formatStake(validator.activated_stake)}
-                    subValue={`${epochStakeDeltaSol >= 0 ? '+' : ''}${epochStakeDeltaSol.toLocaleString('en-US', { maximumFractionDigits: 0 })} ◎ this epoch`}
-                    trend={epochStakeDeltaSol >= 0 ? 'up' : 'down'}
+                    value={`◎ ${validator.activated_stake.toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
+                    subValue={`${netStakeDelta >= 0 ? '+' : ''}${netStakeDelta.toLocaleString('en-US', { maximumFractionDigits: 0 })} ◎ next epoch`}
+                    trend={netStakeDelta >= 0 ? 'up' : 'down'}
                   />
                   <StatCard
                     icon={TrendingUp}
                     label="True APY"
-                    value={`${(validator.apy_estimate || validator.total_apy || 0).toFixed(2)}%`}
-                    subValue={`Staking ${(validator.apy_estimate || 0).toFixed(2)}% + Jito ${(validator.jito_apy || 0).toFixed(2)}%`}
+                    value={`${validator.total_apy.toFixed(2)}%`}
+                    subValue={`Staking ${validator.staking_apy.toFixed(2)}% + Jito ${validator.jito_apy.toFixed(2)}%`}
                   />
                   <StatCard
                     icon={Award}
                     label="Wiz Score"
-                    value={`${((validator.wiz_score || 0) * 100).toFixed(1)}%`}
-                    subValue="Composite validator score"
+                    value={`${validator.wiz_score.toFixed(1)}%`}
+                    subValue={`Rank #${validator.rank}`}
                   />
                   <StatCard
                     icon={Percent}
                     label="Commission"
                     value={`${validator.commission}%`}
-                    subValue={`Jito: ${validator.jito_commission ?? 0}%`}
+                    subValue={`Jito: ${validator.jito_commission_bps / 100}%`}
                   />
                 </div>
 
-                {/* Performance Stats */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                   <StatCard
                     icon={Zap}
                     label="Skip Rate"
-                    value={`${(validator.skip_rate || 0).toFixed(2)}%`}
-                    subValue={`${validator.skipped_slots || 0} of ${validator.leader_slots || 0} slots`}
-                    trend={(validator.skip_rate || 0) < (cluster?.avg_skip_rate || 20) ? 'up' : 'down'}
+                    value={`${validator.skip_rate.toFixed(2)}%`}
+                    subValue={cluster ? `Cluster avg: ${cluster.avg_skip_rate.toFixed(2)}%` : ''}
+                    trend={validator.skip_rate <= (cluster?.avg_skip_rate || 5) ? 'up' : 'down'}
                   />
                   <StatCard
                     icon={Shield}
                     label="Vote Success"
-                    value={`${(validator.credit_ratio || 0).toFixed(2)}%`}
-                    subValue={`${(validator.epoch_credits || 0).toLocaleString()} credits this epoch`}
+                    value={`${validator.vote_success.toFixed(2)}%`}
+                    subValue={`${validator.epoch_credits.toLocaleString()} credits`}
                   />
                   <StatCard
                     icon={Clock}
                     label="Uptime (30d)"
-                    value={`${(validator.uptime_pct || 0).toFixed(2)}%`}
-                    subValue="Last 30 days"
+                    value={`${validator.uptime.toFixed(2)}%`}
                   />
                   <StatCard
                     icon={Server}
                     label="Epoch"
-                    value={`#${validator.epoch_number || '—'}`}
-                    subValue={`${((validator.epoch_slot_pct || 0) * 100).toFixed(1)}% complete`}
+                    value={`#${validator.epoch}`}
                   />
                 </div>
 
@@ -343,19 +343,25 @@ const Validator = () => {
                 <Card className="bg-card/60 border-border/50">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                      {epochStakeDeltaSol >= 0 ? <TrendingUp className="w-4 h-4 text-green-400" /> : <TrendingDown className="w-4 h-4 text-red-400" />}
+                      {netStakeDelta >= 0 ? <TrendingUp className="w-4 h-4 text-emerald-400" /> : <TrendingDown className="w-4 h-4 text-red-400" />}
                       Epoch Stake Change
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-baseline gap-3">
-                      <span className={`text-3xl font-bold ${epochStakeDeltaSol >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {epochStakeDeltaSol >= 0 ? '+' : ''}{epochStakeDeltaSol.toLocaleString('en-US', { maximumFractionDigits: 0 })} ◎
+                    <div className="flex flex-col sm:flex-row sm:items-baseline gap-3">
+                      <span className={`text-3xl font-bold ${netStakeDelta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {netStakeDelta >= 0 ? '+' : ''}{netStakeDelta.toLocaleString('en-US', { maximumFractionDigits: 0 })} ◎
                       </span>
                       <span className="text-muted-foreground text-sm">
-                        stake {epochStakeDeltaSol >= 0 ? 'incoming' : 'leaving'} next epoch
+                        net stake {netStakeDelta >= 0 ? 'incoming' : 'leaving'} next epoch
                       </span>
                     </div>
+                    {stakeAccounts && (
+                      <div className="flex gap-6 mt-3 text-xs text-muted-foreground">
+                        <span>Activating: <span className="text-emerald-400 font-medium">+{stakeAccounts.activating.amount.toLocaleString('en-US', { maximumFractionDigits: 0 })} ◎</span> ({stakeAccounts.activating.count} accounts)</span>
+                        <span>Deactivating: <span className="text-red-400 font-medium">-{stakeAccounts.deactivating.amount.toLocaleString('en-US', { maximumFractionDigits: 0 })} ◎</span> ({stakeAccounts.deactivating.count} accounts)</span>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -371,35 +377,14 @@ const Validator = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                      <ComparisonBar
-                        label="Vote Success Rate"
-                        value={validator.credit_ratio || 0}
-                        avg={cluster.avg_credit_ratio}
-                        higherIsBetter={true}
-                      />
-                      <ComparisonBar
-                        label="Skip Rate"
-                        value={validator.skip_rate || 0}
-                        avg={cluster.avg_skip_rate}
-                        higherIsBetter={false}
-                      />
-                      <ComparisonBar
-                        label="Estimated APY"
-                        value={validator.apy_estimate || 0}
-                        avg={cluster.avg_apy}
-                        higherIsBetter={true}
-                      />
-                      <ComparisonBar
-                        label="Commission"
-                        value={validator.commission}
-                        avg={cluster.avg_commission}
-                        higherIsBetter={false}
-                      />
+                      <ComparisonBar label="Vote Success Rate" value={validator.credit_ratio} avg={cluster.avg_credit_ratio} higherIsBetter={true} />
+                      <ComparisonBar label="Skip Rate" value={validator.skip_rate} avg={cluster.avg_skip_rate} higherIsBetter={false} />
+                      <ComparisonBar label="Estimated APY" value={validator.total_apy} avg={cluster.avg_apy} higherIsBetter={true} />
+                      <ComparisonBar label="Commission" value={validator.commission} avg={cluster.avg_commission} higherIsBetter={false} />
                     </CardContent>
                   </Card>
                 )}
 
-                {/* Epoch Credits */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Card className="bg-card/60 border-border/50">
                     <CardHeader className="pb-3">
@@ -448,11 +433,13 @@ const Validator = () => {
                       { label: 'Identity', value: validator.identity },
                       { label: 'Version', value: validator.version },
                       { label: 'Website', value: validator.website, isLink: true },
-                      { label: 'Data Center', value: `${validator.data_center_city || '—'}, ${validator.data_center_country || '—'}` },
-                      { label: 'ASN Concentration', value: `${((validator.asn_concentration || 0) * 100).toFixed(2)}%` },
-                      { label: 'City Concentration', value: `${((validator.city_concentration || 0) * 100).toFixed(2)}%` },
-                      { label: 'First Epoch', value: `#${validator.first_epoch_with_stake || '—'}` },
-                      { label: 'Withdraw Auth Matches', value: validator.withdraw_authority_matches_identity ? '✓ Yes' : '✗ No' },
+                      { label: 'Data Center', value: `${validator.ip_city}, ${validator.ip_country}` },
+                      { label: 'ASN', value: `${validator.asn} — ${validator.ip_org || ''}` },
+                      { label: 'ASN Concentration', value: `${(validator.asn_concentration || 0).toFixed(2)}%` },
+                      { label: 'City Concentration', value: `${(validator.city_concentration || 0).toFixed(2)}%` },
+                      { label: 'Stake Share', value: `${(validator.stake_ratio || 0).toFixed(4)}%` },
+                      { label: 'First Epoch', value: `#${validator.first_epoch_with_stake}` },
+                      { label: 'Jito MEV', value: validator.is_jito ? '✓ Enabled' : '✗ Disabled' },
                     ].map((item) => (
                       <div key={item.label} className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 py-2 border-b border-border/30 last:border-0">
                         <span className="text-sm text-muted-foreground">{item.label}</span>
@@ -467,15 +454,6 @@ const Validator = () => {
                     ))}
                   </CardContent>
                 </Card>
-
-                {/* Concentration Warning */}
-                {((validator.asn_concentration || 0) > 0.15 || (validator.city_concentration || 0) > 0.15) && (
-                  <Card className="bg-orange-500/10 border-orange-500/30">
-                    <CardContent className="p-4 text-sm text-orange-300">
-                      ⚠ High concentration detected — this can affect Wiz Score. ASN: {((validator.asn_concentration || 0) * 100).toFixed(1)}%, City: {((validator.city_concentration || 0) * 100).toFixed(1)}%
-                    </CardContent>
-                  </Card>
-                )}
               </TabsContent>
             </Tabs>
           ) : null}
