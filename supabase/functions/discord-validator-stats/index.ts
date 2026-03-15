@@ -46,8 +46,8 @@ serve(async (req) => {
       fetchJSON(`https://api.stakewiz.com/cluster_stats`),
     ]);
 
-    // --- Parse data ---
-    const totalStakeSol = validator.activated_stake ? (validator.activated_stake / 1e9) : 0;
+    // --- Parse data (API returns SOL, not lamports) ---
+    const totalStakeSol = validator.activated_stake || 0;
     const activatingSOL = stakeAccounts?.activating?.amount || 0;
     const deactivatingSOL = stakeAccounts?.deactivating?.amount || 0;
     const netDelta = activatingSOL - deactivatingSOL;
@@ -56,17 +56,19 @@ serve(async (req) => {
 
     const wizScore = validator.wiz_score;
     const commission = validator.commission;
-    const skipRate = validator.skip_rate;
+    const skipRate = validator.skip_rate ?? validator.wiz_skip_rate;
     const clusterSkipRate = clusterStats?.avg_skip_rate;
     const voteSuccess = validator.vote_success;
-    const clusterVoteSuccess = clusterStats?.avg_vote_success;
+    const clusterVoteSuccess = clusterStats?.avg_credit_ratio;
 
-    const stakingApy = validator.apy_estimate;
+    const stakingApy = validator.staking_apy || validator.apy_estimate;
     const jitoApy = validator.jito_apy;
-    const totalApy = (stakingApy || 0) + (jitoApy || 0);
+    const totalApy = validator.total_apy || ((stakingApy || 0) + (jitoApy || 0));
 
-    const version = validator.software_version || 'Unknown';
-    const datacenter = validator.data_center_key || 'Unknown';
+    const version = validator.version || 'Unknown';
+    const datacenter = validator.ip_city && validator.ip_country
+      ? `${validator.ip_city}, ${validator.ip_country} (${validator.ip_org || validator.ip_asn || ''})`
+      : 'Unknown';
     const delinquent = validator.delinquent === true;
 
     // --- Build embed ---
