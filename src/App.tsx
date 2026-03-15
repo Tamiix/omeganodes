@@ -18,6 +18,7 @@ import AdminReferrals from "./pages/AdminReferrals";
 import RefRedirect from "./pages/RefRedirect";
 import OfficialLinks from "./pages/OfficialLinks";
 import AdminEmails from "./pages/AdminEmails";
+import Validator from "./pages/Validator";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/admin/emails" element={<AdminEmails />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/links" element={<OfficialLinks />} />
+              <Route path="/validator" element={<Validator />} />
               <Route path="/referral" element={<Referral />} />
               <Route path="/ref/:code" element={<RefRedirect />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
