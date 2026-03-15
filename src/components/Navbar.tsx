@@ -54,6 +54,9 @@ const Navbar = () => {
             <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               FAQ
             </a>
+            <a href="/validator" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Validator
+            </a>
             <a href="/links" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Links
             </a>
