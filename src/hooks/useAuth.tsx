@@ -155,6 +155,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           supabase.functions.invoke('discord-registration-notification', {
             body: {
               email: email,
+              username: username,
               registerDate: new Date().toISOString()
             }
           }),
