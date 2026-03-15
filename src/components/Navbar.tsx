@@ -140,6 +140,9 @@ const Navbar = () => {
             <a href="#faq" onClick={() => setIsOpen(false)} className="block py-2 text-sm text-muted-foreground hover:text-foreground">
               FAQ
             </a>
+            <a href="/validator" onClick={() => setIsOpen(false)} className="block py-2 text-sm text-muted-foreground hover:text-foreground">
+              Validator
+            </a>
             <a href="/links" onClick={() => setIsOpen(false)} className="block py-2 text-sm text-muted-foreground hover:text-foreground">
               Links
             </a>

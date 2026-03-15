@@ -41,6 +41,7 @@ const App = () => (
               <Route path="/admin/emails" element={<AdminEmails />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/links" element={<OfficialLinks />} />
+              <Route path="/validator" element={<Validator />} />
               <Route path="/referral" element={<Referral />} />
               <Route path="/ref/:code" element={<RefRedirect />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
