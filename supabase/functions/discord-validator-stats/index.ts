@@ -81,6 +81,7 @@ serve(async (req) => {
       `**Epoch Delta:** ${deltaEmoji} ${deltaSign}◎ ${formatNumber(netDelta)}`,
       `  ↳ Incoming: +◎ ${formatNumber(activatingSOL)} | Leaving: -◎ ${formatNumber(deactivatingSOL)}`,
       `**Wiz Score:** ${formatNumber(wizScore, 1)} / 10`,
+      `**Rank:** #${validator.rank || 'N/A'}`,
       `**Commission:** ${commission != null ? `${commission}%` : 'N/A'}`,
     ];
 
