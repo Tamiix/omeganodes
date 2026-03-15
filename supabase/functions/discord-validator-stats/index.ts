@@ -107,7 +107,7 @@ serve(async (req) => {
         { name: '🔧 Technical', value: technicalLines.join('\n'), inline: false },
       ],
       footer: {
-        text: `OmegaNode Validator • Epoch ${validator.epoch_credits ? 'active' : 'N/A'}`,
+        text: `OmegaNode Validator • Epoch ${validator.epoch || 'N/A'} • Uptime ${formatPct(validator.uptime)}`,
       },
       timestamp: new Date().toISOString(),
     };
