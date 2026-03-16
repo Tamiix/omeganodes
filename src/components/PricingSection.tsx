@@ -205,8 +205,10 @@ const PricingSection = () => {
     let discountPercent = 0;
 
     if (isSwQoS) {
-      // SwQoS standalone: $350/mo per 100k SOL package
-      const totalStake = swqosStakePackages * 350;
+      // SwQoS standalone: $500/mo per 100k SOL, 1M = $1,000
+      const totalStake = swqosStakePackages >= 10
+        ? 1000
+        : swqosStakePackages * 500;
       const commitment = commitments.find(c => c.id === selectedCommitment);
       discountPercent = commitment?.discount || 0;
       serverPrice = Math.round(totalStake * (1 - discountPercent));
@@ -216,7 +218,7 @@ const PricingSection = () => {
       const spec = dedicatedSpecs.find(s => s.id === selectedDedicatedSpec);
       const basePrice = spec?.price || 2700;
       const stakeDiscountPercent = selectedCommitment === "3months" ? 0.10 : 0;
-      const stakePerPackage = 350 * (1 - stakeDiscountPercent);
+      const stakePerPackage = 500 * (1 - stakeDiscountPercent);
       const stakeAddition = additionalStakePackages * stakePerPackage;
       const shredsAddition = privateShredsEnabled ? 800 : 0;
       const commitment = commitments.find(c => c.id === selectedCommitment);
@@ -224,7 +226,7 @@ const PricingSection = () => {
       
       serverPrice = Math.round(basePrice * (1 - discountPercent));
       addOnsPrice = stakeAddition + shredsAddition;
-      beforeDiscount = basePrice + (additionalStakePackages * 350) + shredsAddition;
+      beforeDiscount = basePrice + (additionalStakePackages * 500) + shredsAddition;
     } else if (isWeekly) {
       // Weekly shared: fixed $120
       serverPrice = 120;
@@ -724,9 +726,9 @@ const PricingSection = () => {
               <div className="text-center lg:text-right">
                 <p className="text-xs text-muted-foreground mb-1">SwQoS Stake</p>
                 <div>
-                  {(discount > 0 || referralBanner) && (
+                   {(discount > 0 || referralBanner) && (
                     <div className="text-lg text-muted-foreground line-through">
-                      {formatPrice(swqosStakePackages * 350)}
+                      {formatPrice(swqosStakePackages >= 10 ? 1000 : swqosStakePackages * 500)}
                     </div>
                   )}
                   <div className="flex items-baseline justify-center lg:justify-end gap-1">
@@ -761,7 +763,7 @@ const PricingSection = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium">100,000 SOL per package</p>
-                    <p className="text-xs text-muted-foreground">$350/month each</p>
+                    <p className="text-xs text-muted-foreground">$500/month each — 1M SOL for just $1,000</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -778,6 +780,7 @@ const PricingSection = () => {
                 </div>
                 <p className="text-xs text-secondary mt-2">
                   Total stake: {(swqosStakePackages * 100000).toLocaleString()} SOL
+                  {swqosStakePackages >= 10 && ' — Save $4,000/mo vs per-package pricing'}
                 </p>
               </div>
 
@@ -789,7 +792,7 @@ const PricingSection = () => {
                 </p>
                 <p>
                   <Shield className="w-3.5 h-3.5 text-primary inline mr-1.5" />
-                  Same pricing as dedicated server add-on — no premium for standalone purchase.
+                  Go all in with 1M SOL for just $1,000/mo — save $4,000 compared to per-package pricing.
                 </p>
               </div>
             </motion.div>
@@ -808,7 +811,7 @@ const PricingSection = () => {
                     {[
                       "Stake-Weighted QoS priority",
                       "100,000 SOL per package",
-                      "Same pricing as dedicated add-on",
+                      "1M SOL for $1,000/mo (save $4,000)",
                       "No server purchase required",
                       "Priority transaction processing",
                     ].map((feature, i) => (
@@ -1179,9 +1182,9 @@ const PricingSection = () => {
                         Additional Stake
                       </h3>
                       <div className="flex items-center justify-between">
-                        <div>
+                         <div>
                           <p className="text-sm font-medium">100,000 SOL per package</p>
-                          <p className="text-xs text-muted-foreground">$350/month each</p>
+                          <p className="text-xs text-muted-foreground">$500/month each</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <button

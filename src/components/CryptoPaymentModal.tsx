@@ -44,18 +44,18 @@ const getCryptoOptions = (isTestMode: boolean, isWeekly: boolean) => {
   ];
 };
 
-// swQoS pricing tiers (USD)
+// swQoS pricing tiers (USD) — $500/100k up to 900k, 1M = $1,000
 const SWQOS_TIERS = [
-  { stake: 100000, label: "100K", price: 380 },
-  { stake: 200000, label: "200K", price: 760 },
-  { stake: 300000, label: "300K", price: 1140 },
-  { stake: 400000, label: "400K", price: 1520 },
-  { stake: 500000, label: "500K", price: 1900 },
-  { stake: 600000, label: "600K", price: 2280 },
-  { stake: 700000, label: "700K", price: 2660 },
-  { stake: 800000, label: "800K", price: 3040 },
-  { stake: 900000, label: "900K", price: 3420 },
-  { stake: 1000000, label: "1M", price: 3800 },
+  { stake: 100000, label: "100K", price: 500 },
+  { stake: 200000, label: "200K", price: 1000 },
+  { stake: 300000, label: "300K", price: 1500 },
+  { stake: 400000, label: "400K", price: 2000 },
+  { stake: 500000, label: "500K", price: 2500 },
+  { stake: 600000, label: "600K", price: 3000 },
+  { stake: 700000, label: "700K", price: 3500 },
+  { stake: 800000, label: "800K", price: 4000 },
+  { stake: 900000, label: "900K", price: 4500 },
+  { stake: 1000000, label: "1M", price: 1000 },
 ];
 
 const SHREDS_PRICE = 800; // USD per month
@@ -583,10 +583,10 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, planName, rps
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold">⚡ swQoS Service</span>
+                       <span className="font-semibold">⚡ swQoS Service</span>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        $350/mo per 100K stake (up to 1M)
+                        $500/mo per 100K stake — 1M for just $1,000/mo
                       </p>
                       <p className="text-xs text-muted-foreground/70 mt-0.5">
                         Want a longer term? Open a ticket for discounts.
