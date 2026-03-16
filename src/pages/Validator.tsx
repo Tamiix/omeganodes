@@ -165,15 +165,17 @@ const Validator = () => {
     setLoading(true);
     setError(null);
     try {
-      const [valData, stakeData, clusterData] = await Promise.all([
+      const [valData, stakeData, clusterData, stakesData] = await Promise.all([
         fetchEndpoint('validator'),
         fetchEndpoint('epoch_stake_accounts'),
         fetchEndpoint('cluster_stats'),
+        fetchEndpoint('stakes'),
       ]);
 
       setValidator(valData);
       setStakeAccounts(stakeData);
       setCluster(clusterData);
+      setStakes(Array.isArray(stakesData) ? stakesData : []);
       setLastUpdated(new Date());
     } catch (err: any) {
       console.error('Failed to fetch validator data:', err);
