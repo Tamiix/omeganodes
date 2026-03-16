@@ -26,6 +26,9 @@ Deno.serve(async (req) => {
       case 'delinquencies':
         apiUrl = `https://api.stakewiz.com/validator_delinquencies/${VOTE_ACCOUNT}`;
         break;
+      case 'stakes':
+        apiUrl = `https://api.stakewiz.com/validator_stakes/${VOTE_ACCOUNT}`;
+        break;
       case 'cluster_stats':
         apiUrl = `https://api.stakewiz.com/cluster_stats`;
         break;

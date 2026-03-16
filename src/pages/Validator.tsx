@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import TopStakers from '@/components/validator/TopStakers';
 
 const VOTE_ACCOUNT = 'EMVmh5hF6LT1sZM9G7dEX1bykRYEymWY2vtE7QHBBAW6';
 const PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
@@ -154,6 +155,7 @@ const Validator = () => {
   const navigate = useNavigate();
   const [validator, setValidator] = useState<ValidatorData | null>(null);
   const [stakeAccounts, setStakeAccounts] = useState<StakeAccounts | null>(null);
+  const [stakes, setStakes] = useState<any[]>([]);
   const [cluster, setCluster] = useState<ClusterStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -163,15 +165,17 @@ const Validator = () => {
     setLoading(true);
     setError(null);
     try {
-      const [valData, stakeData, clusterData] = await Promise.all([
+      const [valData, stakeData, clusterData, stakesData] = await Promise.all([
         fetchEndpoint('validator'),
         fetchEndpoint('epoch_stake_accounts'),
         fetchEndpoint('cluster_stats'),
+        fetchEndpoint('stakes'),
       ]);
 
       setValidator(valData);
       setStakeAccounts(stakeData);
       setCluster(clusterData);
+      setStakes(Array.isArray(stakesData) ? stakesData : []);
       setLastUpdated(new Date());
     } catch (err: any) {
       console.error('Failed to fetch validator data:', err);
@@ -280,6 +284,7 @@ const Validator = () => {
               <TabsList className="bg-muted/50 w-full sm:w-auto">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="performance">Performance</TabsTrigger>
+                <TabsTrigger value="stakers">Stakers</TabsTrigger>
                 <TabsTrigger value="details">Details</TabsTrigger>
               </TabsList>
 
@@ -419,6 +424,11 @@ const Validator = () => {
                     </CardContent>
                   </Card>
                 </div>
+              </TabsContent>
+
+              {/* Stakers Tab */}
+              <TabsContent value="stakers">
+                <TopStakers stakes={stakes} totalStake={validator.activated_stake} />
               </TabsContent>
 
               {/* Details Tab */}
