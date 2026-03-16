@@ -1,11 +1,8 @@
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, ExternalLink, TrendingUp, TrendingDown, Server, Shield, Zap, Clock, Award, RefreshCw, Activity, Percent, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowLeft, ExternalLink, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -63,6 +60,7 @@ interface ValidatorData {
   stake_ratio: number;
   vote_success: number;
   is_jito: boolean;
+  ip_org?: string;
   [key: string]: any;
 }
 
@@ -79,73 +77,33 @@ interface ClusterStats {
   avg_apy: number;
 }
 
-const StatCard = ({ icon: Icon, label, value, subValue, trend }: {
-  icon: any;
+// Simple metric row for the data table
+const MetricRow = ({ label, value, compare, unit = '', lowerBetter = false }: {
   label: string;
-  value: string;
-  subValue?: string;
-  trend?: 'up' | 'down' | 'neutral';
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.3 }}
-  >
-    <Card className="bg-card/80 border-border/50 hover:border-primary/30 transition-all duration-300">
-      <CardContent className="p-4 sm:p-5">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2.5 mb-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Icon className="w-4 h-4 text-primary" />
-            </div>
-            <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{label}</span>
-          </div>
-          {trend && trend !== 'neutral' && (
-            <div className={`flex items-center gap-0.5 text-xs font-medium ${trend === 'up' ? 'text-emerald-400' : 'text-red-400'}`}>
-              {trend === 'up' ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            </div>
-          )}
-        </div>
-        <div className="text-xl sm:text-2xl font-bold text-foreground">{value}</div>
-        {subValue && <div className="text-xs text-muted-foreground mt-1">{subValue}</div>}
-      </CardContent>
-    </Card>
-  </motion.div>
-);
-
-const ComparisonBar = ({ label, value, avg, unit = '%', higherIsBetter = true }: {
-  label: string;
-  value: number;
-  avg: number;
+  value: string | number;
+  compare?: { avg: number; unit?: string };
   unit?: string;
-  higherIsBetter?: boolean;
+  lowerBetter?: boolean;
 }) => {
-  const max = Math.max(value, avg) * 1.2 || 1;
-  const valuePct = (value / max) * 100;
-  const avgPct = (avg / max) * 100;
-  const isBetter = higherIsBetter ? value >= avg : value <= avg;
+  const numVal = typeof value === 'number' ? value : parseFloat(value);
+  const isBetter = compare
+    ? lowerBetter ? numVal <= compare.avg : numVal >= compare.avg
+    : null;
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between text-sm">
-        <span className="text-muted-foreground">{label}</span>
-        <span className={`font-semibold ${isBetter ? 'text-emerald-400' : 'text-orange-400'}`}>
-          {value.toFixed(2)}{unit}
+    <div className="flex items-center justify-between py-2.5 border-b border-border/20 last:border-0">
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <div className="text-right flex items-center gap-3">
+        {compare && (
+          <span className="text-[10px] text-muted-foreground/60 tabular-nums">
+            avg {compare.avg.toFixed(2)}{compare.unit || unit}
+          </span>
+        )}
+        <span className={`text-sm font-mono tabular-nums ${
+          isBetter === true ? 'text-emerald-400' : isBetter === false ? 'text-orange-400' : 'text-foreground'
+        }`}>
+          {typeof value === 'number' ? value.toLocaleString('en-US', { maximumFractionDigits: 2 }) : value}{unit}
         </span>
-      </div>
-      <div className="relative h-2 bg-muted rounded-full overflow-hidden">
-        <div
-          className={`absolute h-full rounded-full transition-all duration-700 ${isBetter ? 'bg-emerald-500/80' : 'bg-orange-500/80'}`}
-          style={{ width: `${valuePct}%` }}
-        />
-        <div
-          className="absolute h-full w-0.5 bg-muted-foreground/50 top-0"
-          style={{ left: `${avgPct}%` }}
-          title={`Cluster avg: ${avg.toFixed(2)}${unit}`}
-        />
-      </div>
-      <div className="text-[10px] text-muted-foreground">
-        Cluster avg: {avg.toFixed(2)}{unit}
       </div>
     </div>
   );
@@ -171,7 +129,6 @@ const Validator = () => {
         fetchEndpoint('cluster_stats'),
         fetchEndpoint('stakes'),
       ]);
-
       setValidator(valData);
       setStakeAccounts(stakeData);
       setCluster(clusterData);
@@ -193,277 +150,220 @@ const Validator = () => {
     ? (stakeAccounts.activating?.amount || 0) - (stakeAccounts.deactivating?.amount || 0)
     : 0;
 
+  const v = validator;
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
       <div className="pt-20 pb-16">
-        <div className="container mx-auto px-4 sm:px-6 max-w-6xl">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="shrink-0">
-                  <ArrowLeft className="w-5 h-5" />
+        <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
+
+          {/* Minimal header */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="shrink-0 -ml-2">
+                  <ArrowLeft className="w-4 h-4" />
                 </Button>
-                <div className="flex items-center gap-3">
-                  {validator?.image && (
-                    <img src={validator.image} alt="Validator" className="w-10 h-10 rounded-full ring-2 ring-primary/30" />
-                  )}
-                  <div>
-                    <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                      {validator?.name || 'OmegaNode Validator'}
-                      {validator?.rank && (
-                        <Badge variant="outline" className="text-xs font-normal">Rank #{validator.rank}</Badge>
-                      )}
-                    </h1>
-                    <p className="text-xs text-muted-foreground">
-                      {validator?.description || 'Enterprise-grade Solana infrastructure'}
-                    </p>
-                  </div>
+                {v?.image && (
+                  <img src={v.image} alt="" className="w-8 h-8 rounded-full" />
+                )}
+                <div>
+                  <h1 className="text-lg font-semibold text-foreground">{v?.name || 'OmegaNode Validator'}</h1>
+                  <p className="text-xs text-muted-foreground font-mono">{VOTE_ACCOUNT.slice(0, 16)}…</p>
                 </div>
               </div>
-
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={fetchData} disabled={loading} className="gap-1.5">
-                  <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-                  Refresh
-                </Button>
+                <button
+                  onClick={fetchData}
+                  disabled={loading}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                >
+                  <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+                </button>
                 <a href={`https://stakewiz.com/validator/${VOTE_ACCOUNT}`} target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline" size="sm" className="gap-1.5">
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    StakeWiz
+                  <Button variant="ghost" size="sm" className="text-xs text-muted-foreground gap-1 h-7">
+                    StakeWiz <ExternalLink className="w-3 h-3" />
                   </Button>
                 </a>
               </div>
             </div>
 
-            {validator && (
-              <div className="flex flex-wrap gap-2 ml-0 sm:ml-14">
-                <Badge className={validator.delinquent ? 'bg-destructive/20 text-destructive border-destructive/30' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'}>
-                  {validator.delinquent ? '⚠ Delinquent' : '● Online'}
+            {v && (
+              <div className="flex flex-wrap gap-1.5 ml-10">
+                <Badge className={`text-[10px] ${v.delinquent ? 'bg-destructive/20 text-destructive border-destructive/30' : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20'}`}>
+                  {v.delinquent ? 'DELINQUENT' : 'ONLINE'}
                 </Badge>
-                {validator.is_jito && (
-                  <Badge variant="outline" className="text-primary border-primary/30">Jito MEV</Badge>
-                )}
-                <Badge variant="outline" className="text-muted-foreground">v{validator.version}</Badge>
-                <Badge variant="outline" className="text-muted-foreground">
-                  {validator.ip_city}, {validator.ip_country}
-                </Badge>
+                {v.is_jito && <Badge variant="outline" className="text-[10px] text-muted-foreground">Jito</Badge>}
+                <Badge variant="outline" className="text-[10px] text-muted-foreground">v{v.version}</Badge>
+                <Badge variant="outline" className="text-[10px] text-muted-foreground">{v.ip_city}, {v.ip_country}</Badge>
+                <Badge variant="outline" className="text-[10px] text-muted-foreground">#{v.rank}</Badge>
                 {lastUpdated && (
-                  <Badge variant="outline" className="text-muted-foreground">
-                    Updated {lastUpdated.toLocaleTimeString()}
-                  </Badge>
+                  <Badge variant="outline" className="text-[10px] text-muted-foreground/50">{lastUpdated.toLocaleTimeString()}</Badge>
                 )}
               </div>
             )}
-          </motion.div>
+          </div>
 
           {error && (
-            <Card className="bg-destructive/10 border-destructive/30 mb-6">
-              <CardContent className="p-4 text-center text-destructive">
-                {error}
-                <Button variant="ghost" size="sm" onClick={fetchData} className="ml-2">Retry</Button>
-              </CardContent>
-            </Card>
+            <div className="text-sm text-destructive mb-6 p-3 border border-destructive/20 rounded-md bg-destructive/5">
+              {error}
+              <button onClick={fetchData} className="ml-2 underline text-xs">retry</button>
+            </div>
           )}
 
-          {loading && !validator ? (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
-              {[...Array(8)].map((_, i) => (
-                <Card key={i} className="bg-card/50 border-border/30 animate-pulse">
-                  <CardContent className="p-5 h-28" />
-                </Card>
+          {loading && !v ? (
+            <div className="space-y-2">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-10 bg-muted/30 rounded animate-pulse" />
               ))}
             </div>
-          ) : validator ? (
-            <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="bg-muted/50 w-full sm:w-auto">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="performance">Performance</TabsTrigger>
-                <TabsTrigger value="stakers">Stakers</TabsTrigger>
-                <TabsTrigger value="details">Details</TabsTrigger>
+          ) : v ? (
+            <Tabs defaultValue="overview" className="space-y-4">
+              <TabsList className="bg-transparent border border-border/50 h-8">
+                <TabsTrigger value="overview" className="text-xs h-6 data-[state=active]:bg-muted">Stats</TabsTrigger>
+                <TabsTrigger value="performance" className="text-xs h-6 data-[state=active]:bg-muted">Performance</TabsTrigger>
+                <TabsTrigger value="stakers" className="text-xs h-6 data-[state=active]:bg-muted">Stakers</TabsTrigger>
+                <TabsTrigger value="details" className="text-xs h-6 data-[state=active]:bg-muted">Identity</TabsTrigger>
               </TabsList>
 
-              {/* Overview Tab */}
-              <TabsContent value="overview" className="space-y-6">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                  <StatCard
-                    icon={Activity}
-                    label="Total Stake"
-                    value={`◎ ${validator.activated_stake.toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
-                    subValue={`${netStakeDelta >= 0 ? '+' : ''}${netStakeDelta.toLocaleString('en-US', { maximumFractionDigits: 0 })} ◎ next epoch`}
-                    trend={netStakeDelta >= 0 ? 'up' : 'down'}
-                  />
-                  <StatCard
-                    icon={TrendingUp}
-                    label="True APY"
-                    value={`${validator.total_apy.toFixed(2)}%`}
-                    subValue={`Staking ${validator.staking_apy.toFixed(2)}% + Jito ${validator.jito_apy.toFixed(2)}%`}
-                  />
-                  <StatCard
-                    icon={Award}
-                    label="Wiz Score"
-                    value={`${validator.wiz_score.toFixed(1)}%`}
-                    subValue={`Rank #${validator.rank}`}
-                  />
-                  <StatCard
-                    icon={Percent}
-                    label="Commission"
-                    value={`${validator.commission}%`}
-                    subValue={`Jito: ${validator.jito_commission_bps / 100}%`}
-                  />
+              {/* Stats */}
+              <TabsContent value="overview" className="space-y-0">
+                {/* Key numbers - compact grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-border/30 rounded-lg overflow-hidden mb-6">
+                  {[
+                    { label: 'Total Stake', val: `◎ ${v.activated_stake.toLocaleString('en-US', { maximumFractionDigits: 0 })}` },
+                    { label: 'True APY', val: `${v.total_apy.toFixed(2)}%` },
+                    { label: 'Wiz Score', val: `${v.wiz_score.toFixed(1)}` },
+                    { label: 'Commission', val: `${v.commission}%` },
+                  ].map(item => (
+                    <div key={item.label} className="bg-card p-4">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{item.label}</div>
+                      <div className="text-lg font-semibold font-mono tabular-nums">{item.val}</div>
+                    </div>
+                  ))}
                 </div>
 
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                  <StatCard
-                    icon={Zap}
-                    label="Skip Rate"
-                    value={`${validator.skip_rate.toFixed(2)}%`}
-                    subValue={cluster ? `Cluster avg: ${cluster.avg_skip_rate.toFixed(2)}%` : ''}
-                    trend={validator.skip_rate <= (cluster?.avg_skip_rate || 5) ? 'up' : 'down'}
-                  />
-                  <StatCard
-                    icon={Shield}
-                    label="Vote Success"
-                    value={`${validator.vote_success.toFixed(2)}%`}
-                    subValue={`${validator.epoch_credits.toLocaleString()} credits`}
-                  />
-                  <StatCard
-                    icon={Clock}
-                    label="Uptime (30d)"
-                    value={`${validator.uptime.toFixed(2)}%`}
-                  />
-                  <StatCard
-                    icon={Server}
-                    label="Epoch"
-                    value={`#${validator.epoch}`}
-                  />
+                {/* Detailed metrics table */}
+                <div className="border border-border/30 rounded-lg p-4 bg-card/50">
+                  <MetricRow label="Staking APY" value={v.staking_apy} unit="%" compare={cluster ? { avg: cluster.avg_apy } : undefined} />
+                  <MetricRow label="Jito APY" value={v.jito_apy} unit="%" />
+                  <MetricRow label="Jito Commission" value={v.jito_commission_bps / 100} unit="%" />
+                  <MetricRow label="Skip Rate" value={v.skip_rate} unit="%" lowerBetter compare={cluster ? { avg: cluster.avg_skip_rate } : undefined} />
+                  <MetricRow label="Vote Success" value={v.vote_success} unit="%" compare={cluster ? { avg: cluster.avg_credit_ratio } : undefined} />
+                  <MetricRow label="Uptime (30d)" value={v.uptime} unit="%" />
+                  <MetricRow label="Epoch Credits" value={v.epoch_credits} />
+                  <MetricRow label="Credit Ratio" value={v.credit_ratio} unit="%" />
+                  <MetricRow label="Epoch" value={`#${v.epoch}`} />
                 </div>
 
-                {/* Stake Change Highlight */}
-                <Card className="bg-card/60 border-border/50">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                      {netStakeDelta >= 0 ? <TrendingUp className="w-4 h-4 text-emerald-400" /> : <TrendingDown className="w-4 h-4 text-red-400" />}
-                      Epoch Stake Change
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-col sm:flex-row sm:items-baseline gap-3">
-                      <span className={`text-3xl font-bold ${netStakeDelta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {/* Epoch stake delta */}
+                {stakeAccounts && (
+                  <div className="mt-4 border border-border/30 rounded-lg p-4 bg-card/50">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Epoch Stake Change</div>
+                    <div className="flex items-baseline gap-2 mb-2">
+                      <span className={`text-2xl font-mono font-bold tabular-nums ${netStakeDelta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                         {netStakeDelta >= 0 ? '+' : ''}{netStakeDelta.toLocaleString('en-US', { maximumFractionDigits: 0 })} ◎
                       </span>
-                      <span className="text-muted-foreground text-sm">
-                        net stake {netStakeDelta >= 0 ? 'incoming' : 'leaving'} next epoch
+                      <span className="text-xs text-muted-foreground">net</span>
+                    </div>
+                    <div className="flex gap-4 text-xs text-muted-foreground font-mono">
+                      <span>
+                        <span className="text-emerald-400">+{stakeAccounts.activating.amount.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+                        {' '}({stakeAccounts.activating.count})
+                      </span>
+                      <span>
+                        <span className="text-red-400">-{stakeAccounts.deactivating.amount.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+                        {' '}({stakeAccounts.deactivating.count})
                       </span>
                     </div>
-                    {stakeAccounts && (
-                      <div className="flex gap-6 mt-3 text-xs text-muted-foreground">
-                        <span>Activating: <span className="text-emerald-400 font-medium">+{stakeAccounts.activating.amount.toLocaleString('en-US', { maximumFractionDigits: 0 })} ◎</span> ({stakeAccounts.activating.count} accounts)</span>
-                        <span>Deactivating: <span className="text-red-400 font-medium">-{stakeAccounts.deactivating.amount.toLocaleString('en-US', { maximumFractionDigits: 0 })} ◎</span> ({stakeAccounts.deactivating.count} accounts)</span>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                  </div>
+                )}
               </TabsContent>
 
-              {/* Performance Tab */}
-              <TabsContent value="performance" className="space-y-6">
+              {/* Performance */}
+              <TabsContent value="performance" className="space-y-4">
                 {cluster && (
-                  <Card className="bg-card/60 border-border/50">
-                    <CardHeader>
-                      <CardTitle className="text-base font-semibold flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-primary" />
-                        vs Cluster Average
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <ComparisonBar label="Vote Success Rate" value={validator.credit_ratio} avg={cluster.avg_credit_ratio} higherIsBetter={true} />
-                      <ComparisonBar label="Skip Rate" value={validator.skip_rate} avg={cluster.avg_skip_rate} higherIsBetter={false} />
-                      <ComparisonBar label="Estimated APY" value={validator.total_apy} avg={cluster.avg_apy} higherIsBetter={true} />
-                      <ComparisonBar label="Commission" value={validator.commission} avg={cluster.avg_commission} higherIsBetter={false} />
-                    </CardContent>
-                  </Card>
+                  <div className="border border-border/30 rounded-lg p-4 bg-card/50">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-4">vs Cluster Average</div>
+                    {[
+                      { label: 'Vote Success', val: v.credit_ratio, avg: cluster.avg_credit_ratio, higher: true },
+                      { label: 'Skip Rate', val: v.skip_rate, avg: cluster.avg_skip_rate, higher: false },
+                      { label: 'APY', val: v.total_apy, avg: cluster.avg_apy, higher: true },
+                      { label: 'Commission', val: v.commission, avg: cluster.avg_commission, higher: false },
+                    ].map(m => {
+                      const better = m.higher ? m.val >= m.avg : m.val <= m.avg;
+                      const diff = m.val - m.avg;
+                      return (
+                        <div key={m.label} className="flex items-center justify-between py-2.5 border-b border-border/20 last:border-0">
+                          <span className="text-sm text-muted-foreground">{m.label}</span>
+                          <div className="flex items-center gap-4">
+                            <span className="text-[10px] text-muted-foreground/50 tabular-nums font-mono">avg {m.avg.toFixed(2)}%</span>
+                            <span className={`text-sm font-mono tabular-nums ${better ? 'text-emerald-400' : 'text-orange-400'}`}>
+                              {m.val.toFixed(2)}%
+                            </span>
+                            <span className={`text-[10px] font-mono tabular-nums ${better ? 'text-emerald-400/60' : 'text-orange-400/60'}`}>
+                              {diff >= 0 ? '+' : ''}{diff.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Card className="bg-card/60 border-border/50">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">Leader Slots</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{(validator.leader_slots || 0).toLocaleString()}</div>
-                      <div className="mt-2 space-y-1">
-                        <div className="flex justify-between text-xs text-muted-foreground">
-                          <span>Produced</span>
-                          <span>{((validator.leader_slots || 0) - (validator.skipped_slots || 0)).toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-xs text-muted-foreground">
-                          <span>Skipped</span>
-                          <span className="text-orange-400">{(validator.skipped_slots || 0).toLocaleString()}</span>
-                        </div>
-                        <Progress value={100 - (validator.skip_rate || 0)} className="h-1.5 mt-2" />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-card/60 border-border/50">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">Epoch Credits</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{(validator.epoch_credits || 0).toLocaleString()}</div>
-                      <div className="mt-2 text-xs text-muted-foreground">
-                        Credit ratio: <span className="text-foreground font-medium">{(validator.credit_ratio || 0).toFixed(2)}%</span>
-                      </div>
-                      <Progress value={validator.credit_ratio || 0} className="h-1.5 mt-2" />
-                    </CardContent>
-                  </Card>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="border border-border/30 rounded-lg p-4 bg-card/50">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Leader Slots</div>
+                    <div className="text-xl font-mono font-semibold tabular-nums">{(v.leader_slots || 0).toLocaleString()}</div>
+                    <div className="flex gap-4 mt-2 text-xs font-mono text-muted-foreground">
+                      <span>produced <span className="text-foreground">{((v.leader_slots || 0) - (v.skipped_slots || 0)).toLocaleString()}</span></span>
+                      <span>skipped <span className="text-orange-400">{(v.skipped_slots || 0).toLocaleString()}</span></span>
+                    </div>
+                  </div>
+                  <div className="border border-border/30 rounded-lg p-4 bg-card/50">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Epoch Credits</div>
+                    <div className="text-xl font-mono font-semibold tabular-nums">{(v.epoch_credits || 0).toLocaleString()}</div>
+                    <div className="mt-2 text-xs font-mono text-muted-foreground">
+                      ratio <span className="text-foreground">{(v.credit_ratio || 0).toFixed(2)}%</span>
+                    </div>
+                  </div>
                 </div>
               </TabsContent>
 
-              {/* Stakers Tab */}
+              {/* Stakers */}
               <TabsContent value="stakers">
-                <TopStakers stakes={stakes} totalStake={validator.activated_stake} />
+                <TopStakers stakes={stakes} totalStake={v.activated_stake} />
               </TabsContent>
 
-              {/* Details Tab */}
-              <TabsContent value="details" className="space-y-6">
-                <Card className="bg-card/60 border-border/50">
-                  <CardHeader>
-                    <CardTitle className="text-base font-semibold">Validator Identity</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {[
-                      { label: 'Vote Account', value: validator.vote_identity },
-                      { label: 'Identity', value: validator.identity },
-                      { label: 'Version', value: validator.version },
-                      { label: 'Website', value: validator.website, isLink: true },
-                      { label: 'Data Center', value: `${validator.ip_city}, ${validator.ip_country}` },
-                      { label: 'ASN', value: `${validator.asn} — ${validator.ip_org || ''}` },
-                      { label: 'ASN Concentration', value: `${(validator.asn_concentration || 0).toFixed(2)}%` },
-                      { label: 'City Concentration', value: `${(validator.city_concentration || 0).toFixed(2)}%` },
-                      { label: 'Stake Share', value: `${(validator.stake_ratio || 0).toFixed(4)}%` },
-                      { label: 'First Epoch', value: `#${validator.first_epoch_with_stake}` },
-                      { label: 'Jito MEV', value: validator.is_jito ? '✓ Enabled' : '✗ Disabled' },
-                    ].map((item) => (
-                      <div key={item.label} className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 py-2 border-b border-border/30 last:border-0">
-                        <span className="text-sm text-muted-foreground">{item.label}</span>
-                        {item.isLink ? (
-                          <a href={item.value} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
-                            {item.value} <ExternalLink className="w-3 h-3" />
-                          </a>
-                        ) : (
-                          <span className="text-sm text-foreground font-mono break-all">{item.value}</span>
-                        )}
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
+              {/* Identity */}
+              <TabsContent value="details">
+                <div className="border border-border/30 rounded-lg p-4 bg-card/50">
+                  {[
+                    { label: 'Vote Account', value: v.vote_identity },
+                    { label: 'Identity', value: v.identity },
+                    { label: 'Version', value: v.version },
+                    { label: 'Website', value: v.website, isLink: true },
+                    { label: 'Data Center', value: `${v.ip_city}, ${v.ip_country}` },
+                    { label: 'ASN', value: `${v.asn}${v.ip_org ? ` — ${v.ip_org}` : ''}` },
+                    { label: 'ASN Concentration', value: `${(v.asn_concentration || 0).toFixed(2)}%` },
+                    { label: 'City Concentration', value: `${(v.city_concentration || 0).toFixed(2)}%` },
+                    { label: 'Stake Share', value: `${(v.stake_ratio || 0).toFixed(4)}%` },
+                    { label: 'First Epoch', value: `#${v.first_epoch_with_stake}` },
+                    { label: 'Jito MEV', value: v.is_jito ? 'Enabled' : 'Disabled' },
+                  ].map((item) => (
+                    <div key={item.label} className="flex flex-col sm:flex-row sm:items-center justify-between py-2.5 border-b border-border/20 last:border-0">
+                      <span className="text-sm text-muted-foreground">{item.label}</span>
+                      {item.isLink ? (
+                        <a href={item.value} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 font-mono">
+                          {item.value} <ExternalLink className="w-3 h-3" />
+                        </a>
+                      ) : (
+                        <span className="text-sm text-foreground font-mono break-all tabular-nums">{item.value}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </TabsContent>
             </Tabs>
           ) : null}
