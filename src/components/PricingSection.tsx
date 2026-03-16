@@ -792,7 +792,7 @@ const PricingSection = () => {
                 </p>
                 <p>
                   <Shield className="w-3.5 h-3.5 text-primary inline mr-1.5" />
-                  Same pricing as dedicated server add-on — no premium for standalone purchase.
+                  Go all in with 1M SOL for just $1,000/mo — save $4,000 compared to per-package pricing.
                 </p>
               </div>
             </motion.div>
