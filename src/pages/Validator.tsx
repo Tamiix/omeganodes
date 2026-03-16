@@ -284,6 +284,7 @@ const Validator = () => {
               <TabsList className="bg-muted/50 w-full sm:w-auto">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="performance">Performance</TabsTrigger>
+                <TabsTrigger value="stakers">Stakers</TabsTrigger>
                 <TabsTrigger value="details">Details</TabsTrigger>
               </TabsList>
 
