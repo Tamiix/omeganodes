@@ -583,10 +583,10 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, planName, rps
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold">⚡ swQoS Service</span>
+                       <span className="font-semibold">⚡ swQoS Service</span>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        $350/mo per 100K stake (up to 1M)
+                        $500/mo per 100K stake — 1M for just $1,000/mo
                       </p>
                       <p className="text-xs text-muted-foreground/70 mt-0.5">
                         Want a longer term? Open a ticket for discounts.
