@@ -226,7 +226,7 @@ const PricingSection = () => {
       
       serverPrice = Math.round(basePrice * (1 - discountPercent));
       addOnsPrice = stakeAddition + shredsAddition;
-      beforeDiscount = basePrice + (additionalStakePackages * 350) + shredsAddition;
+      beforeDiscount = basePrice + (additionalStakePackages * 500) + shredsAddition;
     } else if (isWeekly) {
       // Weekly shared: fixed $120
       serverPrice = 120;
