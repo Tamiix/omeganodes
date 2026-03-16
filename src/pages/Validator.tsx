@@ -426,6 +426,11 @@ const Validator = () => {
                 </div>
               </TabsContent>
 
+              {/* Stakers Tab */}
+              <TabsContent value="stakers">
+                <TopStakers stakes={stakes} totalStake={validator.activated_stake} />
+              </TabsContent>
+
               {/* Details Tab */}
               <TabsContent value="details" className="space-y-6">
                 <Card className="bg-card/60 border-border/50">
