@@ -1182,9 +1182,9 @@ const PricingSection = () => {
                         Additional Stake
                       </h3>
                       <div className="flex items-center justify-between">
-                        <div>
+                         <div>
                           <p className="text-sm font-medium">100,000 SOL per package</p>
-                          <p className="text-xs text-muted-foreground">$350/month each</p>
+                          <p className="text-xs text-muted-foreground">$500/month each</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <button
