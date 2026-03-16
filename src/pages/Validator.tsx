@@ -155,6 +155,7 @@ const Validator = () => {
   const navigate = useNavigate();
   const [validator, setValidator] = useState<ValidatorData | null>(null);
   const [stakeAccounts, setStakeAccounts] = useState<StakeAccounts | null>(null);
+  const [stakes, setStakes] = useState<any[]>([]);
   const [cluster, setCluster] = useState<ClusterStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
