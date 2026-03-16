@@ -726,9 +726,9 @@ const PricingSection = () => {
               <div className="text-center lg:text-right">
                 <p className="text-xs text-muted-foreground mb-1">SwQoS Stake</p>
                 <div>
-                  {(discount > 0 || referralBanner) && (
+                   {(discount > 0 || referralBanner) && (
                     <div className="text-lg text-muted-foreground line-through">
-                      {formatPrice(swqosStakePackages * 350)}
+                      {formatPrice(swqosStakePackages >= 10 ? 1000 : swqosStakePackages * 500)}
                     </div>
                   )}
                   <div className="flex items-baseline justify-center lg:justify-end gap-1">
