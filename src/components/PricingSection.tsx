@@ -205,8 +205,10 @@ const PricingSection = () => {
     let discountPercent = 0;
 
     if (isSwQoS) {
-      // SwQoS standalone: $350/mo per 100k SOL package
-      const totalStake = swqosStakePackages * 350;
+      // SwQoS standalone: $500/mo per 100k SOL, 1M = $1,000
+      const totalStake = swqosStakePackages >= 10
+        ? 1000
+        : swqosStakePackages * 500;
       const commitment = commitments.find(c => c.id === selectedCommitment);
       discountPercent = commitment?.discount || 0;
       serverPrice = Math.round(totalStake * (1 - discountPercent));
