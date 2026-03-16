@@ -218,7 +218,7 @@ const PricingSection = () => {
       const spec = dedicatedSpecs.find(s => s.id === selectedDedicatedSpec);
       const basePrice = spec?.price || 2700;
       const stakeDiscountPercent = selectedCommitment === "3months" ? 0.10 : 0;
-      const stakePerPackage = 350 * (1 - stakeDiscountPercent);
+      const stakePerPackage = 500 * (1 - stakeDiscountPercent);
       const stakeAddition = additionalStakePackages * stakePerPackage;
       const shredsAddition = privateShredsEnabled ? 800 : 0;
       const commitment = commitments.find(c => c.id === selectedCommitment);
