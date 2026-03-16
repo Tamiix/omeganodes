@@ -780,6 +780,7 @@ const PricingSection = () => {
                 </div>
                 <p className="text-xs text-secondary mt-2">
                   Total stake: {(swqosStakePackages * 100000).toLocaleString()} SOL
+                  {swqosStakePackages >= 10 && ' — Save $4,000/mo vs per-package pricing'}
                 </p>
               </div>
 
