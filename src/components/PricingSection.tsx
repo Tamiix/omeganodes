@@ -811,7 +811,7 @@ const PricingSection = () => {
                     {[
                       "Stake-Weighted QoS priority",
                       "100,000 SOL per package",
-                      "Same pricing as dedicated add-on",
+                      "1M SOL for $1,000/mo (save $4,000)",
                       "No server purchase required",
                       "Priority transaction processing",
                     ].map((feature, i) => (
