@@ -173,7 +173,7 @@ const Validator = () => {
           ) : v ? (
             <Tabs defaultValue="overview" className="space-y-6">
               <TabsList className="bg-transparent p-0 h-auto gap-4 border-b border-border/20 rounded-none w-full justify-start">
-                {['overview', 'performance', 'stakers', 'identity'].map(tab => (
+                {['overview', 'performance', 'stakers', 'details'].map(tab => (
                   <TabsTrigger
                     key={tab}
                     value={tab}
