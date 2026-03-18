@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,11 +13,6 @@ async function fetchJSON(url: string) {
   const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
   if (!res.ok) throw new Error(`API ${url} returned ${res.status}`);
   return res.json();
-}
-
-function formatSol(lamports: number | null | undefined): string {
-  if (lamports == null) return '0';
-  return (lamports / 1e9).toLocaleString('en-US', { maximumFractionDigits: 2 });
 }
 
 function formatNumber(n: number | null | undefined, decimals = 2): string {
@@ -39,14 +35,53 @@ serve(async (req) => {
       throw new Error('DISCORD_VALIDATOR_WEBHOOK_URL not configured');
     }
 
-    // Fetch all data in parallel
-    const [validator, stakeAccounts, clusterStats] = await Promise.all([
-      fetchJSON(`https://api.stakewiz.com/validator/${VOTE_ACCOUNT}`),
+    // Check if force flag is set (bypass epoch check)
+    let force = false;
+    try {
+      const body = await req.json();
+      force = body?.force === true;
+    } catch {
+      // No body or not JSON, that's fine
+    }
+
+    // Fetch validator data first to get current epoch
+    const validator = await fetchJSON(`https://api.stakewiz.com/validator/${VOTE_ACCOUNT}`);
+    const currentEpoch = validator.epoch;
+
+    if (!currentEpoch) {
+      throw new Error('Could not determine current epoch from API');
+    }
+
+    // Check last posted epoch from app_settings
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data: setting } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'last_validator_epoch_posted')
+      .maybeSingle();
+
+    const lastPostedEpoch = setting?.value?.epoch;
+
+    if (!force && lastPostedEpoch && lastPostedEpoch === currentEpoch) {
+      console.log(`Epoch ${currentEpoch} already posted, skipping.`);
+      return new Response(
+        JSON.stringify({ success: true, skipped: true, reason: `Epoch ${currentEpoch} already posted` }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
+    }
+
+    console.log(`New epoch detected: ${currentEpoch} (last posted: ${lastPostedEpoch || 'none'}). Posting report...`);
+
+    // Fetch remaining data in parallel
+    const [stakeAccounts, clusterStats] = await Promise.all([
       fetchJSON(`https://api.stakewiz.com/validator_epoch_stake_accounts/${VOTE_ACCOUNT}`),
       fetchJSON(`https://api.stakewiz.com/cluster_stats`),
     ]);
 
-    // --- Parse data (API returns SOL, not lamports) ---
+    // --- Parse data ---
     const totalStakeSol = validator.activated_stake || 0;
     const activatingSOL = stakeAccounts?.activating?.amount || 0;
     const deactivatingSOL = stakeAccounts?.deactivating?.amount || 0;
@@ -72,7 +107,7 @@ serve(async (req) => {
     const delinquent = validator.delinquent === true;
 
     // --- Build embed ---
-    const statusColor = delinquent ? 0xEF4444 : 0x22C55E; // red if delinquent, green otherwise
+    const statusColor = delinquent ? 0xEF4444 : 0x22C55E;
     const statusText = delinquent ? '🔴 DELINQUENT' : '🟢 Active';
 
     const overviewLines = [
@@ -99,7 +134,7 @@ serve(async (req) => {
     ];
 
     const embed = {
-      title: '⚡ OmegaNode Validator Report',
+      title: `⚡ OmegaNode Validator Report — Epoch ${currentEpoch}`,
       color: statusColor,
       fields: [
         { name: '📊 Overview', value: overviewLines.join('\n'), inline: false },
@@ -107,12 +142,11 @@ serve(async (req) => {
         { name: '🔧 Technical', value: technicalLines.join('\n'), inline: false },
       ],
       footer: {
-        text: `OmegaNode Validator • Epoch ${validator.epoch || 'N/A'} • Uptime ${formatPct(validator.uptime)}`,
+        text: `OmegaNode Validator • Epoch ${currentEpoch} • Uptime ${formatPct(validator.uptime)}`,
       },
       timestamp: new Date().toISOString(),
     };
 
-    // Alert content if delinquent
     let content = '';
     if (delinquent) {
       content = '⚠️ **VALIDATOR DELINQUENT** — Immediate attention required!\n||<@404356986340114442> <@545046451219070980>||';
@@ -130,10 +164,26 @@ serve(async (req) => {
       throw new Error(`Discord webhook failed: ${discordRes.status}`);
     }
 
-    console.log('Validator stats posted to Discord');
+    // Update last posted epoch in app_settings
+    const { error: upsertError } = await supabase
+      .from('app_settings')
+      .upsert(
+        {
+          key: 'last_validator_epoch_posted',
+          value: { epoch: currentEpoch, posted_at: new Date().toISOString() },
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'key' }
+      );
+
+    if (upsertError) {
+      console.error('Failed to update last posted epoch:', upsertError);
+    }
+
+    console.log(`Validator stats for epoch ${currentEpoch} posted to Discord`);
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ success: true, epoch: currentEpoch }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   } catch (error: unknown) {
