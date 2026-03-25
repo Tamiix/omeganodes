@@ -126,11 +126,11 @@ const Validator = () => {
       setCluster(clusterData);
       setStakes(Array.isArray(stakesData) ? stakesData : []);
 
-      // Compute Jito rank by total stake (activated_stake descending)
+      // Compute Jito rank by active stake (descending)
       if (jitoData?.validators && Array.isArray(jitoData.validators)) {
         const sorted = [...jitoData.validators]
-          .filter((v: any) => v.activated_stake > 0)
-          .sort((a: any, b: any) => b.activated_stake - a.activated_stake);
+          .filter((v: any) => v.active_stake > 0)
+          .sort((a: any, b: any) => b.active_stake - a.active_stake);
         const idx = sorted.findIndex((v: any) => v.vote_account === VOTE_ACCOUNT);
         if (idx !== -1) {
           setJitoRank({ rank: idx + 1, total: sorted.length });
