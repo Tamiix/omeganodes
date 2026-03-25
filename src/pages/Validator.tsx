@@ -271,7 +271,7 @@ const Validator = () => {
                     icon={Award}
                     label="Wiz Score"
                     value={`${(v.wiz_score / 10).toFixed(1)} / 10`}
-                    sub={v.rank ? `Rank #${v.rank}` : undefined}
+                    sub={jitoRank ? `Jito Rank #${jitoRank.rank} / ${jitoRank.total}` : (v.rank ? `Rank #${v.rank}` : undefined)}
                     iconColor="text-cyan-400"
                   />
                   <StatCard
