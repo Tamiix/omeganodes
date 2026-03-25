@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, ExternalLink, RefreshCw, TrendingUp, Award, Percent, Zap, Circle, Clock, Hash, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowLeft, ExternalLink, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import TopStakers from '@/components/validator/TopStakers';
@@ -76,39 +75,16 @@ interface ClusterStats {
   avg_apy: number;
 }
 
-const StatCard = ({ icon: Icon, label, value, sub, iconColor }: { icon: any; label: string; value: string; sub?: string; iconColor?: string }) => (
-  <div className="border border-border/30 rounded-lg p-4 bg-card/50">
-    <div className="flex items-center justify-between mb-3">
-      <div className="flex items-center gap-2">
-        <Icon className={`w-4 h-4 ${iconColor || 'text-primary'}`} />
-        <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">{label}</span>
-      </div>
-    </div>
-    <div className="text-2xl font-bold font-mono tabular-nums text-foreground">{value}</div>
-    {sub && <div className="text-[11px] text-muted-foreground/60 mt-1 font-mono">{sub}</div>}
-  </div>
-);
-
-const Row = ({ label, val, sub }: { label: string; val: string; sub?: string }) => (
-  <div className="flex items-center justify-between py-2.5 border-b border-border/10 last:border-0">
-    <span className="text-[13px] text-muted-foreground">{label}</span>
-    <div className="text-right">
-      <span className="text-[13px] font-mono tabular-nums text-foreground">{val}</span>
-      {sub && <span className="text-[11px] text-muted-foreground/50 ml-2 font-mono">{sub}</span>}
-    </div>
-  </div>
-);
-
 const Validator = () => {
   const navigate = useNavigate();
   const [validator, setValidator] = useState<ValidatorData | null>(null);
   const [stakeAccounts, setStakeAccounts] = useState<StakeAccounts | null>(null);
   const [stakes, setStakes] = useState<any[]>([]);
   const [cluster, setCluster] = useState<ClusterStats | null>(null);
-  const [jitoRank, setJitoRank] = useState<{ rank: number; total: number } | null>(null);
+  const [jitoRank, setJitoRank] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'stakers' | 'details'>('overview');
 
   const fetchData = async () => {
     setLoading(true);
@@ -126,18 +102,13 @@ const Validator = () => {
       setCluster(clusterData);
       setStakes(Array.isArray(stakesData) ? stakesData : []);
 
-      // Compute Jito rank by active stake (descending)
       if (jitoData?.validators && Array.isArray(jitoData.validators)) {
         const sorted = [...jitoData.validators]
           .filter((v: any) => v.active_stake > 0)
           .sort((a: any, b: any) => b.active_stake - a.active_stake);
         const idx = sorted.findIndex((v: any) => v.vote_account === VOTE_ACCOUNT);
-        if (idx !== -1) {
-          setJitoRank({ rank: idx + 1, total: sorted.length });
-        }
+        if (idx !== -1) setJitoRank(idx + 1);
       }
-
-      setLastUpdated(new Date());
     } catch (err: any) {
       console.error('Failed to fetch validator data:', err);
       setError(err.message || 'Failed to load validator data');
@@ -153,237 +124,212 @@ const Validator = () => {
     ? (stakeAccounts.activating?.amount || 0) - (stakeAccounts.deactivating?.amount || 0)
     : 0;
 
+  const tabs = ['overview', 'stakers', 'details'] as const;
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
       <div className="pt-24 pb-20">
-        <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
+        <div className="container mx-auto px-4 sm:px-6 max-w-3xl">
 
           {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-start justify-between mb-3">
+          <div className="mb-10">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <button onClick={() => navigate('/')} className="text-muted-foreground hover:text-foreground transition-colors">
-                  <ArrowLeft className="w-5 h-5" />
+                  <ArrowLeft className="w-4 h-4" />
                 </button>
-                {v?.image && <img src={v.image} alt="" className="w-10 h-10 rounded-full" />}
-                <div>
-                  <div className="flex items-center gap-2.5">
-                    <h1 className="text-2xl font-bold text-foreground">{v?.name || 'OmegaNode Validator'}</h1>
-                     {jitoRank && (
-                      <span className="text-[11px] font-mono border border-purple-500/40 text-purple-400 rounded px-1.5 py-0.5">
-                        Jito #{jitoRank.rank}
-                      </span>
-                    )}
-                    {v?.rank && (
-                      <span className="text-[11px] font-mono border border-border/40 text-muted-foreground rounded px-1.5 py-0.5">
-                        SW #{v.rank}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground/60 mt-0.5">Enterprise-grade Solana infrastructure provider · Mainnet</p>
-                </div>
+                {v?.image && <img src={v.image} alt="" className="w-8 h-8 rounded-full" />}
+                <h1 className="text-xl font-semibold text-foreground">{v?.name || 'OmegaNode Validator'}</h1>
+                {!v?.delinquent && v && (
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" title="Online" />
+                )}
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={fetchData} disabled={loading} className="gap-1.5 text-xs">
-                  <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh
-                </Button>
-                <Button variant="outline" size="sm" asChild className="gap-1.5 text-xs">
-                  <a href={`https://stakewiz.com/validator/${VOTE_ACCOUNT}`} target="_blank" rel="noopener noreferrer">
-                    StakeWiz <ExternalLink className="w-3 h-3" />
-                  </a>
-                </Button>
-              </div>
+              <Button variant="ghost" size="sm" onClick={fetchData} disabled={loading} className="text-muted-foreground hover:text-foreground">
+                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              </Button>
             </div>
 
-            {/* Status pills */}
+            {/* Badges */}
             {v && (
-              <div className="flex items-center gap-2 ml-[68px] flex-wrap">
-                {!v.delinquent && (
-                  <span className="text-[11px] font-medium border border-emerald-500/30 text-emerald-400 rounded-full px-2.5 py-0.5 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" /> Online
+              <div className="flex items-center gap-2 ml-[60px] flex-wrap">
+                {jitoRank && (
+                  <span className="text-[11px] font-mono text-accent rounded px-2 py-0.5 bg-accent/10">
+                    Jito #{jitoRank}
                   </span>
                 )}
-                {v.is_jito && (
-                  <span className="text-[11px] font-medium border border-purple-500/30 text-purple-400 rounded-full px-2.5 py-0.5">
-                    Jito MEV
+                {v.rank && (
+                  <span className="text-[11px] font-mono text-muted-foreground rounded px-2 py-0.5 bg-muted/50">
+                    SW #{v.rank}
                   </span>
                 )}
-                <span className="text-[11px] font-mono border border-border/30 text-muted-foreground rounded-full px-2.5 py-0.5">
-                  v{v.version}
+                <span className="text-[11px] font-mono text-muted-foreground/60">
+                  v{v.version} · {v.ip_city}, {v.ip_country}
                 </span>
-                <span className="text-[11px] border border-border/30 text-muted-foreground rounded-full px-2.5 py-0.5">
-                  {v.ip_city}, {v.ip_country}
-                </span>
-                {lastUpdated && (
-                  <span className="text-[11px] border border-border/30 text-muted-foreground rounded-full px-2.5 py-0.5">
-                    Updated {lastUpdated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })}
-                  </span>
-                )}
               </div>
             )}
           </div>
 
           {error && (
-            <div className="text-sm text-destructive mb-6 p-3 rounded bg-destructive/5 border border-destructive/15">
+            <div className="text-sm text-destructive mb-6 p-3 rounded-md bg-destructive/5 border border-destructive/10">
               {error} <button onClick={fetchData} className="underline ml-1">retry</button>
             </div>
           )}
 
           {loading && !v ? (
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-24 bg-muted/20 rounded-lg animate-pulse" />
+            <div className="space-y-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-16 bg-muted/15 rounded-md animate-pulse" />
               ))}
             </div>
           ) : v ? (
-            <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="bg-card/50 border border-border/30 p-1 h-auto rounded-lg">
-                {['overview', 'performance', 'stakers', 'details'].map(tab => (
-                  <TabsTrigger
+            <>
+              {/* Tab bar */}
+              <div className="flex gap-1 mb-8 border-b border-border/20 pb-px">
+                {tabs.map(tab => (
+                  <button
                     key={tab}
-                    value={tab}
-                    className="text-xs capitalize px-4 py-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+                    onClick={() => setActiveTab(tab)}
+                    className={`text-xs capitalize px-3 py-2 transition-colors relative ${
+                      activeTab === tab
+                        ? 'text-foreground'
+                        : 'text-muted-foreground hover:text-foreground/70'
+                    }`}
                   >
                     {tab}
-                  </TabsTrigger>
+                    {activeTab === tab && (
+                      <span className="absolute bottom-0 left-0 right-0 h-px bg-foreground" />
+                    )}
+                  </button>
                 ))}
-              </TabsList>
+              </div>
 
               {/* Overview */}
-              <TabsContent value="overview" className="space-y-4 mt-4">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <StatCard
-                    icon={TrendingUp}
-                    label="Total Stake"
-                    value={`◎ ${v.activated_stake.toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
-                    sub={netDelta !== 0 ? `${netDelta >= 0 ? '+' : ''}${netDelta.toLocaleString('en-US', { maximumFractionDigits: 0 })} ◎ next epoch` : undefined}
-                    iconColor="text-emerald-400"
-                  />
-                  <StatCard
-                    icon={TrendingUp}
-                    label="True APY"
-                    value={`${v.total_apy.toFixed(2)}%`}
-                    sub={`Staking ${v.staking_apy.toFixed(2)}% + Jito ${v.jito_apy.toFixed(2)}%`}
-                    iconColor="text-purple-400"
-                  />
-                  <StatCard
-                    icon={Award}
-                    label="Wiz Score"
-                    value={`${(v.wiz_score / 10).toFixed(1)} / 10`}
-                    sub={jitoRank ? `Jito Rank #${jitoRank.rank}` : (v.rank ? `Rank #${v.rank}` : undefined)}
-                    iconColor="text-cyan-400"
-                  />
-                  <StatCard
-                    icon={Percent}
-                    label="Commission"
-                    value={`${v.commission}%`}
-                    sub={`Jito: ${(v.jito_commission_bps / 100).toFixed(0)}%`}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <StatCard
-                    icon={Zap}
-                    label="Skip Rate"
-                    value={`${v.skip_rate.toFixed(2)}%`}
-                    sub={cluster ? `Cluster avg: ${cluster.avg_skip_rate.toFixed(2)}%` : undefined}
-                    iconColor="text-yellow-400"
-                  />
-                  <StatCard
-                    icon={Circle}
-                    label="Vote Success"
-                    value={`${v.vote_success.toFixed(2)}%`}
-                    sub={`${v.epoch_credits.toLocaleString()} credits`}
-                  />
-                  <StatCard
-                    icon={Clock}
-                    label="Uptime (30D)"
-                    value={`${v.uptime.toFixed(2)}%`}
-                    iconColor="text-emerald-400"
-                  />
-                  <StatCard
-                    icon={Hash}
-                    label="Epoch"
-                    value={`#${v.epoch}`}
-                  />
-                </div>
-
-                {/* Epoch Stake Change */}
-                {stakeAccounts && (
-                  <div className="border border-border/30 rounded-lg p-5 bg-card/50 mt-2">
-                    <div className="flex items-center gap-2 mb-3">
-                      <TrendingUp className="w-4 h-4 text-primary" />
-                      <span className="text-[13px] font-medium text-foreground">Epoch Stake Change</span>
+              {activeTab === 'overview' && (
+                <div className="space-y-8">
+                  {/* Key metrics - simple rows */}
+                  <div>
+                    <div className="grid grid-cols-3 gap-8 mb-8">
+                      <div>
+                        <span className="text-[11px] uppercase tracking-wider text-muted-foreground/50 block mb-1">Total Stake</span>
+                        <span className="text-lg font-mono font-semibold text-foreground">
+                          ◎ {v.activated_stake.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[11px] uppercase tracking-wider text-muted-foreground/50 block mb-1">True APY</span>
+                        <span className="text-lg font-mono font-semibold text-foreground">{v.total_apy.toFixed(2)}%</span>
+                        <span className="text-[11px] text-muted-foreground/40 block font-mono">
+                          {v.staking_apy.toFixed(2)}% + {v.jito_apy.toFixed(2)}% jito
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[11px] uppercase tracking-wider text-muted-foreground/50 block mb-1">Wiz Score</span>
+                        <span className="text-lg font-mono font-semibold text-foreground">{(v.wiz_score / 10).toFixed(1)}<span className="text-muted-foreground/40"> / 10</span></span>
+                      </div>
                     </div>
-                    <div className="flex items-baseline gap-3">
-                      <span className={`text-2xl font-bold font-mono tabular-nums ${netDelta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                        {netDelta >= 0 ? '+' : ''}{netDelta.toLocaleString('en-US', { maximumFractionDigits: 0 })} ◎
-                      </span>
-                      <span className="text-xs text-muted-foreground/60">net stake incoming next epoch</span>
-                    </div>
-                    <div className="flex gap-6 mt-2 text-xs font-mono text-muted-foreground/60">
-                      <span>Activating: <span className="text-emerald-400/80">+{stakeAccounts.activating.amount.toLocaleString('en-US', { maximumFractionDigits: 0 })} ◎</span> ({stakeAccounts.activating.count} accounts)</span>
-                      <span>Deactivating: <span className="text-red-400/80">-{stakeAccounts.deactivating.amount.toLocaleString('en-US', { maximumFractionDigits: 0 })} ◎</span> ({stakeAccounts.deactivating.count} accounts)</span>
+
+                    <div className="grid grid-cols-4 gap-8">
+                      <div>
+                        <span className="text-[11px] uppercase tracking-wider text-muted-foreground/50 block mb-1">Commission</span>
+                        <span className="text-sm font-mono text-foreground">{v.commission}%</span>
+                        <span className="text-[11px] text-muted-foreground/40 block font-mono">Jito {(v.jito_commission_bps / 100).toFixed(0)}%</span>
+                      </div>
+                      <div>
+                        <span className="text-[11px] uppercase tracking-wider text-muted-foreground/50 block mb-1">Skip Rate</span>
+                        <span className="text-sm font-mono text-foreground">{v.skip_rate.toFixed(2)}%</span>
+                        {cluster && <span className="text-[11px] text-muted-foreground/40 block font-mono">avg {cluster.avg_skip_rate.toFixed(2)}%</span>}
+                      </div>
+                      <div>
+                        <span className="text-[11px] uppercase tracking-wider text-muted-foreground/50 block mb-1">Vote Success</span>
+                        <span className="text-sm font-mono text-foreground">{v.vote_success.toFixed(2)}%</span>
+                      </div>
+                      <div>
+                        <span className="text-[11px] uppercase tracking-wider text-muted-foreground/50 block mb-1">Uptime</span>
+                        <span className="text-sm font-mono text-foreground">{v.uptime.toFixed(2)}%</span>
+                      </div>
                     </div>
                   </div>
-                )}
-              </TabsContent>
 
-              {/* Performance */}
-              <TabsContent value="performance" className="space-y-6 mt-4">
-                {cluster && (
-                  <div className="border border-border/30 rounded-lg p-5 bg-card/50">
-                    <span className="text-[13px] font-medium text-foreground mb-4 block">vs Cluster Average</span>
-                    {[
-                      { label: 'Vote Success', val: v.credit_ratio, avg: cluster.avg_credit_ratio, higher: true },
-                      { label: 'Skip Rate', val: v.skip_rate, avg: cluster.avg_skip_rate, higher: false },
-                      { label: 'APY', val: v.total_apy, avg: cluster.avg_apy, higher: true },
-                      { label: 'Commission', val: v.commission, avg: cluster.avg_commission, higher: false },
-                    ].map(m => {
-                      const better = m.higher ? m.val >= m.avg : m.val <= m.avg;
-                      const diff = m.val - m.avg;
-                      return (
-                        <div key={m.label} className="flex items-center justify-between py-2.5 border-b border-border/10 last:border-0">
-                          <span className="text-[13px] text-muted-foreground">{m.label}</span>
-                          <div className="flex items-center gap-3 font-mono tabular-nums text-[13px]">
-                            <span className="text-muted-foreground/40">{m.avg.toFixed(2)}%</span>
-                            <span className={better ? 'text-emerald-400' : 'text-orange-400'}>{m.val.toFixed(2)}%</span>
-                            <span className={`text-[11px] ${better ? 'text-emerald-400/50' : 'text-orange-400/50'}`}>
-                              {diff >= 0 ? '+' : ''}{diff.toFixed(2)}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
+                  {/* Epoch stake change */}
+                  {stakeAccounts && (
+                    <div className="border-t border-border/15 pt-6">
+                      <span className="text-[11px] uppercase tracking-wider text-muted-foreground/50 block mb-2">Epoch #{v.epoch} Stake Change</span>
+                      <div className="flex items-baseline gap-3 mb-1">
+                        <span className={`text-lg font-mono font-semibold ${netDelta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {netDelta >= 0 ? '+' : ''}{netDelta.toLocaleString('en-US', { maximumFractionDigits: 0 })} ◎
+                        </span>
+                        <span className="text-[11px] text-muted-foreground/40">net</span>
+                      </div>
+                      <div className="flex gap-6 text-[11px] font-mono text-muted-foreground/40">
+                        <span>
+                          <span className="text-emerald-400/70">+{stakeAccounts.activating.amount.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> activating ({stakeAccounts.activating.count})
+                        </span>
+                        <span>
+                          <span className="text-red-400/70">-{stakeAccounts.deactivating.amount.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> deactivating ({stakeAccounts.deactivating.count})
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Performance vs cluster */}
+                  {cluster && (
+                    <div className="border-t border-border/15 pt-6">
+                      <span className="text-[11px] uppercase tracking-wider text-muted-foreground/50 block mb-4">vs Cluster</span>
+                      <div className="space-y-0">
+                        {[
+                          { label: 'Vote Success', val: v.credit_ratio, avg: cluster.avg_credit_ratio, higher: true },
+                          { label: 'Skip Rate', val: v.skip_rate, avg: cluster.avg_skip_rate, higher: false },
+                          { label: 'APY', val: v.total_apy, avg: cluster.avg_apy, higher: true },
+                          { label: 'Commission', val: v.commission, avg: cluster.avg_commission, higher: false },
+                        ].map(m => {
+                          const better = m.higher ? m.val >= m.avg : m.val <= m.avg;
+                          const diff = m.val - m.avg;
+                          return (
+                            <div key={m.label} className="flex items-center justify-between py-2 border-b border-border/8 last:border-0">
+                              <span className="text-xs text-muted-foreground">{m.label}</span>
+                              <div className="flex items-center gap-4 font-mono text-xs">
+                                <span className="text-muted-foreground/30 w-14 text-right">{m.avg.toFixed(2)}%</span>
+                                <span className={better ? 'text-emerald-400' : 'text-orange-400'}>{m.val.toFixed(2)}%</span>
+                                <span className={`text-[10px] w-12 text-right ${better ? 'text-emerald-400/40' : 'text-orange-400/40'}`}>
+                                  {diff >= 0 ? '+' : ''}{diff.toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Epoch stats */}
+                  <div className="border-t border-border/15 pt-6">
+                    <div className="grid grid-cols-2 gap-8">
+                      <div>
+                        <span className="text-[11px] uppercase tracking-wider text-muted-foreground/50 block mb-1">Leader Slots</span>
+                        <span className="text-sm font-mono text-foreground">{(v.leader_slots || 0).toLocaleString()}</span>
+                        <span className="text-[11px] text-muted-foreground/40 block font-mono">
+                          {((v.leader_slots || 0) - (v.skipped_slots || 0)).toLocaleString()} produced · {(v.skipped_slots || 0).toLocaleString()} skipped
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[11px] uppercase tracking-wider text-muted-foreground/50 block mb-1">Epoch Credits</span>
+                        <span className="text-sm font-mono text-foreground">{(v.epoch_credits || 0).toLocaleString()}</span>
+                        <span className="text-[11px] text-muted-foreground/40 block font-mono">{(v.credit_ratio || 0).toFixed(2)}% ratio</span>
+                      </div>
+                    </div>
                   </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-3">
-                  <StatCard
-                    icon={Hash}
-                    label="Leader Slots"
-                    value={(v.leader_slots || 0).toLocaleString()}
-                    sub={`${((v.leader_slots || 0) - (v.skipped_slots || 0)).toLocaleString()} produced · ${(v.skipped_slots || 0).toLocaleString()} skipped`}
-                  />
-                  <StatCard
-                    icon={Award}
-                    label="Epoch Credits"
-                    value={(v.epoch_credits || 0).toLocaleString()}
-                    sub={`${(v.credit_ratio || 0).toFixed(2)}% ratio`}
-                    iconColor="text-cyan-400"
-                  />
                 </div>
-              </TabsContent>
+              )}
 
               {/* Stakers */}
-              <TabsContent value="stakers" className="mt-4">
+              {activeTab === 'stakers' && (
                 <TopStakers stakes={stakes} totalStake={v.activated_stake} />
-              </TabsContent>
+              )}
 
               {/* Details */}
-              <TabsContent value="details" className="mt-4">
-                <div className="border border-border/30 rounded-lg p-5 bg-card/50">
+              {activeTab === 'details' && (
+                <div className="space-y-0">
                   {[
                     { l: 'Vote Account', v: v.vote_identity },
                     { l: 'Identity', v: v.identity },
@@ -398,19 +344,30 @@ const Validator = () => {
                     { l: 'Jito MEV', v: v.is_jito ? 'Enabled' : 'Disabled' },
                   ].map(item => (
                     <div key={item.l} className="flex flex-col sm:flex-row sm:items-center justify-between py-2.5 border-b border-border/10 last:border-0">
-                      <span className="text-[13px] text-muted-foreground">{item.l}</span>
+                      <span className="text-xs text-muted-foreground">{item.l}</span>
                       {item.link ? (
-                        <a href={item.v} target="_blank" rel="noopener noreferrer" className="text-[13px] text-primary hover:underline flex items-center gap-1 font-mono">
+                        <a href={item.v} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1 font-mono">
                           {item.v} <ExternalLink className="w-2.5 h-2.5" />
                         </a>
                       ) : (
-                        <span className="text-[13px] text-foreground font-mono break-all tabular-nums">{item.v}</span>
+                        <span className="text-xs text-foreground font-mono break-all">{item.v}</span>
                       )}
                     </div>
                   ))}
+
+                  <div className="pt-4 mt-4 border-t border-border/10">
+                    <a
+                      href={`https://stakewiz.com/validator/${VOTE_ACCOUNT}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                    >
+                      View on StakeWiz <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
                 </div>
-              </TabsContent>
-            </Tabs>
+              )}
+            </>
           ) : null}
         </div>
       </div>
