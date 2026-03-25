@@ -105,6 +105,7 @@ const Validator = () => {
   const [stakeAccounts, setStakeAccounts] = useState<StakeAccounts | null>(null);
   const [stakes, setStakes] = useState<any[]>([]);
   const [cluster, setCluster] = useState<ClusterStats | null>(null);
+  const [jitoRank, setJitoRank] = useState<{ rank: number; total: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -113,16 +114,29 @@ const Validator = () => {
     setLoading(true);
     setError(null);
     try {
-      const [valData, stakeData, clusterData, stakesData] = await Promise.all([
+      const [valData, stakeData, clusterData, stakesData, jitoData] = await Promise.all([
         fetchEndpoint('validator'),
         fetchEndpoint('epoch_stake_accounts'),
         fetchEndpoint('cluster_stats'),
         fetchEndpoint('stakes'),
+        fetchEndpoint('jito_validators').catch(() => null),
       ]);
       setValidator(valData);
       setStakeAccounts(stakeData);
       setCluster(clusterData);
       setStakes(Array.isArray(stakesData) ? stakesData : []);
+
+      // Compute Jito rank by active stake (descending)
+      if (jitoData?.validators && Array.isArray(jitoData.validators)) {
+        const sorted = [...jitoData.validators]
+          .filter((v: any) => v.active_stake > 0)
+          .sort((a: any, b: any) => b.active_stake - a.active_stake);
+        const idx = sorted.findIndex((v: any) => v.vote_account === VOTE_ACCOUNT);
+        if (idx !== -1) {
+          setJitoRank({ rank: idx + 1, total: sorted.length });
+        }
+      }
+
       setLastUpdated(new Date());
     } catch (err: any) {
       console.error('Failed to fetch validator data:', err);
@@ -156,9 +170,14 @@ const Validator = () => {
                 <div>
                   <div className="flex items-center gap-2.5">
                     <h1 className="text-2xl font-bold text-foreground">{v?.name || 'OmegaNode Validator'}</h1>
+                    {jitoRank && (
+                      <span className="text-[11px] font-mono border border-purple-500/40 text-purple-400 rounded px-1.5 py-0.5">
+                        Jito #{jitoRank.rank} / {jitoRank.total}
+                      </span>
+                    )}
                     {v?.rank && (
-                      <span className="text-[11px] font-mono border border-primary/40 text-primary rounded px-1.5 py-0.5">
-                        Rank #{v.rank}
+                      <span className="text-[11px] font-mono border border-border/40 text-muted-foreground rounded px-1.5 py-0.5">
+                        SW #{v.rank}
                       </span>
                     )}
                   </div>
@@ -252,7 +271,7 @@ const Validator = () => {
                     icon={Award}
                     label="Wiz Score"
                     value={`${(v.wiz_score / 10).toFixed(1)} / 10`}
-                    sub={v.rank ? `Rank #${v.rank}` : undefined}
+                    sub={jitoRank ? `Jito Rank #${jitoRank.rank} / ${jitoRank.total}` : (v.rank ? `Rank #${v.rank}` : undefined)}
                     iconColor="text-cyan-400"
                   />
                   <StatCard
