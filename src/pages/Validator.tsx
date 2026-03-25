@@ -105,6 +105,7 @@ const Validator = () => {
   const [stakeAccounts, setStakeAccounts] = useState<StakeAccounts | null>(null);
   const [stakes, setStakes] = useState<any[]>([]);
   const [cluster, setCluster] = useState<ClusterStats | null>(null);
+  const [jitoRank, setJitoRank] = useState<{ rank: number; total: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -113,16 +114,29 @@ const Validator = () => {
     setLoading(true);
     setError(null);
     try {
-      const [valData, stakeData, clusterData, stakesData] = await Promise.all([
+      const [valData, stakeData, clusterData, stakesData, jitoData] = await Promise.all([
         fetchEndpoint('validator'),
         fetchEndpoint('epoch_stake_accounts'),
         fetchEndpoint('cluster_stats'),
         fetchEndpoint('stakes'),
+        fetchEndpoint('jito_validators').catch(() => null),
       ]);
       setValidator(valData);
       setStakeAccounts(stakeData);
       setCluster(clusterData);
       setStakes(Array.isArray(stakesData) ? stakesData : []);
+
+      // Compute Jito rank by total stake (activated_stake descending)
+      if (jitoData?.validators && Array.isArray(jitoData.validators)) {
+        const sorted = [...jitoData.validators]
+          .filter((v: any) => v.activated_stake > 0)
+          .sort((a: any, b: any) => b.activated_stake - a.activated_stake);
+        const idx = sorted.findIndex((v: any) => v.vote_account === VOTE_ACCOUNT);
+        if (idx !== -1) {
+          setJitoRank({ rank: idx + 1, total: sorted.length });
+        }
+      }
+
       setLastUpdated(new Date());
     } catch (err: any) {
       console.error('Failed to fetch validator data:', err);
