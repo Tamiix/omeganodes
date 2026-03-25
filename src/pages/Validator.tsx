@@ -170,9 +170,9 @@ const Validator = () => {
                 <div>
                   <div className="flex items-center gap-2.5">
                     <h1 className="text-2xl font-bold text-foreground">{v?.name || 'OmegaNode Validator'}</h1>
-                    {jitoRank && (
+                     {jitoRank && (
                       <span className="text-[11px] font-mono border border-purple-500/40 text-purple-400 rounded px-1.5 py-0.5">
-                        Jito #{jitoRank.rank} / {jitoRank.total}
+                        Jito #{jitoRank.rank}
                       </span>
                     )}
                     {v?.rank && (
@@ -271,7 +271,7 @@ const Validator = () => {
                     icon={Award}
                     label="Wiz Score"
                     value={`${(v.wiz_score / 10).toFixed(1)} / 10`}
-                    sub={jitoRank ? `Jito Rank #${jitoRank.rank} / ${jitoRank.total}` : (v.rank ? `Rank #${v.rank}` : undefined)}
+                    sub={jitoRank ? `Jito Rank #${jitoRank.rank}` : (v.rank ? `Rank #${v.rank}` : undefined)}
                     iconColor="text-cyan-400"
                   />
                   <StatCard
