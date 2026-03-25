@@ -170,9 +170,14 @@ const Validator = () => {
                 <div>
                   <div className="flex items-center gap-2.5">
                     <h1 className="text-2xl font-bold text-foreground">{v?.name || 'OmegaNode Validator'}</h1>
+                    {jitoRank && (
+                      <span className="text-[11px] font-mono border border-purple-500/40 text-purple-400 rounded px-1.5 py-0.5">
+                        Jito #{jitoRank.rank} / {jitoRank.total}
+                      </span>
+                    )}
                     {v?.rank && (
-                      <span className="text-[11px] font-mono border border-primary/40 text-primary rounded px-1.5 py-0.5">
-                        Rank #{v.rank}
+                      <span className="text-[11px] font-mono border border-border/40 text-muted-foreground rounded px-1.5 py-0.5">
+                        SW #{v.rank}
                       </span>
                     )}
                   </div>
