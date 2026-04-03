@@ -32,6 +32,9 @@ Deno.serve(async (req) => {
       case 'cluster_stats':
         apiUrl = `https://api.stakewiz.com/cluster_stats`;
         break;
+      case 'epoch_history':
+        apiUrl = `https://api.stakewiz.com/validator_total_stakes/${VOTE_ACCOUNT}`;
+        break;
       case 'jito_validators':
         apiUrl = `https://kobe.mainnet.jito.network/api/v1/validators`;
         break;

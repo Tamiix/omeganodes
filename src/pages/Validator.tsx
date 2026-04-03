@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, ExternalLink, RefreshCw, Shield, Zap, TrendingUp, Server, Activity } from 'lucide-react';
+import { ArrowLeft, ExternalLink, RefreshCw, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import TopStakers from '@/components/validator/TopStakers';
@@ -76,20 +75,10 @@ interface ClusterStats {
   avg_apy: number;
 }
 
-const StatCard = ({ icon: Icon, label, value, sub, color = 'text-foreground' }: {
-  icon: any; label: string; value: string; sub?: string; color?: string;
-}) => (
-  <Card className="bg-card border-border/50">
-    <CardContent className="p-4">
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className="w-3.5 h-3.5 text-muted-foreground" />
-        <span className="text-xs text-muted-foreground">{label}</span>
-      </div>
-      <p className={`text-xl font-semibold font-mono ${color}`}>{value}</p>
-      {sub && <p className="text-[11px] text-muted-foreground mt-0.5 font-mono">{sub}</p>}
-    </CardContent>
-  </Card>
-);
+interface EpochStake {
+  epoch: number;
+  stake: number;
+}
 
 const Validator = () => {
   const navigate = useNavigate();
@@ -98,6 +87,7 @@ const Validator = () => {
   const [stakes, setStakes] = useState<any[]>([]);
   const [cluster, setCluster] = useState<ClusterStats | null>(null);
   const [jitoRank, setJitoRank] = useState<number | null>(null);
+  const [epochHistory, setEpochHistory] = useState<EpochStake[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'stakers' | 'details'>('overview');
@@ -106,17 +96,23 @@ const Validator = () => {
     setLoading(true);
     setError(null);
     try {
-      const [valData, stakeData, clusterData, stakesData, jitoData] = await Promise.all([
+      const [valData, stakeData, clusterData, stakesData, jitoData, epochData] = await Promise.all([
         fetchEndpoint('validator'),
         fetchEndpoint('epoch_stake_accounts'),
         fetchEndpoint('cluster_stats'),
         fetchEndpoint('stakes'),
         fetchEndpoint('jito_validators').catch(() => null),
+        fetchEndpoint('epoch_history').catch(() => []),
       ]);
       setValidator(valData);
       setStakeAccounts(stakeData);
       setCluster(clusterData);
       setStakes(Array.isArray(stakesData) ? stakesData : []);
+
+      if (Array.isArray(epochData) && epochData.length > 0) {
+        const sorted = [...epochData].sort((a: EpochStake, b: EpochStake) => b.epoch - a.epoch);
+        setEpochHistory(sorted.slice(0, 11)); // 11 to calculate 10 deltas
+      }
 
       if (jitoData?.validators && Array.isArray(jitoData.validators)) {
         const sorted = [...jitoData.validators]
@@ -140,13 +136,28 @@ const Validator = () => {
     ? (stakeAccounts.activating?.amount || 0) - (stakeAccounts.deactivating?.amount || 0)
     : 0;
 
+  // Calculate epoch deltas from history
+  const epochDeltas = epochHistory.length > 1
+    ? epochHistory.slice(0, -1).map((current, i) => {
+        const prev = epochHistory[i + 1];
+        return {
+          epoch: current.epoch,
+          stake: current.stake,
+          delta: current.stake - prev.stake,
+        };
+      })
+    : [];
+
   const tabs = ['overview', 'stakers', 'details'] as const;
+
+  const fmt = (n: number, decimals = 0) =>
+    n.toLocaleString('en-US', { maximumFractionDigits: decimals });
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
       <div className="pt-24 pb-20">
-        <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
+        <div className="container mx-auto px-4 sm:px-6 max-w-3xl">
 
           {/* Header */}
           <div className="mb-8">
@@ -155,34 +166,29 @@ const Validator = () => {
                 <button onClick={() => navigate('/')} className="text-muted-foreground hover:text-foreground transition-colors">
                   <ArrowLeft className="w-4 h-4" />
                 </button>
-                {v?.image && <img src={v.image} alt="" className="w-10 h-10 rounded-full border border-border/50" />}
+                {v?.image && <img src={v.image} alt="" className="w-9 h-9 rounded-full" />}
                 <div>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-lg font-semibold text-foreground">{v?.name || 'OmegaNode Validator'}</h1>
+                    <h1 className="text-base font-semibold text-foreground">{v?.name || 'OmegaNode Validator'}</h1>
                     {!v?.delinquent && v && (
-                      <span className="w-2 h-2 rounded-full bg-emerald-400" title="Online" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title="Online" />
                     )}
                   </div>
                   {v && (
-                    <div className="flex items-center gap-2 mt-0.5">
+                    <div className="flex items-center gap-1.5 mt-0.5">
                       {jitoRank && (
-                        <span className="text-[11px] font-mono text-purple-400 bg-purple-500/10 border border-purple-500/20 rounded px-1.5 py-0.5">
+                        <span className="text-[10px] font-mono text-purple-400 bg-purple-500/10 rounded px-1.5 py-0.5">
                           Jito #{jitoRank}
                         </span>
                       )}
-                      {v.rank && (
-                        <span className="text-[11px] font-mono text-muted-foreground bg-muted/50 rounded px-1.5 py-0.5">
-                          SW #{v.rank}
-                        </span>
-                      )}
-                      <span className="text-[11px] text-muted-foreground">
+                      <span className="text-[10px] text-muted-foreground font-mono">
                         v{v.version} · {v.ip_city}, {v.ip_country}
                       </span>
                     </div>
                   )}
                 </div>
               </div>
-              <Button variant="ghost" size="sm" onClick={fetchData} disabled={loading} className="text-muted-foreground hover:text-foreground">
+              <Button variant="ghost" size="icon" onClick={fetchData} disabled={loading} className="h-8 w-8 text-muted-foreground hover:text-foreground">
                 <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
               </Button>
             </div>
@@ -195,13 +201,9 @@ const Validator = () => {
           )}
 
           {loading && !v ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {[...Array(6)].map((_, i) => (
-                <Card key={i} className="bg-card border-border/50">
-                  <CardContent className="p-4">
-                    <div className="h-16 bg-muted/30 rounded animate-pulse" />
-                  </CardContent>
-                </Card>
+            <div className="space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-12 bg-muted/20 rounded animate-pulse" />
               ))}
             </div>
           ) : v ? (
@@ -212,7 +214,7 @@ const Validator = () => {
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`text-sm capitalize px-4 py-2.5 transition-colors relative ${
+                    className={`text-xs capitalize px-3 py-2 transition-colors relative ${
                       activeTab === tab
                         ? 'text-foreground font-medium'
                         : 'text-muted-foreground hover:text-foreground/70'
@@ -229,124 +231,130 @@ const Validator = () => {
               {/* Overview */}
               {activeTab === 'overview' && (
                 <div className="space-y-6">
-                  {/* Primary Stats */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    <StatCard
-                      icon={Shield}
-                      label="Total Stake"
-                      value={`◎ ${v.activated_stake.toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
-                    />
-                    <StatCard
-                      icon={TrendingUp}
-                      label="True APY"
-                      value={`${v.total_apy.toFixed(2)}%`}
-                      sub={`${v.staking_apy.toFixed(2)}% base + ${v.jito_apy.toFixed(2)}% jito`}
-                      color="text-emerald-400"
-                    />
-                    <StatCard
-                      icon={Zap}
-                      label="Wiz Score"
-                      value={`${(v.wiz_score / 10).toFixed(1)} / 10`}
-                    />
+                  {/* Key metrics row */}
+                  <div className="grid grid-cols-3 gap-px bg-border/30 rounded-lg overflow-hidden">
+                    {[
+                      { label: 'Total Stake', value: `◎ ${fmt(v.activated_stake)}`, color: '' },
+                      { label: 'True APY', value: `${v.total_apy.toFixed(2)}%`, color: 'text-emerald-400' },
+                      { label: 'Wiz Score', value: `${(v.wiz_score / 10).toFixed(1)}/10`, color: '' },
+                    ].map(m => (
+                      <div key={m.label} className="bg-card p-4">
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 block mb-1">{m.label}</span>
+                        <span className={`text-lg font-mono font-semibold ${m.color || 'text-foreground'}`}>{m.value}</span>
+                      </div>
+                    ))}
                   </div>
 
-                  {/* Secondary Stats */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <StatCard icon={Activity} label="Commission" value={`${v.commission}%`} sub={`Jito ${(v.jito_commission_bps / 100).toFixed(0)}%`} />
-                    <StatCard icon={Activity} label="Skip Rate" value={`${v.skip_rate.toFixed(2)}%`} sub={cluster ? `avg ${cluster.avg_skip_rate.toFixed(2)}%` : undefined} />
-                    <StatCard icon={Activity} label="Vote Success" value={`${v.vote_success.toFixed(2)}%`} />
-                    <StatCard icon={Server} label="Uptime" value={`${v.uptime.toFixed(2)}%`} />
+                  {/* Performance metrics */}
+                  <div className="grid grid-cols-4 gap-px bg-border/30 rounded-lg overflow-hidden">
+                    {[
+                      { label: 'Commission', value: `${v.commission}%`, sub: `Jito ${(v.jito_commission_bps / 100).toFixed(0)}%` },
+                      { label: 'Skip Rate', value: `${v.skip_rate.toFixed(2)}%`, sub: cluster ? `avg ${cluster.avg_skip_rate.toFixed(2)}%` : '' },
+                      { label: 'Vote Success', value: `${v.vote_success.toFixed(1)}%` },
+                      { label: 'Uptime', value: `${v.uptime.toFixed(2)}%` },
+                    ].map(m => (
+                      <div key={m.label} className="bg-card p-3">
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 block mb-1">{m.label}</span>
+                        <span className="text-sm font-mono font-medium text-foreground">{m.value}</span>
+                        {m.sub && <span className="text-[10px] text-muted-foreground/50 block mt-0.5 font-mono">{m.sub}</span>}
+                      </div>
+                    ))}
                   </div>
 
-                  {/* Epoch Stake Change */}
+                  {/* Current epoch stake change */}
                   {stakeAccounts && (
-                    <Card className="bg-card border-border/50">
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-2 mb-3">
-                          <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
-                          <span className="text-xs text-muted-foreground">Epoch #{v.epoch} Stake Change</span>
-                        </div>
-                        <p className={`text-xl font-semibold font-mono mb-2 ${netDelta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                          {netDelta >= 0 ? '+' : ''}{netDelta.toLocaleString('en-US', { maximumFractionDigits: 0 })} ◎
-                        </p>
-                        <div className="flex gap-4 text-xs font-mono text-muted-foreground">
-                          <span>
-                            <span className="text-emerald-400/80">+{stakeAccounts.activating.amount.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> activating ({stakeAccounts.activating.count})
-                          </span>
-                          <span>
-                            <span className="text-red-400/80">-{stakeAccounts.deactivating.amount.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> deactivating ({stakeAccounts.deactivating.count})
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <div className="rounded-lg border border-border/30 bg-card p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Epoch {v.epoch} · Stake Change</span>
+                        <span className={`text-sm font-mono font-semibold ${netDelta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {netDelta >= 0 ? '+' : ''}{fmt(netDelta)} ◎
+                        </span>
+                      </div>
+                      <div className="flex gap-4 text-[11px] font-mono text-muted-foreground/60">
+                        <span><span className="text-emerald-400/70">+{fmt(stakeAccounts.activating.amount)}</span> ({stakeAccounts.activating.count})</span>
+                        <span><span className="text-red-400/70">-{fmt(stakeAccounts.deactivating.amount)}</span> ({stakeAccounts.deactivating.count})</span>
+                      </div>
+                    </div>
                   )}
 
-                  {/* Cluster Comparison */}
+                  {/* Epoch History */}
+                  {epochDeltas.length > 0 && (
+                    <div className="rounded-lg border border-border/30 bg-card overflow-hidden">
+                      <div className="px-4 py-3 border-b border-border/20">
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Stake History · Last {epochDeltas.length} Epochs</span>
+                      </div>
+                      <div className="divide-y divide-border/10">
+                        {epochDeltas.map(e => (
+                          <div key={e.epoch} className="flex items-center justify-between px-4 py-2.5 hover:bg-muted/5 transition-colors">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-mono text-muted-foreground/50 w-16">#{e.epoch}</span>
+                              <span className="text-xs font-mono text-muted-foreground">◎ {fmt(e.stake)}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              {e.delta > 0 ? (
+                                <TrendingUp className="w-3 h-3 text-emerald-400/70" />
+                              ) : e.delta < 0 ? (
+                                <TrendingDown className="w-3 h-3 text-red-400/70" />
+                              ) : (
+                                <Minus className="w-3 h-3 text-muted-foreground/30" />
+                              )}
+                              <span className={`text-xs font-mono ${
+                                e.delta > 0 ? 'text-emerald-400' : e.delta < 0 ? 'text-red-400' : 'text-muted-foreground/40'
+                              }`}>
+                                {e.delta > 0 ? '+' : ''}{fmt(e.delta)}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Cluster comparison */}
                   {cluster && (
-                    <Card className="bg-card border-border/50">
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-2 mb-4">
-                          <Activity className="w-3.5 h-3.5 text-muted-foreground" />
-                          <span className="text-xs text-muted-foreground">vs Cluster Average</span>
-                        </div>
-                        <div className="space-y-0">
-                          {[
-                            { label: 'Vote Success', val: v.credit_ratio, avg: cluster.avg_credit_ratio, higher: true },
-                            { label: 'Skip Rate', val: v.skip_rate, avg: cluster.avg_skip_rate, higher: false },
-                            { label: 'APY', val: v.total_apy, avg: cluster.avg_apy, higher: true },
-                            { label: 'Commission', val: v.commission, avg: cluster.avg_commission, higher: false },
-                          ].map(m => {
-                            const better = m.higher ? m.val >= m.avg : m.val <= m.avg;
-                            const diff = m.val - m.avg;
-                            return (
-                              <div key={m.label} className="flex items-center justify-between py-2.5 border-b border-border/20 last:border-0">
-                                <span className="text-sm text-muted-foreground">{m.label}</span>
-                                <div className="flex items-center gap-4 font-mono text-sm">
-                                  <span className="text-muted-foreground/40 w-16 text-right">{m.avg.toFixed(2)}%</span>
-                                  <span className={better ? 'text-emerald-400' : 'text-orange-400'}>{m.val.toFixed(2)}%</span>
-                                  <span className={`text-xs w-14 text-right ${better ? 'text-emerald-400/50' : 'text-orange-400/50'}`}>
-                                    {diff >= 0 ? '+' : ''}{diff.toFixed(2)}
-                                  </span>
-                                </div>
+                    <div className="rounded-lg border border-border/30 bg-card overflow-hidden">
+                      <div className="px-4 py-3 border-b border-border/20">
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">vs Cluster Average</span>
+                      </div>
+                      <div className="divide-y divide-border/10">
+                        {[
+                          { label: 'Vote Success', val: v.credit_ratio, avg: cluster.avg_credit_ratio, higher: true },
+                          { label: 'Skip Rate', val: v.skip_rate, avg: cluster.avg_skip_rate, higher: false },
+                          { label: 'APY', val: v.total_apy, avg: cluster.avg_apy, higher: true },
+                          { label: 'Commission', val: v.commission, avg: cluster.avg_commission, higher: false },
+                        ].map(m => {
+                          const better = m.higher ? m.val >= m.avg : m.val <= m.avg;
+                          const diff = m.val - m.avg;
+                          return (
+                            <div key={m.label} className="flex items-center justify-between px-4 py-2.5">
+                              <span className="text-xs text-muted-foreground">{m.label}</span>
+                              <div className="flex items-center gap-3 font-mono text-xs">
+                                <span className="text-muted-foreground/30 w-14 text-right">{m.avg.toFixed(2)}%</span>
+                                <span className={better ? 'text-emerald-400' : 'text-orange-400'}>{m.val.toFixed(2)}%</span>
+                                <span className={`text-[10px] w-12 text-right ${better ? 'text-emerald-400/40' : 'text-orange-400/40'}`}>
+                                  {diff >= 0 ? '+' : ''}{diff.toFixed(2)}
+                                </span>
                               </div>
-                            );
-                          })}
-                        </div>
-                      </CardContent>
-                    </Card>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   )}
-
-                  {/* Epoch Performance */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <StatCard
-                      icon={Server}
-                      label="Leader Slots"
-                      value={(v.leader_slots || 0).toLocaleString()}
-                      sub={`${((v.leader_slots || 0) - (v.skipped_slots || 0)).toLocaleString()} produced · ${(v.skipped_slots || 0).toLocaleString()} skipped`}
-                    />
-                    <StatCard
-                      icon={Zap}
-                      label="Epoch Credits"
-                      value={(v.epoch_credits || 0).toLocaleString()}
-                      sub={`${(v.credit_ratio || 0).toFixed(2)}% ratio`}
-                    />
-                  </div>
                 </div>
               )}
 
               {/* Stakers */}
               {activeTab === 'stakers' && (
-                <Card className="bg-card border-border/50">
-                  <CardContent className="p-4">
-                    <TopStakers stakes={stakes} totalStake={v.activated_stake} />
-                  </CardContent>
-                </Card>
+                <div className="rounded-lg border border-border/30 bg-card p-4">
+                  <TopStakers stakes={stakes} totalStake={v.activated_stake} />
+                </div>
               )}
 
               {/* Details */}
               {activeTab === 'details' && (
-                <Card className="bg-card border-border/50">
-                  <CardContent className="p-4">
+                <div className="rounded-lg border border-border/30 bg-card overflow-hidden">
+                  <div className="divide-y divide-border/10">
                     {[
                       { l: 'Vote Account', v: v.vote_identity },
                       { l: 'Identity', v: v.identity },
@@ -360,30 +368,29 @@ const Validator = () => {
                       { l: 'First Epoch', v: `${v.first_epoch_with_stake}` },
                       { l: 'Jito MEV', v: v.is_jito ? 'Enabled' : 'Disabled' },
                     ].map(item => (
-                      <div key={item.l} className="flex flex-col sm:flex-row sm:items-center justify-between py-2.5 border-b border-border/20 last:border-0">
-                        <span className="text-sm text-muted-foreground">{item.l}</span>
+                      <div key={item.l} className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2.5">
+                        <span className="text-xs text-muted-foreground">{item.l}</span>
                         {item.link ? (
-                          <a href={item.v} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 font-mono">
+                          <a href={item.v} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1 font-mono">
                             {item.v} <ExternalLink className="w-3 h-3" />
                           </a>
                         ) : (
-                          <span className="text-sm text-foreground font-mono break-all">{item.v}</span>
+                          <span className="text-xs text-foreground font-mono break-all">{item.v}</span>
                         )}
                       </div>
                     ))}
-
-                    <div className="pt-4 mt-2">
-                      <a
-                        href={`https://stakewiz.com/validator/${VOTE_ACCOUNT}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                      >
-                        View on StakeWiz <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                  <div className="px-4 py-3 border-t border-border/20">
+                    <a
+                      href={`https://stakewiz.com/validator/${VOTE_ACCOUNT}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                    >
+                      View on StakeWiz <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                </div>
               )}
             </>
           ) : null}
