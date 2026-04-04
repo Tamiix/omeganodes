@@ -24,3 +24,5 @@ project_id = "mmkornqvbafkricqixgk"
     verify_jwt = false
   [functions.discord-validator-stats]
     verify_jwt = false
+  [functions.snapshot-stake]
+    verify_jwt = false
