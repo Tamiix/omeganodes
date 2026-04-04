@@ -354,6 +354,39 @@ export type Database = {
           },
         ]
       }
+      stake_snapshots: {
+        Row: {
+          activating_count: number
+          activating_stake: number
+          created_at: string
+          deactivating_count: number
+          deactivating_stake: number
+          id: string
+          stake_accounts_count: number
+          total_stake: number
+        }
+        Insert: {
+          activating_count?: number
+          activating_stake?: number
+          created_at?: string
+          deactivating_count?: number
+          deactivating_stake?: number
+          id?: string
+          stake_accounts_count?: number
+          total_stake: number
+        }
+        Update: {
+          activating_count?: number
+          activating_stake?: number
+          created_at?: string
+          deactivating_count?: number
+          deactivating_stake?: number
+          id?: string
+          stake_accounts_count?: number
+          total_stake?: number
+        }
+        Relationships: []
+      }
       trial_usage: {
         Row: {
           created_at: string
