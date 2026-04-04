@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, ExternalLink, RefreshCw, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { ArrowLeft, ExternalLink, RefreshCw, TrendingUp, TrendingDown, Minus, Clock, Activity, Shield, Zap, BarChart3, Users, Server } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import TopStakers from '@/components/validator/TopStakers';
+import { supabase } from '@/integrations/supabase/client';
 
 const VOTE_ACCOUNT = 'EMVmh5hF6LT1sZM9G7dEX1bykRYEymWY2vtE7QHBBAW6';
 const PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
@@ -80,6 +82,16 @@ interface EpochStake {
   stake: number;
 }
 
+interface StakeSnapshot {
+  id: string;
+  total_stake: number;
+  activating_stake: number;
+  deactivating_stake: number;
+  activating_count: number;
+  deactivating_count: number;
+  created_at: string;
+}
+
 const Validator = () => {
   const navigate = useNavigate();
   const [validator, setValidator] = useState<ValidatorData | null>(null);
@@ -88,6 +100,7 @@ const Validator = () => {
   const [cluster, setCluster] = useState<ClusterStats | null>(null);
   const [jitoRank, setJitoRank] = useState<number | null>(null);
   const [epochHistory, setEpochHistory] = useState<EpochStake[]>([]);
+  const [snapshots, setSnapshots] = useState<StakeSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'stakers' | 'details'>('overview');
@@ -111,7 +124,7 @@ const Validator = () => {
 
       if (Array.isArray(epochData) && epochData.length > 0) {
         const sorted = [...epochData].sort((a: EpochStake, b: EpochStake) => b.epoch - a.epoch);
-        setEpochHistory(sorted.slice(0, 11)); // 11 to calculate 10 deltas
+        setEpochHistory(sorted.slice(0, 11));
       }
 
       if (jitoData?.validators && Array.isArray(jitoData.validators)) {
@@ -121,6 +134,15 @@ const Validator = () => {
         const idx = sorted.findIndex((v: any) => v.vote_account === VOTE_ACCOUNT);
         if (idx !== -1) setJitoRank(idx + 1);
       }
+
+      // Fetch stake snapshots from DB
+      const { data: snapshotData } = await supabase
+        .from('stake_snapshots')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(48);
+
+      if (snapshotData) setSnapshots(snapshotData as StakeSnapshot[]);
     } catch (err: any) {
       console.error('Failed to fetch validator data:', err);
       setError(err.message || 'Failed to load validator data');
@@ -136,7 +158,6 @@ const Validator = () => {
     ? (stakeAccounts.activating?.amount || 0) - (stakeAccounts.deactivating?.amount || 0)
     : 0;
 
-  // Calculate epoch deltas from history
   const epochDeltas = epochHistory.length > 1
     ? epochHistory.slice(0, -1).map((current, i) => {
         const prev = epochHistory[i + 1];
@@ -153,77 +174,105 @@ const Validator = () => {
   const fmt = (n: number, decimals = 0) =>
     n.toLocaleString('en-US', { maximumFractionDigits: decimals });
 
+  const formatTime = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  };
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  // Calculate snapshot deltas for the activity feed
+  const snapshotDeltas = snapshots.length > 1
+    ? snapshots.slice(0, -1).map((current, i) => {
+        const prev = snapshots[i + 1];
+        return {
+          time: current.created_at,
+          totalStake: current.total_stake,
+          delta: current.total_stake - prev.total_stake,
+          activating: current.activating_stake,
+          deactivating: current.deactivating_stake,
+        };
+      }).filter(s => s.delta !== 0)
+    : [];
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
       <div className="pt-24 pb-20">
-        <div className="container mx-auto px-4 sm:px-6 max-w-3xl">
+        <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
 
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-10">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <button onClick={() => navigate('/')} className="text-muted-foreground hover:text-foreground transition-colors">
-                  <ArrowLeft className="w-4 h-4" />
+                  <ArrowLeft className="w-5 h-5" />
                 </button>
-                {v?.image && <img src={v.image} alt="" className="w-9 h-9 rounded-full" />}
+                {v?.image && <img src={v.image} alt="" className="w-12 h-12 rounded-full ring-2 ring-border/50" />}
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-base font-semibold text-foreground">{v?.name || 'OmegaNode Validator'}</h1>
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-xl font-bold text-foreground">{v?.name || 'OmegaNode Validator'}</h1>
                     {!v?.delinquent && v && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title="Online" />
+                      <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-400 bg-emerald-500/10 rounded-full px-2.5 py-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        Online
+                      </span>
                     )}
                   </div>
                   {v && (
-                    <div className="flex items-center gap-1.5 mt-0.5">
+                    <div className="flex items-center gap-2 mt-1">
                       {jitoRank && (
-                        <span className="text-[10px] font-mono text-purple-400 bg-purple-500/10 rounded px-1.5 py-0.5">
+                        <span className="text-[11px] font-mono font-medium text-purple-400 bg-purple-500/10 rounded-full px-2.5 py-0.5">
                           Jito #{jitoRank}
                         </span>
                       )}
-                      <span className="text-[10px] text-muted-foreground font-mono">
+                      <span className="text-[11px] font-mono text-muted-foreground bg-muted/30 rounded-full px-2.5 py-0.5">
+                        SW #{v.rank}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground">
                         v{v.version} · {v.ip_city}, {v.ip_country}
                       </span>
                     </div>
                   )}
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={fetchData} disabled={loading} className="h-8 w-8 text-muted-foreground hover:text-foreground">
+              <Button variant="outline" size="sm" onClick={fetchData} disabled={loading} className="gap-2">
                 <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
               </Button>
             </div>
           </div>
 
           {error && (
-            <div className="text-sm text-destructive mb-6 p-3 rounded-md bg-destructive/5 border border-destructive/10">
+            <div className="text-sm text-destructive mb-6 p-4 rounded-lg bg-destructive/5 border border-destructive/20">
               {error} <button onClick={fetchData} className="underline ml-1">retry</button>
             </div>
           )}
 
           {loading && !v ? (
-            <div className="space-y-3">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-12 bg-muted/20 rounded animate-pulse" />
+            <div className="grid grid-cols-3 gap-4">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-28 bg-muted/20 rounded-xl animate-pulse" />
               ))}
             </div>
           ) : v ? (
             <>
               {/* Tab bar */}
-              <div className="flex gap-1 mb-6 border-b border-border/30">
+              <div className="flex gap-1 mb-8 bg-muted/20 rounded-lg p-1 w-fit">
                 {tabs.map(tab => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`text-xs capitalize px-3 py-2 transition-colors relative ${
+                    className={`text-sm capitalize px-5 py-2 rounded-md transition-all font-medium ${
                       activeTab === tab
-                        ? 'text-foreground font-medium'
-                        : 'text-muted-foreground hover:text-foreground/70'
+                        ? 'bg-card text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     {tab}
-                    {activeTab === tab && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
-                    )}
                   </button>
                 ))}
               </div>
@@ -231,166 +280,319 @@ const Validator = () => {
               {/* Overview */}
               {activeTab === 'overview' && (
                 <div className="space-y-6">
-                  {/* Key metrics row */}
-                  <div className="grid grid-cols-3 gap-px bg-border/30 rounded-lg overflow-hidden">
+                  {/* Primary metrics - large cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card className="bg-card border-border/40">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <BarChart3 className="w-4 h-4 text-primary" />
+                          </div>
+                          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Stake</span>
+                        </div>
+                        <p className="text-3xl font-bold font-mono text-foreground">◎ {fmt(v.activated_stake)}</p>
+                        <p className="text-xs text-muted-foreground mt-1 font-mono">{(v.stake_ratio || 0).toFixed(4)}% of network</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-card border-border/40">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                            <TrendingUp className="w-4 h-4 text-emerald-400" />
+                          </div>
+                          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">True APY</span>
+                        </div>
+                        <p className="text-3xl font-bold font-mono text-emerald-400">{v.total_apy.toFixed(2)}%</p>
+                        <p className="text-xs text-muted-foreground mt-1 font-mono">
+                          Base {v.staking_apy?.toFixed(2)}% + Jito {v.jito_apy?.toFixed(2)}%
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-card border-border/40">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+                            <Shield className="w-4 h-4 text-yellow-400" />
+                          </div>
+                          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Wiz Score</span>
+                        </div>
+                        <p className="text-3xl font-bold font-mono text-foreground">{(v.wiz_score / 10).toFixed(1)}<span className="text-lg text-muted-foreground">/10</span></p>
+                        <div className="mt-2 h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                          <div className="h-full bg-yellow-400 rounded-full" style={{ width: `${(v.wiz_score / 10) * 10}%` }} />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Performance grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
-                      { label: 'Total Stake', value: `◎ ${fmt(v.activated_stake)}`, color: '' },
-                      { label: 'True APY', value: `${v.total_apy.toFixed(2)}%`, color: 'text-emerald-400' },
-                      { label: 'Wiz Score', value: `${(v.wiz_score / 10).toFixed(1)}/10`, color: '' },
+                      { icon: Zap, label: 'Commission', value: `${v.commission}%`, sub: `Jito ${(v.jito_commission_bps / 100).toFixed(0)}%`, iconColor: 'text-blue-400', bgColor: 'bg-blue-500/10' },
+                      { icon: Activity, label: 'Skip Rate', value: `${v.skip_rate.toFixed(2)}%`, sub: cluster ? `avg ${cluster.avg_skip_rate.toFixed(2)}%` : '', iconColor: 'text-orange-400', bgColor: 'bg-orange-500/10' },
+                      { icon: Shield, label: 'Vote Success', value: `${v.vote_success.toFixed(1)}%`, sub: '', iconColor: 'text-emerald-400', bgColor: 'bg-emerald-500/10' },
+                      { icon: Server, label: 'Uptime', value: `${v.uptime.toFixed(2)}%`, sub: '', iconColor: 'text-purple-400', bgColor: 'bg-purple-500/10' },
                     ].map(m => (
-                      <div key={m.label} className="bg-card p-4">
-                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 block mb-1">{m.label}</span>
-                        <span className={`text-lg font-mono font-semibold ${m.color || 'text-foreground'}`}>{m.value}</span>
-                      </div>
+                      <Card key={m.label} className="bg-card border-border/40">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className={`w-6 h-6 rounded-md ${m.bgColor} flex items-center justify-center`}>
+                              <m.icon className={`w-3 h-3 ${m.iconColor}`} />
+                            </div>
+                            <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{m.label}</span>
+                          </div>
+                          <p className="text-xl font-bold font-mono text-foreground">{m.value}</p>
+                          {m.sub && <p className="text-[11px] text-muted-foreground/60 mt-0.5 font-mono">{m.sub}</p>}
+                        </CardContent>
+                      </Card>
                     ))}
                   </div>
 
-                  {/* Performance metrics */}
-                  <div className="grid grid-cols-4 gap-px bg-border/30 rounded-lg overflow-hidden">
-                    {[
-                      { label: 'Commission', value: `${v.commission}%`, sub: `Jito ${(v.jito_commission_bps / 100).toFixed(0)}%` },
-                      { label: 'Skip Rate', value: `${v.skip_rate.toFixed(2)}%`, sub: cluster ? `avg ${cluster.avg_skip_rate.toFixed(2)}%` : '' },
-                      { label: 'Vote Success', value: `${v.vote_success.toFixed(1)}%` },
-                      { label: 'Uptime', value: `${v.uptime.toFixed(2)}%` },
-                    ].map(m => (
-                      <div key={m.label} className="bg-card p-3">
-                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 block mb-1">{m.label}</span>
-                        <span className="text-sm font-mono font-medium text-foreground">{m.value}</span>
-                        {m.sub && <span className="text-[10px] text-muted-foreground/50 block mt-0.5 font-mono">{m.sub}</span>}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Current epoch stake change */}
+                  {/* Epoch Stake Change - Current */}
                   {stakeAccounts && (
-                    <div className="rounded-lg border border-border/30 bg-card p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Epoch {v.epoch} · Stake Change</span>
-                        <span className={`text-sm font-mono font-semibold ${netDelta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                          {netDelta >= 0 ? '+' : ''}{fmt(netDelta)} ◎
-                        </span>
-                      </div>
-                      <div className="flex gap-4 text-[11px] font-mono text-muted-foreground/60">
-                        <span><span className="text-emerald-400/70">+{fmt(stakeAccounts.activating.amount)}</span> ({stakeAccounts.activating.count})</span>
-                        <span><span className="text-red-400/70">-{fmt(stakeAccounts.deactivating.amount)}</span> ({stakeAccounts.deactivating.count})</span>
-                      </div>
-                    </div>
+                    <Card className="bg-card border-border/40">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <Activity className="w-4 h-4 text-primary" />
+                            </div>
+                            <div>
+                              <span className="text-sm font-medium text-foreground">Epoch {v.epoch} Stake Movement</span>
+                              <span className="text-xs text-muted-foreground block">Current epoch changes</span>
+                            </div>
+                          </div>
+                          <span className={`text-2xl font-bold font-mono ${netDelta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            {netDelta >= 0 ? '+' : ''}{fmt(netDelta)} ◎
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="rounded-lg bg-emerald-500/5 border border-emerald-500/10 p-4">
+                            <div className="flex items-center gap-2 mb-1">
+                              <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                              <span className="text-xs font-medium text-emerald-400">Activating</span>
+                            </div>
+                            <p className="text-lg font-bold font-mono text-emerald-400">+{fmt(stakeAccounts.activating.amount)} ◎</p>
+                            <p className="text-[11px] text-muted-foreground font-mono">{stakeAccounts.activating.count} accounts</p>
+                          </div>
+                          <div className="rounded-lg bg-red-500/5 border border-red-500/10 p-4">
+                            <div className="flex items-center gap-2 mb-1">
+                              <TrendingDown className="w-3.5 h-3.5 text-red-400" />
+                              <span className="text-xs font-medium text-red-400">Deactivating</span>
+                            </div>
+                            <p className="text-lg font-bold font-mono text-red-400">-{fmt(stakeAccounts.deactivating.amount)} ◎</p>
+                            <p className="text-[11px] text-muted-foreground font-mono">{stakeAccounts.deactivating.count} accounts</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Stake Activity Feed - Hourly snapshots */}
+                  {snapshotDeltas.length > 0 && (
+                    <Card className="bg-card border-border/40">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-2 mb-5">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Clock className="w-4 h-4 text-primary" />
+                          </div>
+                          <div>
+                            <span className="text-sm font-medium text-foreground">Stake Activity</span>
+                            <span className="text-xs text-muted-foreground block">Recent stake changes tracked over time</span>
+                          </div>
+                        </div>
+                        <div className="space-y-0">
+                          {snapshotDeltas.slice(0, 20).map((s, i) => {
+                            const maxDelta = Math.max(...snapshotDeltas.map(d => Math.abs(d.delta)));
+                            const barWidth = maxDelta > 0 ? (Math.abs(s.delta) / maxDelta) * 100 : 0;
+                            return (
+                              <div key={i} className="flex items-center gap-4 py-3 border-b border-border/10 last:border-0">
+                                <div className="w-24 flex-shrink-0">
+                                  <span className="text-xs font-mono text-muted-foreground">{formatDate(s.time)}</span>
+                                  <span className="text-[11px] font-mono text-muted-foreground/50 block">{formatTime(s.time)}</span>
+                                </div>
+                                <div className="flex-1 flex items-center gap-3">
+                                  <div className="flex-1 h-6 rounded-md overflow-hidden bg-muted/10 relative">
+                                    <div
+                                      className={`h-full rounded-md transition-all ${s.delta >= 0 ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}
+                                      style={{ width: `${Math.max(barWidth, 3)}%` }}
+                                    />
+                                  </div>
+                                  <span className={`text-sm font-mono font-semibold w-28 text-right ${
+                                    s.delta > 0 ? 'text-emerald-400' : 'text-red-400'
+                                  }`}>
+                                    {s.delta > 0 ? '+' : ''}{fmt(s.delta)} ◎
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {snapshotDeltas.length === 0 && (
+                          <p className="text-sm text-muted-foreground text-center py-8">
+                            Stake tracking will appear here as snapshots are collected over time.
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {snapshots.length === 0 && (
+                    <Card className="bg-card border-border/40">
+                      <CardContent className="p-6 text-center">
+                        <Clock className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
+                        <p className="text-sm text-muted-foreground">Stake tracking is being set up. Activity will show here as data is collected.</p>
+                      </CardContent>
+                    </Card>
                   )}
 
                   {/* Epoch History */}
                   {epochDeltas.length > 0 && (
-                    <div className="rounded-lg border border-border/30 bg-card overflow-hidden">
-                      <div className="px-4 py-3 border-b border-border/20">
-                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Stake History · Last {epochDeltas.length} Epochs</span>
-                      </div>
-                      <div className="divide-y divide-border/10">
-                        {epochDeltas.map(e => (
-                          <div key={e.epoch} className="flex items-center justify-between px-4 py-2.5 hover:bg-muted/5 transition-colors">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-mono text-muted-foreground/50 w-16">#{e.epoch}</span>
-                              <span className="text-xs font-mono text-muted-foreground">◎ {fmt(e.stake)}</span>
+                    <Card className="bg-card border-border/40 overflow-hidden">
+                      <CardContent className="p-0">
+                        <div className="px-6 py-4 border-b border-border/20">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <BarChart3 className="w-4 h-4 text-primary" />
                             </div>
-                            <div className="flex items-center gap-1.5">
-                              {e.delta > 0 ? (
-                                <TrendingUp className="w-3 h-3 text-emerald-400/70" />
-                              ) : e.delta < 0 ? (
-                                <TrendingDown className="w-3 h-3 text-red-400/70" />
-                              ) : (
-                                <Minus className="w-3 h-3 text-muted-foreground/30" />
-                              )}
-                              <span className={`text-xs font-mono ${
-                                e.delta > 0 ? 'text-emerald-400' : e.delta < 0 ? 'text-red-400' : 'text-muted-foreground/40'
-                              }`}>
-                                {e.delta > 0 ? '+' : ''}{fmt(e.delta)}
-                              </span>
+                            <div>
+                              <span className="text-sm font-medium text-foreground">Epoch History</span>
+                              <span className="text-xs text-muted-foreground block">Last {epochDeltas.length} epochs</span>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
+                        </div>
+                        <div className="divide-y divide-border/10">
+                          {epochDeltas.map(e => {
+                            const maxDelta = Math.max(...epochDeltas.map(d => Math.abs(d.delta)));
+                            const barWidth = maxDelta > 0 ? (Math.abs(e.delta) / maxDelta) * 100 : 0;
+                            return (
+                              <div key={e.epoch} className="flex items-center gap-4 px-6 py-3.5 hover:bg-muted/5 transition-colors">
+                                <span className="text-xs font-mono text-muted-foreground/50 w-16 flex-shrink-0">#{e.epoch}</span>
+                                <span className="text-sm font-mono text-muted-foreground w-28 flex-shrink-0">◎ {fmt(e.stake)}</span>
+                                <div className="flex-1 h-5 rounded bg-muted/10 overflow-hidden relative">
+                                  <div
+                                    className={`h-full rounded transition-all ${e.delta >= 0 ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}
+                                    style={{ width: `${Math.max(barWidth, 2)}%` }}
+                                  />
+                                </div>
+                                <div className="flex items-center gap-2 w-32 justify-end flex-shrink-0">
+                                  {e.delta > 0 ? (
+                                    <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                                  ) : e.delta < 0 ? (
+                                    <TrendingDown className="w-3.5 h-3.5 text-red-400" />
+                                  ) : (
+                                    <Minus className="w-3.5 h-3.5 text-muted-foreground/30" />
+                                  )}
+                                  <span className={`text-sm font-mono font-semibold ${
+                                    e.delta > 0 ? 'text-emerald-400' : e.delta < 0 ? 'text-red-400' : 'text-muted-foreground/40'
+                                  }`}>
+                                    {e.delta > 0 ? '+' : ''}{fmt(e.delta)}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
                   )}
 
                   {/* Cluster comparison */}
                   {cluster && (
-                    <div className="rounded-lg border border-border/30 bg-card overflow-hidden">
-                      <div className="px-4 py-3 border-b border-border/20">
-                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">vs Cluster Average</span>
-                      </div>
-                      <div className="divide-y divide-border/10">
-                        {[
-                          { label: 'Vote Success', val: v.credit_ratio, avg: cluster.avg_credit_ratio, higher: true },
-                          { label: 'Skip Rate', val: v.skip_rate, avg: cluster.avg_skip_rate, higher: false },
-                          { label: 'APY', val: v.total_apy, avg: cluster.avg_apy, higher: true },
-                          { label: 'Commission', val: v.commission, avg: cluster.avg_commission, higher: false },
-                        ].map(m => {
-                          const better = m.higher ? m.val >= m.avg : m.val <= m.avg;
-                          const diff = m.val - m.avg;
-                          return (
-                            <div key={m.label} className="flex items-center justify-between px-4 py-2.5">
-                              <span className="text-xs text-muted-foreground">{m.label}</span>
-                              <div className="flex items-center gap-3 font-mono text-xs">
-                                <span className="text-muted-foreground/30 w-14 text-right">{m.avg.toFixed(2)}%</span>
-                                <span className={better ? 'text-emerald-400' : 'text-orange-400'}>{m.val.toFixed(2)}%</span>
-                                <span className={`text-[10px] w-12 text-right ${better ? 'text-emerald-400/40' : 'text-orange-400/40'}`}>
-                                  {diff >= 0 ? '+' : ''}{diff.toFixed(2)}
-                                </span>
-                              </div>
+                    <Card className="bg-card border-border/40 overflow-hidden">
+                      <CardContent className="p-0">
+                        <div className="px-6 py-4 border-b border-border/20">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <Users className="w-4 h-4 text-primary" />
                             </div>
-                          );
-                        })}
-                      </div>
-                    </div>
+                            <div>
+                              <span className="text-sm font-medium text-foreground">vs Cluster Average</span>
+                              <span className="text-xs text-muted-foreground block">How we compare to the network</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="divide-y divide-border/10">
+                          {[
+                            { label: 'Vote Success', val: v.credit_ratio, avg: cluster.avg_credit_ratio, higher: true },
+                            { label: 'Skip Rate', val: v.skip_rate, avg: cluster.avg_skip_rate, higher: false },
+                            { label: 'APY', val: v.total_apy, avg: cluster.avg_apy, higher: true },
+                            { label: 'Commission', val: v.commission, avg: cluster.avg_commission, higher: false },
+                          ].map(m => {
+                            const better = m.higher ? m.val >= m.avg : m.val <= m.avg;
+                            const diff = m.val - m.avg;
+                            return (
+                              <div key={m.label} className="flex items-center justify-between px-6 py-3.5">
+                                <span className="text-sm text-muted-foreground">{m.label}</span>
+                                <div className="flex items-center gap-4 font-mono text-sm">
+                                  <span className="text-muted-foreground/40 w-16 text-right">{m.avg.toFixed(2)}%</span>
+                                  <span className={`font-semibold ${better ? 'text-emerald-400' : 'text-orange-400'}`}>{m.val.toFixed(2)}%</span>
+                                  <span className={`text-xs w-14 text-right ${better ? 'text-emerald-400/50' : 'text-orange-400/50'}`}>
+                                    {diff >= 0 ? '+' : ''}{diff.toFixed(2)}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
                   )}
                 </div>
               )}
 
               {/* Stakers */}
               {activeTab === 'stakers' && (
-                <div className="rounded-lg border border-border/30 bg-card p-4">
-                  <TopStakers stakes={stakes} totalStake={v.activated_stake} />
-                </div>
+                <Card className="bg-card border-border/40">
+                  <CardContent className="p-6">
+                    <TopStakers stakes={stakes} totalStake={v.activated_stake} />
+                  </CardContent>
+                </Card>
               )}
 
               {/* Details */}
               {activeTab === 'details' && (
-                <div className="rounded-lg border border-border/30 bg-card overflow-hidden">
-                  <div className="divide-y divide-border/10">
-                    {[
-                      { l: 'Vote Account', v: v.vote_identity },
-                      { l: 'Identity', v: v.identity },
-                      { l: 'Version', v: v.version },
-                      { l: 'Website', v: v.website, link: true },
-                      { l: 'Data Center', v: `${v.ip_city}, ${v.ip_country}` },
-                      { l: 'ASN', v: `${v.asn}${v.ip_org ? ` — ${v.ip_org}` : ''}` },
-                      { l: 'ASN Concentration', v: `${(v.asn_concentration || 0).toFixed(2)}%` },
-                      { l: 'City Concentration', v: `${(v.city_concentration || 0).toFixed(2)}%` },
-                      { l: 'Stake Share', v: `${(v.stake_ratio || 0).toFixed(4)}%` },
-                      { l: 'First Epoch', v: `${v.first_epoch_with_stake}` },
-                      { l: 'Jito MEV', v: v.is_jito ? 'Enabled' : 'Disabled' },
-                    ].map(item => (
-                      <div key={item.l} className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2.5">
-                        <span className="text-xs text-muted-foreground">{item.l}</span>
-                        {item.link ? (
-                          <a href={item.v} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1 font-mono">
-                            {item.v} <ExternalLink className="w-3 h-3" />
-                          </a>
-                        ) : (
-                          <span className="text-xs text-foreground font-mono break-all">{item.v}</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="px-4 py-3 border-t border-border/20">
-                    <a
-                      href={`https://stakewiz.com/validator/${VOTE_ACCOUNT}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[10px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                    >
-                      View on StakeWiz <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
-                </div>
+                <Card className="bg-card border-border/40 overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="divide-y divide-border/10">
+                      {[
+                        { l: 'Vote Account', v: v.vote_identity },
+                        { l: 'Identity', v: v.identity },
+                        { l: 'Version', v: v.version },
+                        { l: 'Website', v: v.website, link: true },
+                        { l: 'Data Center', v: `${v.ip_city}, ${v.ip_country}` },
+                        { l: 'ASN', v: `${v.asn}${v.ip_org ? ` — ${v.ip_org}` : ''}` },
+                        { l: 'ASN Concentration', v: `${(v.asn_concentration || 0).toFixed(2)}%` },
+                        { l: 'City Concentration', v: `${(v.city_concentration || 0).toFixed(2)}%` },
+                        { l: 'Stake Share', v: `${(v.stake_ratio || 0).toFixed(4)}%` },
+                        { l: 'First Epoch', v: `${v.first_epoch_with_stake}` },
+                        { l: 'Jito MEV', v: v.is_jito ? 'Enabled' : 'Disabled' },
+                      ].map(item => (
+                        <div key={item.l} className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4">
+                          <span className="text-sm text-muted-foreground">{item.l}</span>
+                          {item.link ? (
+                            <a href={item.v} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 font-mono">
+                              {item.v} <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          ) : (
+                            <span className="text-sm text-foreground font-mono break-all">{item.v}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="px-6 py-4 border-t border-border/20">
+                      <a
+                        href={`https://stakewiz.com/validator/${VOTE_ACCOUNT}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                      >
+                        View on StakeWiz <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  </CardContent>
+                </Card>
               )}
             </>
           ) : null}
