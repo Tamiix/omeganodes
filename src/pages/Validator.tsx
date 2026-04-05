@@ -154,6 +154,7 @@ const Validator = () => {
       setError(err.message || 'Failed to load validator data');
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
