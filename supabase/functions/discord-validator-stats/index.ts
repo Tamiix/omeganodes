@@ -15,20 +15,21 @@ async function fetchJSON(url: string) {
   return res.json();
 }
 
-function formatNumber(n: number | null | undefined, decimals = 2): string {
+function fmt(n: number | null | undefined, decimals = 2): string {
   if (n == null) return 'N/A';
   return n.toLocaleString('en-US', { maximumFractionDigits: decimals });
 }
 
-function formatPct(n: number | null | undefined): string {
+function pct(n: number | null | undefined): string {
   if (n == null) return 'N/A';
   return `${n.toFixed(2)}%`;
 }
 
 function getSupabaseClient() {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  return createClient(supabaseUrl, supabaseKey);
+  return createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  );
 }
 
 async function getLastState(supabase: any): Promise<{ epoch?: number; stake?: number }> {
@@ -44,79 +45,140 @@ async function saveLastState(supabase: any, state: { epoch: number; stake: numbe
   await supabase
     .from('app_settings')
     .upsert(
-      {
-        key: 'last_validator_state',
-        value: state,
-        updated_at: new Date().toISOString(),
-      },
+      { key: 'last_validator_state', value: state, updated_at: new Date().toISOString() },
       { onConflict: 'key' }
     );
 }
 
-async function postEpochReport(validator: any, stakeAccounts: any, clusterStats: any) {
+function sumStakeAccounts(accounts: any): number {
+  if (!accounts) return 0;
+  if (typeof accounts === 'number') return accounts;
+  if (accounts.amount != null) return accounts.amount;
+  if (Array.isArray(accounts)) {
+    return accounts.reduce((sum: number, a: any) => sum + (a.stake || a.lamports || a.amount || 0), 0);
+  }
+  return 0;
+}
+
+function countStakeAccounts(accounts: any): number {
+  if (!accounts) return 0;
+  if (typeof accounts === 'number') return accounts;
+  if (accounts.count != null) return accounts.count;
+  if (Array.isArray(accounts)) return accounts.length;
+  return 0;
+}
+
+async function postEpochReport(validator: any, stakeAccounts: any, clusterStats: any, previousStake: number | undefined) {
   const totalStakeSol = validator.activated_stake || 0;
-  const activatingSOL = stakeAccounts?.activating?.amount || 0;
-  const deactivatingSOL = stakeAccounts?.deactivating?.amount || 0;
-  const netDelta = activatingSOL - deactivatingSOL;
-  const deltaSign = netDelta >= 0 ? '+' : '';
-  const deltaEmoji = netDelta > 0 ? '📈' : netDelta < 0 ? '📉' : '➡️';
+  
+  // Calculate epoch delta from previous state if available
+  const epochDelta = previousStake != null ? totalStakeSol - previousStake : 0;
+  const deltaSign = epochDelta >= 0 ? '+' : '';
+  const deltaEmoji = epochDelta > 0 ? '📈' : epochDelta < 0 ? '📉' : '➡️';
+
+  // Parse activating/deactivating from stake accounts response
+  const activatingSOL = sumStakeAccounts(stakeAccounts?.activating);
+  const deactivatingSOL = sumStakeAccounts(stakeAccounts?.deactivating);
+  const activatingCount = countStakeAccounts(stakeAccounts?.activating);
+  const deactivatingCount = countStakeAccounts(stakeAccounts?.deactivating);
 
   const wizScore = validator.wiz_score;
+  const wizDisplay = wizScore != null ? `${(wizScore / 10).toFixed(1)} / 10` : 'N/A';
   const commission = validator.commission;
   const skipRate = validator.skip_rate ?? validator.wiz_skip_rate;
   const clusterSkipRate = clusterStats?.avg_skip_rate;
   const voteSuccess = validator.vote_success;
   const clusterVoteSuccess = clusterStats?.avg_credit_ratio;
-
   const stakingApy = validator.staking_apy || validator.apy_estimate;
   const jitoApy = validator.jito_apy;
   const totalApy = validator.total_apy || ((stakingApy || 0) + (jitoApy || 0));
-
   const version = validator.version || 'Unknown';
   const datacenter = validator.ip_city && validator.ip_country
     ? `${validator.ip_city}, ${validator.ip_country} (${validator.ip_org || validator.ip_asn || ''})`
     : 'Unknown';
   const delinquent = validator.delinquent === true;
-
-  const statusColor = delinquent ? 0xEF4444 : 0x22C55E;
+  const statusColor = delinquent ? 0xEF4444 : 0x5B4EE4;
   const statusText = delinquent ? '🔴 DELINQUENT' : '🟢 Active';
-
-  // Wiz score is 0-100 from API, display as X.X / 10
-  const wizDisplay = wizScore != null ? `${(wizScore / 10).toFixed(1)} / 10` : 'N/A';
-
-  const overviewLines = [
-    `**Status:** ${statusText}`,
-    `**Total Stake:** ◎ ${formatNumber(totalStakeSol)}`,
-    `**Epoch Delta:** ${deltaEmoji} ${deltaSign}◎ ${formatNumber(netDelta)}`,
-    `  ↳ Incoming: +◎ ${formatNumber(activatingSOL)} | Leaving: -◎ ${formatNumber(deactivatingSOL)}`,
-    `**Wiz Score:** ${wizDisplay}`,
-    `**Rank:** #${validator.rank || 'N/A'}`,
-    `**Commission:** ${commission != null ? `${commission}%` : 'N/A'}`,
-  ];
-
-  const performanceLines = [
-    `**True APY:** ${formatPct(totalApy)}`,
-    `  ↳ Staking: ${formatPct(stakingApy)} + Jito MEV: ${formatPct(jitoApy)}`,
-    `**Skip Rate:** ${formatPct(skipRate)} (cluster avg: ${formatPct(clusterSkipRate)})`,
-    `**Vote Success:** ${formatPct(voteSuccess)} (cluster avg: ${formatPct(clusterVoteSuccess)})`,
-  ];
-
-  const technicalLines = [
-    `**Version:** \`${version}\``,
-    `**Data Center:** ${datacenter}`,
-    `**Vote Account:** \`${VOTE_ACCOUNT.slice(0, 8)}...${VOTE_ACCOUNT.slice(-8)}\``,
-  ];
+  const epoch = validator.epoch;
 
   const embed = {
-    title: `⚡ OmegaNode Validator Report — Epoch ${validator.epoch}`,
+    title: `⚡ OmegaNode Validator — Epoch ${epoch}`,
+    url: `https://omeganodes.io/epochreport/${epoch}`,
     color: statusColor,
     fields: [
-      { name: '📊 Overview', value: overviewLines.join('\n'), inline: false },
-      { name: '🏆 Performance', value: performanceLines.join('\n'), inline: false },
-      { name: '🔧 Technical', value: technicalLines.join('\n'), inline: false },
+      {
+        name: 'Status',
+        value: statusText,
+        inline: true,
+      },
+      {
+        name: 'Total Stake',
+        value: `◎ ${fmt(totalStakeSol)}`,
+        inline: true,
+      },
+      {
+        name: 'Epoch Delta',
+        value: `${deltaEmoji} ${deltaSign}◎ ${fmt(epochDelta)}`,
+        inline: true,
+      },
+      {
+        name: 'Incoming',
+        value: `+◎ ${fmt(activatingSOL)} (${activatingCount})`,
+        inline: true,
+      },
+      {
+        name: 'Leaving',
+        value: `-◎ ${fmt(deactivatingSOL)} (${deactivatingCount})`,
+        inline: true,
+      },
+      {
+        name: 'Wiz Score',
+        value: wizDisplay,
+        inline: true,
+      },
+      {
+        name: 'Rank',
+        value: `#${validator.rank || 'N/A'}`,
+        inline: true,
+      },
+      {
+        name: 'Commission',
+        value: commission != null ? `${commission}%` : 'N/A',
+        inline: true,
+      },
+      {
+        name: 'True APY',
+        value: `${pct(totalApy)}\n↳ ${pct(stakingApy)} + ${pct(jitoApy)} MEV`,
+        inline: true,
+      },
+      {
+        name: 'Skip Rate',
+        value: `${pct(skipRate)}\n↳ cluster: ${pct(clusterSkipRate)}`,
+        inline: true,
+      },
+      {
+        name: 'Vote Success',
+        value: `${pct(voteSuccess)}\n↳ cluster: ${pct(clusterVoteSuccess)}`,
+        inline: true,
+      },
+      {
+        name: 'Version',
+        value: `\`${version}\``,
+        inline: true,
+      },
+      {
+        name: 'Data Center',
+        value: datacenter,
+        inline: true,
+      },
+      {
+        name: 'Vote Account',
+        value: `\`${VOTE_ACCOUNT.slice(0, 8)}…${VOTE_ACCOUNT.slice(-8)}\``,
+        inline: true,
+      },
     ],
     footer: {
-      text: `OmegaNode Validator • Epoch ${validator.epoch} • Uptime ${formatPct(validator.uptime)}`,
+      text: `OmegaNode • Epoch ${epoch} • Uptime ${pct(validator.uptime)}`,
     },
     timestamp: new Date().toISOString(),
   };
@@ -129,7 +191,10 @@ async function postEpochReport(validator: any, stakeAccounts: any, clusterStats:
   const discordRes = await fetch(DISCORD_WEBHOOK_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ content: content || undefined, embeds: [embed] }),
+    body: JSON.stringify({
+      content: content || undefined,
+      embeds: [embed],
+    }),
   });
 
   if (!discordRes.ok) {
@@ -148,18 +213,11 @@ async function postStakeChangeAlert(currentStake: number, previousStake: number,
     title: `${emoji} Stake Change Detected`,
     color: delta > 0 ? 0x22C55E : 0xF59E0B,
     fields: [
-      {
-        name: 'Stake Update',
-        value: [
-          `**Previous:** ◎ ${formatNumber(previousStake)}`,
-          `**Current:** ◎ ${formatNumber(currentStake)}`,
-          `**Change:** ${deltaSign}◎ ${formatNumber(delta)}`,
-          `**Epoch:** ${epoch}`,
-        ].join('\n'),
-        inline: false,
-      },
+      { name: 'Previous', value: `◎ ${fmt(previousStake)}`, inline: true },
+      { name: 'Current', value: `◎ ${fmt(currentStake)}`, inline: true },
+      { name: 'Change', value: `${deltaSign}◎ ${fmt(delta)}`, inline: true },
     ],
-    footer: { text: 'OmegaNode Validator • Stake Monitor' },
+    footer: { text: `OmegaNode • Epoch ${epoch} • Stake Monitor` },
     timestamp: new Date().toISOString(),
   };
 
@@ -197,7 +255,6 @@ serve(async (req) => {
     const supabase = getSupabaseClient();
     const lastState = await getLastState(supabase);
 
-    // Fetch validator data
     const validator = await fetchJSON(`https://api.stakewiz.com/validator/${VOTE_ACCOUNT}`);
     const currentEpoch = validator.epoch;
     const currentStake = validator.activated_stake || 0;
@@ -208,21 +265,18 @@ serve(async (req) => {
 
     const actions: string[] = [];
 
-    // Check for epoch change → full report
     const epochChanged = !lastState.epoch || lastState.epoch !== currentEpoch;
     if (force || epochChanged) {
       const [stakeAccounts, clusterStats] = await Promise.all([
         fetchJSON(`https://api.stakewiz.com/validator_epoch_stake_accounts/${VOTE_ACCOUNT}`),
         fetchJSON(`https://api.stakewiz.com/cluster_stats`),
       ]);
-      await postEpochReport(validator, stakeAccounts, clusterStats);
+      await postEpochReport(validator, stakeAccounts, clusterStats, lastState.stake);
       actions.push(`epoch_report:${currentEpoch}`);
       console.log(`Epoch report posted for epoch ${currentEpoch}`);
     }
 
-    // Check for stake change → stake alert (only if not already posting epoch report)
     if (!epochChanged && lastState.stake != null) {
-      // Round to avoid noise from tiny fluctuations (< 1 SOL)
       const stakeChanged = Math.abs(currentStake - lastState.stake) >= 1;
       if (stakeChanged) {
         await postStakeChangeAlert(currentStake, lastState.stake, currentEpoch);
@@ -231,7 +285,6 @@ serve(async (req) => {
       }
     }
 
-    // Save current state
     await saveLastState(supabase, {
       epoch: currentEpoch,
       stake: currentStake,
@@ -240,7 +293,7 @@ serve(async (req) => {
 
     const skipped = actions.length === 0;
     if (skipped) {
-      console.log(`No changes detected (epoch ${currentEpoch}, stake ◎${formatNumber(currentStake)})`);
+      console.log(`No changes detected (epoch ${currentEpoch}, stake ◎${fmt(currentStake)})`);
     }
 
     return new Response(
