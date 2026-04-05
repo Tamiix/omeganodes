@@ -443,63 +443,6 @@ const Validator = () => {
                     </Card>
                   )}
 
-                  {/* Stake Activity Feed - Hourly snapshots */}
-                  {snapshotDeltas.length > 0 && (
-                    <Card className="bg-card border-border/40">
-                      <CardContent className="p-6">
-                        <div className="flex items-center gap-2 mb-5">
-                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <Clock className="w-4 h-4 text-primary" />
-                          </div>
-                          <div>
-                            <span className="text-sm font-medium text-foreground">Stake Activity</span>
-                            <span className="text-xs text-muted-foreground block">Recent stake changes tracked over time</span>
-                          </div>
-                        </div>
-                        <div className="space-y-0">
-                          {snapshotDeltas.slice(0, 20).map((s, i) => {
-                            const maxDelta = Math.max(...snapshotDeltas.map(d => Math.abs(d.delta)));
-                            const barWidth = maxDelta > 0 ? (Math.abs(s.delta) / maxDelta) * 100 : 0;
-                            return (
-                              <div key={i} className="flex items-center gap-4 py-3 border-b border-border/10 last:border-0">
-                                <div className="w-24 flex-shrink-0">
-                                  <span className="text-xs font-mono text-muted-foreground">{formatDate(s.time)}</span>
-                                  <span className="text-[11px] font-mono text-muted-foreground/50 block">{formatTime(s.time)}</span>
-                                </div>
-                                <div className="flex-1 flex items-center gap-3">
-                                  <div className="flex-1 h-6 rounded-md overflow-hidden bg-muted/10 relative">
-                                    <div
-                                      className={`h-full rounded-md transition-all ${s.delta >= 0 ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}
-                                      style={{ width: `${Math.max(barWidth, 3)}%` }}
-                                    />
-                                  </div>
-                                  <span className={`text-sm font-mono font-semibold w-28 text-right ${
-                                    s.delta > 0 ? 'text-emerald-400' : 'text-red-400'
-                                  }`}>
-                                    {s.delta > 0 ? '+' : ''}{fmt(s.delta)} ◎
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        {snapshotDeltas.length === 0 && (
-                          <p className="text-sm text-muted-foreground text-center py-8">
-                            Stake tracking will appear here as snapshots are collected over time.
-                          </p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {snapshots.length === 0 && (
-                    <Card className="bg-card border-border/40">
-                      <CardContent className="p-6 text-center">
-                        <Clock className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
-                        <p className="text-sm text-muted-foreground">Stake tracking is being set up. Activity will show here as data is collected.</p>
-                      </CardContent>
-                    </Card>
-                  )}
 
                   {/* Epoch History */}
                   {epochDeltas.length > 0 && (
