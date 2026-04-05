@@ -155,7 +155,11 @@ const Validator = () => {
   // Live epoch countdown
   const [epochRemaining, setEpochRemaining] = useState({ h: 0, m: 0, s: 0, progress: 0, elapsed: 0 });
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (!validator?.epoch_slot_height) return;
