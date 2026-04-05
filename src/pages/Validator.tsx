@@ -155,6 +155,10 @@ const Validator = () => {
       setError(err.message || 'Failed to load validator data');
     } finally {
       setLoading(false);
+      if (isBackground) {
+        setJustRefreshed(true);
+        setTimeout(() => setJustRefreshed(false), 1500);
+      }
       setIsRefreshing(false);
     }
   };
