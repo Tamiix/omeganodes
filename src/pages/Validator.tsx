@@ -103,11 +103,16 @@ const Validator = () => {
   const [epochHistory, setEpochHistory] = useState<EpochStake[]>([]);
   const [snapshots, setSnapshots] = useState<StakeSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'stakers' | 'details'>('overview');
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (isBackground = false) => {
+    if (isBackground) {
+      setIsRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     setError(null);
     try {
       const [valData, stakeData, clusterData, stakesData, jitoData, epochData] = await Promise.all([
