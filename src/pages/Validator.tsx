@@ -151,7 +151,35 @@ const Validator = () => {
     }
   };
 
+  // Live epoch countdown
+  const [epochRemaining, setEpochRemaining] = useState({ h: 0, m: 0, s: 0, progress: 0, elapsed: 0 });
+
   useEffect(() => { fetchData(); }, []);
+
+  useEffect(() => {
+    if (!validator?.epoch_slot_height) return;
+    const SLOTS_PER_EPOCH = 432000;
+    const SLOT_DURATION_MS = 400;
+    const initialSlot = validator.epoch_slot_height;
+    const fetchedAt = Date.now();
+
+    const tick = () => {
+      const elapsedSinceFetch = Date.now() - fetchedAt;
+      const estimatedSlot = initialSlot + Math.floor(elapsedSinceFetch / SLOT_DURATION_MS);
+      const capped = Math.min(estimatedSlot, SLOTS_PER_EPOCH);
+      const remaining = (SLOTS_PER_EPOCH - capped) * SLOT_DURATION_MS;
+      setEpochRemaining({
+        h: Math.floor(remaining / 3600000),
+        m: Math.floor((remaining % 3600000) / 60000),
+        s: Math.floor((remaining % 60000) / 1000),
+        progress: (capped / SLOTS_PER_EPOCH) * 100,
+        elapsed: capped,
+      });
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [validator?.epoch_slot_height]);
 
   const v = validator;
   const netDelta = stakeAccounts
