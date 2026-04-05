@@ -103,11 +103,16 @@ const Validator = () => {
   const [epochHistory, setEpochHistory] = useState<EpochStake[]>([]);
   const [snapshots, setSnapshots] = useState<StakeSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'stakers' | 'details'>('overview');
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (isBackground = false) => {
+    if (isBackground) {
+      setIsRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     setError(null);
     try {
       const [valData, stakeData, clusterData, stakesData, jitoData, epochData] = await Promise.all([
@@ -149,6 +154,7 @@ const Validator = () => {
       setError(err.message || 'Failed to load validator data');
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -157,7 +163,7 @@ const Validator = () => {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 20000);
+    const interval = setInterval(() => fetchData(true), 20000);
     return () => clearInterval(interval);
   }, []);
 
@@ -273,15 +279,15 @@ const Validator = () => {
                 </div>
               </div>
               <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <RefreshCw className="w-3 h-3" />
-                Auto-refreshes every 20s
+                <RefreshCw className={`w-3 h-3 transition-transform ${isRefreshing ? 'animate-spin' : ''}`} />
+                {isRefreshing ? 'Refreshing...' : 'Auto-refreshes every 20s'}
               </span>
             </div>
           </div>
 
           {error && (
             <div className="text-sm text-destructive mb-6 p-4 rounded-lg bg-destructive/5 border border-destructive/20">
-              {error} <button onClick={fetchData} className="underline ml-1">retry</button>
+              {error} <button onClick={() => fetchData()} className="underline ml-1">retry</button>
             </div>
           )}
 
