@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 const DISCORD_WEBHOOK_URL = Deno.env.get('DISCORD_VALIDATOR_WEBHOOK_URL') || '';
+const DISCORD_LINK_WEBHOOK_URL = Deno.env.get('DISCORD_VALIDATOR_LINK_WEBHOOK_URL') || '';
 const VOTE_ACCOUNT = 'EMVmh5hF6LT1sZM9G7dEX1bykRYEymWY2vtE7QHBBAW6';
 
 async function fetchJSON(url: string) {
@@ -188,19 +189,30 @@ async function postEpochReport(validator: any, stakeAccounts: any, clusterStats:
     content = '⚠️ **VALIDATOR DELINQUENT** — Immediate attention required!\n||<@404356986340114442> <@545046451219070980>||';
   }
 
-  const discordRes = await fetch(DISCORD_WEBHOOK_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      content: content || undefined,
-      embeds: [embed],
-    }),
-  });
+  // Send full report to main webhook
+  const fullPayload = JSON.stringify({ content: content || undefined, embeds: [embed] });
 
-  if (!discordRes.ok) {
-    const errText = await discordRes.text();
-    console.error('Discord webhook error:', errText);
-    throw new Error(`Discord webhook failed: ${discordRes.status}`);
+  // Send link-only embed to second webhook
+  const linkEmbed = {
+    title: `⚡ Epoch ${epoch} Report`,
+    url: `https://omeganodes.io/epochreport/${epoch}`,
+    color: statusColor,
+    description: `◎ ${fmt(totalStakeSol)} total stake — ${deltaEmoji} ${deltaSign}◎ ${fmt(epochDelta)} this epoch\n\n[View Full Report →](https://omeganodes.io/epochreport/${epoch})`,
+    footer: { text: 'OmegaNode Validator' },
+    timestamp: new Date().toISOString(),
+  };
+  const linkPayload = JSON.stringify({ embeds: [linkEmbed] });
+
+  const results = await Promise.allSettled([
+    fetch(DISCORD_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: fullPayload }),
+    DISCORD_LINK_WEBHOOK_URL
+      ? fetch(DISCORD_LINK_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: linkPayload })
+      : Promise.resolve(null),
+  ]);
+
+  const mainRes = results[0];
+  if (mainRes.status === 'rejected' || (mainRes.status === 'fulfilled' && mainRes.value && !mainRes.value.ok)) {
+    throw new Error('Discord main webhook failed');
   }
 }
 
