@@ -151,7 +151,35 @@ const Validator = () => {
     }
   };
 
+  // Live epoch countdown
+  const [epochRemaining, setEpochRemaining] = useState({ h: 0, m: 0, s: 0, progress: 0, elapsed: 0 });
+
   useEffect(() => { fetchData(); }, []);
+
+  useEffect(() => {
+    if (!validator?.epoch_slot_height) return;
+    const SLOTS_PER_EPOCH = 432000;
+    const SLOT_DURATION_MS = 400;
+    const initialSlot = validator.epoch_slot_height;
+    const fetchedAt = Date.now();
+
+    const tick = () => {
+      const elapsedSinceFetch = Date.now() - fetchedAt;
+      const estimatedSlot = initialSlot + Math.floor(elapsedSinceFetch / SLOT_DURATION_MS);
+      const capped = Math.min(estimatedSlot, SLOTS_PER_EPOCH);
+      const remaining = (SLOTS_PER_EPOCH - capped) * SLOT_DURATION_MS;
+      setEpochRemaining({
+        h: Math.floor(remaining / 3600000),
+        m: Math.floor((remaining % 3600000) / 60000),
+        s: Math.floor((remaining % 60000) / 1000),
+        progress: (capped / SLOTS_PER_EPOCH) * 100,
+        elapsed: capped,
+      });
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [validator?.epoch_slot_height]);
 
   const v = validator;
   const netDelta = stakeAccounts
@@ -326,48 +354,35 @@ const Validator = () => {
                     </Card>
                   </div>
 
-                  {/* Epoch Progress */}
-                  {v && (() => {
-                    const SLOTS_PER_EPOCH = 432000;
-                    const SLOT_DURATION_MS = 400;
-                    const slotIndex = v.epoch_slot_height || 0;
-                    const progress = (slotIndex / SLOTS_PER_EPOCH) * 100;
-                    const remainingSlots = SLOTS_PER_EPOCH - slotIndex;
-                    const remainingMs = remainingSlots * SLOT_DURATION_MS;
-                    const remainingHours = Math.floor(remainingMs / 3600000);
-                    const remainingMins = Math.floor((remainingMs % 3600000) / 60000);
-                    const elapsed = SLOTS_PER_EPOCH - remainingSlots;
-                    
-                    return (
-                      <Card className="bg-card border-border/40">
-                        <CardContent className="p-5">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                                <Clock className="w-3.5 h-3.5 text-primary" />
-                              </div>
-                              <span className="text-sm font-medium text-foreground">Epoch {v.epoch}</span>
-                            </div>
-                            <span className="text-xs font-mono text-muted-foreground">
-                              {remainingHours}h {remainingMins}m remaining
-                            </span>
+                  {/* Epoch Progress - Live */}
+                  <Card className="bg-card border-border/40">
+                    <CardContent className="p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Clock className="w-3.5 h-3.5 text-primary" />
                           </div>
-                          <div className="h-2.5 bg-muted/20 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-to-r from-primary/80 to-primary rounded-full transition-all duration-500"
-                              style={{ width: `${progress}%` }}
-                            />
-                          </div>
-                          <div className="flex justify-between mt-2">
-                            <span className="text-[11px] font-mono text-muted-foreground/60">{progress.toFixed(1)}%</span>
-                            <span className="text-[11px] font-mono text-muted-foreground/60">
-                              {fmt(elapsed)} / {fmt(SLOTS_PER_EPOCH)} slots
-                            </span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })()}
+                          <span className="text-sm font-medium text-foreground">Epoch {v.epoch}</span>
+                        </div>
+                        <span className="text-sm font-mono text-foreground tabular-nums">
+                          {String(epochRemaining.h).padStart(2, '0')}:{String(epochRemaining.m).padStart(2, '0')}:{String(epochRemaining.s).padStart(2, '0')}
+                          <span className="text-muted-foreground ml-1.5 text-xs">remaining</span>
+                        </span>
+                      </div>
+                      <div className="h-2.5 bg-muted/20 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-primary/80 to-primary rounded-full transition-all duration-1000"
+                          style={{ width: `${epochRemaining.progress}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between mt-2">
+                        <span className="text-[11px] font-mono text-muted-foreground/60">{epochRemaining.progress.toFixed(2)}%</span>
+                        <span className="text-[11px] font-mono text-muted-foreground/60">
+                          {fmt(epochRemaining.elapsed)} / 432,000 slots
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
 
                   {/* Performance grid */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -596,46 +611,147 @@ const Validator = () => {
 
               {/* Details */}
               {activeTab === 'details' && (
-                <Card className="bg-card border-border/40 overflow-hidden">
-                  <CardContent className="p-0">
-                    <div className="divide-y divide-border/10">
-                      {[
-                        { l: 'Vote Account', v: v.vote_identity },
-                        { l: 'Identity', v: v.identity },
-                        { l: 'Version', v: v.version },
-                        { l: 'Website', v: v.website, link: true },
-                        { l: 'Data Center', v: `${v.ip_city}, ${v.ip_country}` },
-                        { l: 'ASN', v: `${v.asn}${v.ip_org ? ` — ${v.ip_org}` : ''}` },
-                        { l: 'ASN Concentration', v: `${(v.asn_concentration || 0).toFixed(2)}%` },
-                        { l: 'City Concentration', v: `${(v.city_concentration || 0).toFixed(2)}%` },
-                        { l: 'Stake Share', v: `${(v.stake_ratio || 0).toFixed(4)}%` },
-                        { l: 'First Epoch', v: `${v.first_epoch_with_stake}` },
-                        { l: 'Jito MEV', v: v.is_jito ? 'Enabled' : 'Disabled' },
-                      ].map(item => (
-                        <div key={item.l} className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4">
-                          <span className="text-sm text-muted-foreground">{item.l}</span>
-                          {item.link ? (
-                            <a href={item.v} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 font-mono">
-                              {item.v} <ExternalLink className="w-3.5 h-3.5" />
-                            </a>
-                          ) : (
-                            <span className="text-sm text-foreground font-mono break-all">{item.v}</span>
-                          )}
+                <div className="space-y-6">
+                  {/* Performance Stats */}
+                  <Card className="bg-card border-border/40 overflow-hidden">
+                    <CardContent className="p-0">
+                      <div className="px-6 py-4 border-b border-border/20">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Activity className="w-4 h-4 text-primary" />
+                          </div>
+                          <span className="text-sm font-medium text-foreground">Performance</span>
                         </div>
+                      </div>
+                      <div className="divide-y divide-border/10">
+                        {[
+                          { l: 'Epoch Credits', v: fmt(v.epoch_credits || 0) },
+                          { l: 'Credit Ratio', v: `${(v.credit_ratio || 0).toFixed(4)}%` },
+                          { l: 'Skip Rate', v: `${v.skip_rate.toFixed(2)}%` },
+                          { l: 'Leader Slots', v: fmt(v.leader_slots || 0) },
+                          { l: 'Skipped Slots', v: fmt(v.skipped_slots || 0) },
+                          { l: 'Vote Success', v: `${v.vote_success.toFixed(2)}%` },
+                          { l: 'Uptime', v: `${v.uptime.toFixed(2)}%` },
+                        ].map(item => (
+                          <div key={item.l} className="flex items-center justify-between px-6 py-3.5">
+                            <span className="text-sm text-muted-foreground">{item.l}</span>
+                            <span className="text-sm text-foreground font-mono">{item.v}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Commission & Rewards */}
+                  <Card className="bg-card border-border/40 overflow-hidden">
+                    <CardContent className="p-0">
+                      <div className="px-6 py-4 border-b border-border/20">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                            <Zap className="w-4 h-4 text-emerald-400" />
+                          </div>
+                          <span className="text-sm font-medium text-foreground">Commission & Rewards</span>
+                        </div>
+                      </div>
+                      <div className="divide-y divide-border/10">
+                        {[
+                          { l: 'Validator Commission', v: `${v.commission}%` },
+                          { l: 'Jito MEV Commission', v: `${(v.jito_commission_bps / 100).toFixed(0)}%` },
+                          { l: 'Staking APY', v: `${v.staking_apy?.toFixed(2) || '—'}%` },
+                          { l: 'Jito MEV APY', v: `${v.jito_apy?.toFixed(2) || '—'}%` },
+                          { l: 'Total True APY', v: `${v.total_apy?.toFixed(2) || '—'}%` },
+                          { l: 'Jito MEV', v: v.is_jito ? 'Enabled' : 'Disabled' },
+                        ].map(item => (
+                          <div key={item.l} className="flex items-center justify-between px-6 py-3.5">
+                            <span className="text-sm text-muted-foreground">{item.l}</span>
+                            <span className="text-sm text-foreground font-mono">{item.v}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Infrastructure */}
+                  <Card className="bg-card border-border/40 overflow-hidden">
+                    <CardContent className="p-0">
+                      <div className="px-6 py-4 border-b border-border/20">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                            <Server className="w-4 h-4 text-purple-400" />
+                          </div>
+                          <span className="text-sm font-medium text-foreground">Infrastructure</span>
+                        </div>
+                      </div>
+                      <div className="divide-y divide-border/10">
+                        {[
+                          { l: 'Data Center', v: `${v.ip_city}, ${v.ip_country}` },
+                          { l: 'ASN', v: `${v.asn}${v.ip_org ? ` — ${v.ip_org}` : ''}` },
+                          { l: 'ASN Concentration', v: `${(v.asn_concentration || 0).toFixed(2)}%` },
+                          { l: 'City Concentration', v: `${(v.city_concentration || 0).toFixed(2)}%` },
+                          { l: 'Version', v: v.version },
+                          { l: 'Withdraw Authority Score', v: `${v.withdraw_authority_score || 0}/4` },
+                        ].map(item => (
+                          <div key={item.l} className="flex items-center justify-between px-6 py-3.5">
+                            <span className="text-sm text-muted-foreground">{item.l}</span>
+                            <span className="text-sm text-foreground font-mono">{item.v}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Identity */}
+                  <Card className="bg-card border-border/40 overflow-hidden">
+                    <CardContent className="p-0">
+                      <div className="px-6 py-4 border-b border-border/20">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Shield className="w-4 h-4 text-primary" />
+                          </div>
+                          <span className="text-sm font-medium text-foreground">Identity & Accounts</span>
+                        </div>
+                      </div>
+                      <div className="divide-y divide-border/10">
+                        {[
+                          { l: 'Vote Account', v: v.vote_identity, mono: true },
+                          { l: 'Identity', v: v.identity, mono: true },
+                          { l: 'Wiz Score', v: `${(v.wiz_score / 10).toFixed(1)} / 10` },
+                          { l: 'StakeWiz Rank', v: `#${v.rank}` },
+                          { l: 'Jito Rank', v: jitoRank ? `#${jitoRank}` : '—' },
+                          { l: 'Stake Share', v: `${(v.stake_ratio || 0).toFixed(4)}%` },
+                          { l: 'First Epoch', v: `${v.first_epoch_with_stake}` },
+                        ].map(item => (
+                          <div key={item.l} className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-3.5 gap-1">
+                            <span className="text-sm text-muted-foreground">{item.l}</span>
+                            <span className={`text-sm text-foreground font-mono break-all ${(item as any).mono ? 'text-xs' : ''}`}>{item.v}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* External Links */}
+                  <Card className="bg-card border-border/40">
+                    <CardContent className="p-4 flex flex-wrap gap-3">
+                      {[
+                        { label: 'StakeWiz', url: `https://stakewiz.com/validator/${VOTE_ACCOUNT}` },
+                        { label: 'Jito', url: `https://www.jito.network/validator/${VOTE_ACCOUNT}/` },
+                        { label: 'Solana Beach', url: `https://solanabeach.io/validator/${VOTE_ACCOUNT}` },
+                        ...(v.website ? [{ label: 'Website', url: v.website }] : []),
+                      ].map(link => (
+                        <a
+                          key={link.label}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 bg-muted/20 rounded-lg px-3 py-2"
+                        >
+                          {link.label} <ExternalLink className="w-3 h-3" />
+                        </a>
                       ))}
-                    </div>
-                    <div className="px-6 py-4 border-t border-border/20">
-                      <a
-                        href={`https://stakewiz.com/validator/${VOTE_ACCOUNT}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                      >
-                        View on StakeWiz <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </div>
               )}
             </>
           ) : null}
