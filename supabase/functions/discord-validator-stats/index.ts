@@ -196,9 +196,9 @@ async function postEpochReport(validator: any, stakeAccounts: any, clusterStats:
   const wizDisplay2 = validator.wiz_score != null ? `${(validator.wiz_score / 10).toFixed(1)}` : 'N/A';
   const stakingApy2 = validator.staking_apy || validator.apy_estimate;
   const totalApy2 = validator.total_apy || ((stakingApy2 || 0) + (validator.jito_apy || 0));
+  const reportUrl = `https://omeganodes.io/epochreport/${epoch}`;
   const linkEmbed = {
     title: `⚡ Epoch ${epoch} — Validator Report`,
-    url: `https://omeganodes.io/epochreport/${epoch}`,
     color: 0x5B4EE4,
     fields: [
       { name: 'Total Stake', value: `◎ ${fmt(totalStakeSol)}`, inline: true },
@@ -207,8 +207,9 @@ async function postEpochReport(validator: any, stakeAccounts: any, clusterStats:
       { name: 'Wiz Score', value: `${wizDisplay2}/10`, inline: true },
       { name: 'Rank', value: `#${validator.rank || 'N/A'}`, inline: true },
       { name: 'Commission', value: `${validator.commission ?? 0}%`, inline: true },
+      { name: '🔗 Full Report', value: `[View on OmegaNodes](${reportUrl})`, inline: false },
     ],
-    footer: { text: 'OmegaNode Validator • View full report ↗' },
+    footer: { text: 'OmegaNode Validator' },
     timestamp: new Date().toISOString(),
   };
   const linkPayload = JSON.stringify({ embeds: [linkEmbed] });
