@@ -245,11 +245,42 @@ serve(async (req) => {
     }
 
     let force = false;
+    let targetEpoch: number | null = null;
     try {
       const body = await req.json();
       force = body?.force === true;
+      if (body?.target_epoch) targetEpoch = Number(body.target_epoch);
     } catch {
       // No body or not JSON
+    }
+
+    // Historical epoch report mode
+    if (targetEpoch) {
+      const [epochHistory, validator, clusterStats] = await Promise.all([
+        fetchJSON(`https://api.stakewiz.com/validator_total_stakes/${VOTE_ACCOUNT}`),
+        fetchJSON(`https://api.stakewiz.com/validator/${VOTE_ACCOUNT}`),
+        fetchJSON(`https://api.stakewiz.com/cluster_stats`),
+      ]);
+
+      if (!Array.isArray(epochHistory)) throw new Error('Could not fetch epoch history');
+
+      const sorted = [...epochHistory].sort((a: any, b: any) => b.epoch - a.epoch);
+      const targetEntry = sorted.find((e: any) => e.epoch === targetEpoch);
+      const nextEntry = sorted.find((e: any) => e.epoch === targetEpoch + 1);
+
+      if (!targetEntry) throw new Error(`Epoch ${targetEpoch} not found in history`);
+
+      const stakeAtEpoch = targetEntry.stake || 0;
+      const delta = nextEntry ? nextEntry.stake - targetEntry.stake : 0;
+
+      // Override validator fields for the historical report
+      const historicalValidator = { ...validator, epoch: targetEpoch, activated_stake: stakeAtEpoch };
+      await postEpochReport(historicalValidator, null, clusterStats, stakeAtEpoch - delta);
+
+      return new Response(
+        JSON.stringify({ success: true, actions: [`epoch_report:${targetEpoch}`], epoch: targetEpoch, stake: stakeAtEpoch }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
     }
 
     const supabase = getSupabaseClient();
