@@ -192,16 +192,8 @@ async function postEpochReport(validator: any, stakeAccounts: any, clusterStats:
   // Send full report to main webhook
   const fullPayload = JSON.stringify({ content: content || undefined, embeds: [embed] });
 
-  // Send link-only embed to second webhook
-  const linkEmbed = {
-    title: `⚡ Epoch ${epoch} Report`,
-    url: `https://omeganodes.io/epochreport/${epoch}`,
-    color: statusColor,
-    description: `◎ ${fmt(totalStakeSol)} total stake — ${deltaEmoji} ${deltaSign}◎ ${fmt(epochDelta)} this epoch\n\n[View Full Report →](https://omeganodes.io/epochreport/${epoch})`,
-    footer: { text: 'OmegaNode Validator' },
-    timestamp: new Date().toISOString(),
-  };
-  const linkPayload = JSON.stringify({ embeds: [linkEmbed] });
+  // Send plain link to second webhook
+  const linkPayload = JSON.stringify({ content: `https://omeganodes.io/epochreport/${epoch}` });
 
   const results = await Promise.allSettled([
     fetch(DISCORD_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: fullPayload }),
