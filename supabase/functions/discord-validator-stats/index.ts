@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 const DISCORD_WEBHOOK_URL = Deno.env.get('DISCORD_VALIDATOR_WEBHOOK_URL') || '';
+const DISCORD_LINK_WEBHOOK_URL = Deno.env.get('DISCORD_VALIDATOR_LINK_WEBHOOK_URL') || '';
 const VOTE_ACCOUNT = 'EMVmh5hF6LT1sZM9G7dEX1bykRYEymWY2vtE7QHBBAW6';
 
 async function fetchJSON(url: string) {
