@@ -287,7 +287,7 @@ const Validator = () => {
 
           {error && (
             <div className="text-sm text-destructive mb-6 p-4 rounded-lg bg-destructive/5 border border-destructive/20">
-              {error} <button onClick={fetchData} className="underline ml-1">retry</button>
+              {error} <button onClick={() => fetchData()} className="underline ml-1">retry</button>
             </div>
           )}
 
