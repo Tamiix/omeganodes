@@ -163,7 +163,7 @@ const Validator = () => {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 20000);
+    const interval = setInterval(() => fetchData(true), 20000);
     return () => clearInterval(interval);
   }, []);
 
