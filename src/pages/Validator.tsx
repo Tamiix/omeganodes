@@ -326,6 +326,49 @@ const Validator = () => {
                     </Card>
                   </div>
 
+                  {/* Epoch Progress */}
+                  {v && (() => {
+                    const SLOTS_PER_EPOCH = 432000;
+                    const SLOT_DURATION_MS = 400;
+                    const slotIndex = v.epoch_slot_height || 0;
+                    const progress = (slotIndex / SLOTS_PER_EPOCH) * 100;
+                    const remainingSlots = SLOTS_PER_EPOCH - slotIndex;
+                    const remainingMs = remainingSlots * SLOT_DURATION_MS;
+                    const remainingHours = Math.floor(remainingMs / 3600000);
+                    const remainingMins = Math.floor((remainingMs % 3600000) / 60000);
+                    const elapsed = SLOTS_PER_EPOCH - remainingSlots;
+                    
+                    return (
+                      <Card className="bg-card border-border/40">
+                        <CardContent className="p-5">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <Clock className="w-3.5 h-3.5 text-primary" />
+                              </div>
+                              <span className="text-sm font-medium text-foreground">Epoch {v.epoch}</span>
+                            </div>
+                            <span className="text-xs font-mono text-muted-foreground">
+                              {remainingHours}h {remainingMins}m remaining
+                            </span>
+                          </div>
+                          <div className="h-2.5 bg-muted/20 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-primary/80 to-primary rounded-full transition-all duration-500"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between mt-2">
+                            <span className="text-[11px] font-mono text-muted-foreground/60">{progress.toFixed(1)}%</span>
+                            <span className="text-[11px] font-mono text-muted-foreground/60">
+                              {fmt(elapsed)} / {fmt(SLOTS_PER_EPOCH)} slots
+                            </span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })()}
+
                   {/* Performance grid */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
