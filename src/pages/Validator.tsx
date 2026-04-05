@@ -106,6 +106,7 @@ const Validator = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [justRefreshed, setJustRefreshed] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'stakers' | 'details'>('overview');
 
   const fetchData = async (isBackground = false) => {
