@@ -192,8 +192,26 @@ async function postEpochReport(validator: any, stakeAccounts: any, clusterStats:
   // Send full report to main webhook
   const fullPayload = JSON.stringify({ content: content || undefined, embeds: [embed] });
 
-  // Send plain link to second webhook
-  const linkPayload = JSON.stringify({ content: `https://omeganodes.io/epochreport/${epoch}` });
+  // Send compact stats embed to second webhook (no auto-unfurl)
+  const wizDisplay2 = validator.wiz_score != null ? `${(validator.wiz_score / 10).toFixed(1)}` : 'N/A';
+  const stakingApy2 = validator.staking_apy || validator.apy_estimate;
+  const totalApy2 = validator.total_apy || ((stakingApy2 || 0) + (validator.jito_apy || 0));
+  const linkEmbed = {
+    title: `⚡ Epoch ${epoch} — Validator Report`,
+    url: `https://omeganodes.io/epochreport/${epoch}`,
+    color: 0x5B4EE4,
+    fields: [
+      { name: 'Total Stake', value: `◎ ${fmt(totalStakeSol)}`, inline: true },
+      { name: 'Delta', value: `${deltaEmoji} ${deltaSign}◎ ${fmt(epochDelta)}`, inline: true },
+      { name: 'APY', value: `${pct(totalApy2)}`, inline: true },
+      { name: 'Wiz Score', value: `${wizDisplay2}/10`, inline: true },
+      { name: 'Rank', value: `#${validator.rank || 'N/A'}`, inline: true },
+      { name: 'Commission', value: `${validator.commission ?? 0}%`, inline: true },
+    ],
+    footer: { text: 'OmegaNode Validator • View full report ↗' },
+    timestamp: new Date().toISOString(),
+  };
+  const linkPayload = JSON.stringify({ embeds: [linkEmbed] });
 
   const results = await Promise.allSettled([
     fetch(DISCORD_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: fullPayload }),
