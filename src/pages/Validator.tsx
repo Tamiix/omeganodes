@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import TopStakers from '@/components/validator/TopStakers';
+import WizScoreGauge from '@/components/validator/WizScoreGauge';
 import { supabase } from '@/integrations/supabase/client';
 
 const VOTE_ACCOUNT = 'EMVmh5hF6LT1sZM9G7dEX1bykRYEymWY2vtE7QHBBAW6';
