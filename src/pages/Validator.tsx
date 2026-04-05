@@ -279,8 +279,8 @@ const Validator = () => {
                 </div>
               </div>
               <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <RefreshCw className="w-3 h-3" />
-                Auto-refreshes every 20s
+                <RefreshCw className={`w-3 h-3 transition-transform ${isRefreshing ? 'animate-spin' : ''}`} />
+                {isRefreshing ? 'Refreshing...' : 'Auto-refreshes every 20s'}
               </span>
             </div>
           </div>
