@@ -158,6 +158,7 @@ const Validator = () => {
       setLoading(false);
       if (isBackground) {
         setJustRefreshed(true);
+        setLastUpdated(new Date());
         setTimeout(() => setJustRefreshed(false), 1500);
       }
       setIsRefreshing(false);
