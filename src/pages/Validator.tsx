@@ -293,7 +293,7 @@ const Validator = () => {
                     <span className="absolute inset-0 rounded-full bg-green-400/40 animate-ping" />
                   )}
                 </span>
-                {isRefreshing ? 'Refreshing...' : justRefreshed ? 'Updated!' : 'Auto-refreshes every 20s'}
+                {isRefreshing ? 'Refreshing...' : justRefreshed ? 'Updated!' : `Auto-refreshes every 20s${lastUpdated ? ` · ${lastUpdated.toLocaleTimeString()}` : ''}`}
               </span>
             </div>
           </div>
