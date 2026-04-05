@@ -157,7 +157,7 @@ const Validator = () => {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 60000);
+    const interval = setInterval(fetchData, 20000);
     return () => clearInterval(interval);
   }, []);
 
@@ -272,10 +272,10 @@ const Validator = () => {
                   )}
                 </div>
               </div>
-              <Button variant="outline" size="sm" onClick={fetchData} disabled={loading} className="gap-2">
-                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
+              <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <RefreshCw className="w-3 h-3" />
+                Auto-refreshes every 20s
+              </span>
             </div>
           </div>
 
