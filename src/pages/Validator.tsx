@@ -205,13 +205,15 @@ const Validator = () => {
     ? (stakeAccounts.activating?.amount || 0) - (stakeAccounts.deactivating?.amount || 0)
     : 0;
 
+  // Delta for epoch N = stake at start of N+1 minus stake at start of N
+  // i.e. what was gained DURING epoch N
   const epochDeltas = epochHistory.length > 1
-    ? epochHistory.slice(0, -1).map((current, i) => {
-        const prev = epochHistory[i + 1];
+    ? epochHistory.slice(1).map((entry, i) => {
+        const next = epochHistory[i]; // the entry one epoch later
         return {
-          epoch: current.epoch,
-          stake: current.stake,
-          delta: current.stake - prev.stake,
+          epoch: entry.epoch,
+          stake: entry.stake,
+          delta: next.stake - entry.stake,
         };
       })
     : [];
