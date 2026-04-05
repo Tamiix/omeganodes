@@ -19,6 +19,7 @@ import RefRedirect from "./pages/RefRedirect";
 import OfficialLinks from "./pages/OfficialLinks";
 import AdminEmails from "./pages/AdminEmails";
 import Validator from "./pages/Validator";
+import EpochReport from "./pages/EpochReport";
 
 const queryClient = new QueryClient();
 
