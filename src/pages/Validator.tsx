@@ -283,9 +283,14 @@ const Validator = () => {
                   )}
                 </div>
               </div>
-              <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <RefreshCw className={`w-3 h-3 transition-transform ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? 'Refreshing...' : 'Auto-refreshes every 20s'}
+              <span className={`text-xs flex items-center gap-1.5 transition-all duration-500 ${justRefreshed ? 'text-green-400' : 'text-muted-foreground'}`}>
+                <span className={`relative flex items-center justify-center`}>
+                  <RefreshCw className={`w-3 h-3 transition-transform ${isRefreshing ? 'animate-spin' : ''}`} />
+                  {justRefreshed && (
+                    <span className="absolute inset-0 rounded-full bg-green-400/40 animate-ping" />
+                  )}
+                </span>
+                {isRefreshing ? 'Refreshing...' : justRefreshed ? 'Updated!' : 'Auto-refreshes every 20s'}
               </span>
             </div>
           </div>
