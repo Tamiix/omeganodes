@@ -106,6 +106,7 @@ const Validator = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [justRefreshed, setJustRefreshed] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'stakers' | 'details'>('overview');
 
   const fetchData = async (isBackground = false) => {
@@ -155,8 +156,10 @@ const Validator = () => {
       setError(err.message || 'Failed to load validator data');
     } finally {
       setLoading(false);
+      setLastUpdated(new Date());
       if (isBackground) {
         setJustRefreshed(true);
+        setLastUpdated(new Date());
         setTimeout(() => setJustRefreshed(false), 1500);
       }
       setIsRefreshing(false);
@@ -290,7 +293,7 @@ const Validator = () => {
                     <span className="absolute inset-0 rounded-full bg-green-400/40 animate-ping" />
                   )}
                 </span>
-                {isRefreshing ? 'Refreshing...' : justRefreshed ? 'Updated!' : 'Auto-refreshes every 20s'}
+                {isRefreshing ? 'Refreshing...' : justRefreshed ? 'Updated!' : `Auto-refreshes every 20s${lastUpdated ? ` · ${lastUpdated.toLocaleTimeString()}` : ''}`}
               </span>
             </div>
           </div>
