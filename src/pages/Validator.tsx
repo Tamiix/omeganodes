@@ -156,6 +156,7 @@ const Validator = () => {
       setError(err.message || 'Failed to load validator data');
     } finally {
       setLoading(false);
+      setLastUpdated(new Date());
       if (isBackground) {
         setJustRefreshed(true);
         setLastUpdated(new Date());
