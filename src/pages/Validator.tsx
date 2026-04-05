@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import TopStakers from '@/components/validator/TopStakers';
+import WizScoreGauge from '@/components/validator/WizScoreGauge';
 import { supabase } from '@/integrations/supabase/client';
 
 const VOTE_ACCOUNT = 'EMVmh5hF6LT1sZM9G7dEX1bykRYEymWY2vtE7QHBBAW6';
@@ -339,17 +340,8 @@ const Validator = () => {
                     </Card>
 
                     <Card className="bg-card border-border/40">
-                      <CardContent className="p-6">
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center">
-                            <Shield className="w-4 h-4 text-yellow-400" />
-                          </div>
-                          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Wiz Score</span>
-                        </div>
-                        <p className="text-3xl font-bold font-mono text-foreground">{(v.wiz_score / 10).toFixed(1)}<span className="text-lg text-muted-foreground">/10</span></p>
-                        <div className="mt-2 h-1.5 bg-muted/30 rounded-full overflow-hidden">
-                          <div className="h-full bg-yellow-400 rounded-full" style={{ width: `${(v.wiz_score / 10) * 10}%` }} />
-                        </div>
+                      <CardContent className="p-6 flex items-center justify-center">
+                        <WizScoreGauge score={v.wiz_score} size={140} />
                       </CardContent>
                     </Card>
                   </div>
