@@ -1243,23 +1243,7 @@ const PricingSection = () => {
                 </div>
 
                 {/* CTA Button */}
-                {selectedCommitment === "trial" && !redeemedTrial ? (
-                  <div className="p-4 rounded-lg border border-dashed border-amber-500/50 bg-amber-500/5 text-center">
-                    <Gift className="w-5 h-5 text-amber-500 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-foreground">Trial Code Required</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Enter a trial code above to activate access
-                    </p>
-                  </div>
-                ) : redeemedTrial ? (
-                  <div className="p-4 rounded-lg border border-secondary/50 bg-secondary/5 text-center">
-                    <Check className="w-5 h-5 text-secondary mx-auto mb-2" />
-                    <p className="text-sm font-medium text-foreground">Trial Activated!</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {TRIAL_DURATION_LABELS[redeemedTrial.duration_type]} access until {new Date(redeemedTrial.access_expires_at).toLocaleString()}
-                    </p>
-                  </div>
-                ) : (
+                {(
                   <Button
                     className={`w-full text-sm font-medium ${
                       isTrialMode || price === 0
