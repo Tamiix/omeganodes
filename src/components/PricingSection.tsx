@@ -1124,54 +1124,17 @@ const PricingSection = () => {
 
               {/* Referral discount is applied silently - no banner shown */}
 
-              {/* Discount / Trial Codes */}
-              <div className={`p-4 rounded-lg border border-border bg-card ${hasCommitmentDiscount && !redeemedTrial ? 'opacity-60' : ''}`}>
+              {/* Discount Codes */}
+              <div className={`p-4 rounded-lg border border-border bg-card ${hasCommitmentDiscount ? 'opacity-60' : ''}`}>
                 <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
                   <Tag className="w-4 h-4 text-primary" />
-                  Discount / Trial Codes
+                  Discount Code
                 </h3>
                 
-                {redeemedTrial ? (
-                  <div className="p-3 rounded-lg bg-secondary/10 border border-secondary/20">
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-secondary" />
-                      <div>
-                        <p className="text-sm font-medium text-secondary">Trial Activated!</p>
-                        <p className="text-xs text-muted-foreground">
-                          {TRIAL_DURATION_LABELS[redeemedTrial.duration_type]} until {new Date(redeemedTrial.access_expires_at).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : hasCommitmentDiscount ? (
-                  <>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Discount codes cannot be combined with commitment discounts.
-                    </p>
-                    {!isDedicated && (
-                      <div className="pt-2 border-t border-border">
-                        <p className="text-xs text-muted-foreground mb-2">Trial codes still work:</p>
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="Enter code (discount or trial)"
-                            value={unifiedCode}
-                            onChange={(e) => { setUnifiedCode(e.target.value.toUpperCase()); setDiscountError(""); setTrialCodeError(""); }}
-                            className="font-mono text-sm"
-                          />
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={handleUnifiedCodeApply}
-                            disabled={!unifiedCode.trim() || isRedeemingTrialCode || isValidatingCode}
-                          >
-                            {(isRedeemingTrialCode || isValidatingCode) ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
-                          </Button>
-                        </div>
-                        {trialCodeError && <p className="text-xs text-destructive mt-1">{trialCodeError}</p>}
-                        {discountError && <p className="text-xs text-destructive mt-1">{discountError}</p>}
-                      </div>
-                    )}
-                  </>
+                {hasCommitmentDiscount ? (
+                  <p className="text-xs text-muted-foreground">
+                    Discount codes cannot be combined with commitment discounts.
+                  </p>
                 ) : appliedDiscount ? (
                   <div className="flex items-center justify-between p-2 rounded-lg bg-secondary/10 border border-secondary/20">
                     <div className="flex items-center gap-2">
@@ -1187,17 +1150,16 @@ const PricingSection = () => {
                   <div className="space-y-2">
                     <div className="flex gap-2">
                       <Input
-                        placeholder="Enter code (discount or trial)"
+                        placeholder="Enter discount code"
                         value={unifiedCode}
-                        onChange={(e) => { setUnifiedCode(e.target.value.toUpperCase()); setDiscountError(""); setTrialCodeError(""); }}
+                        onChange={(e) => { setUnifiedCode(e.target.value.toUpperCase()); setDiscountError(""); }}
                         className="font-mono text-sm"
                       />
-                      <Button variant="outline" size="sm" onClick={handleUnifiedCodeApply} disabled={!unifiedCode.trim() || isValidatingCode || isRedeemingTrialCode}>
-                        {(isValidatingCode || isRedeemingTrialCode) ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                      <Button variant="outline" size="sm" onClick={handleUnifiedCodeApply} disabled={!unifiedCode.trim() || isValidatingCode}>
+                        {isValidatingCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
                       </Button>
                     </div>
                     {discountError && <p className="text-xs text-destructive">{discountError}</p>}
-                    {trialCodeError && <p className="text-xs text-destructive">{trialCodeError}</p>}
                   </div>
                 )}
               </div>
