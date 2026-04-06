@@ -858,12 +858,6 @@ const PricingSection = () => {
                       </div>
                     )}
                   </div>
-                ) : selectedCommitment === "trial" ? (
-                  <div>
-                    <div className="text-lg text-muted-foreground line-through">{formatPrice(300)}</div>
-                    <div className="text-4xl font-bold text-foreground">$0</div>
-                    <p className="text-sm text-amber-500 mt-1">Redeem trial code</p>
-                  </div>
                 ) : (
                   <div>
                     {(discount > 0 || appliedDiscount || referralBanner) && (
