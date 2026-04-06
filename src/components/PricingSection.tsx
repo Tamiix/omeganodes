@@ -803,31 +803,24 @@ const PricingSection = () => {
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
                   {commitments
                     .filter(c => {
-                      if (c.trialOnly && isDedicated) return false;
                       if (c.sharedOnly && (isDedicated || isSwQoS)) return false;
                       return true;
                     })
                     .map((c) => {
-                      const isTrialOnlyCommitment = c.trialOnly === true;
-                      const isDisabled = isTrialOnlyCommitment && isDedicated;
-                      
                       return (
                         <button
                           key={c.id}
-                          onClick={() => !isDisabled && setSelectedCommitment(c.id)}
-                          disabled={isDisabled}
+                          onClick={() => setSelectedCommitment(c.id)}
                           className={`relative py-2.5 sm:py-3 px-2 sm:px-3 rounded-lg text-center transition-all ${
                             selectedCommitment === c.id
                               ? "bg-primary text-white"
-                              : isTrialOnlyCommitment
-                                ? "bg-muted/50 border border-dashed border-border text-muted-foreground"
-                                : "bg-muted border border-border hover:border-primary/40"
-                          } ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                              : "bg-muted border border-border hover:border-primary/40"
+                          }`}
                         >
                           <div className="text-sm font-medium">{c.name}</div>
                           {c.label && (
                             <div className={`text-xs mt-0.5 ${
-                              selectedCommitment === c.id ? "text-white/80" : isTrialOnlyCommitment ? "text-amber-500" : "text-secondary"
+                              selectedCommitment === c.id ? "text-white/80" : "text-secondary"
                             }`}>{c.label}</div>
                           )}
                         </button>
