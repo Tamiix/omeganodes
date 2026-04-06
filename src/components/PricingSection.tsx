@@ -838,7 +838,7 @@ const PricingSection = () => {
                   <div>
                     <div className="text-lg text-muted-foreground line-through">{formatPrice(300)}</div>
                     <div className="text-4xl font-bold text-foreground">$0</div>
-                    <p className="text-sm text-secondary mt-1">30-minute free trial</p>
+                    <p className="text-sm text-secondary mt-1">1-hour free trial</p>
                   </div>
                 ) : isWeekly ? (
                   <div>
