@@ -96,14 +96,8 @@ const PricingSection = () => {
   const [discountError, setDiscountError] = useState("");
   const [isValidatingCode, setIsValidatingCode] = useState(false);
   
-  // Unified code input (discount or trial)
+  // Unified code input (discount)
   const [unifiedCode, setUnifiedCode] = useState("");
-  
-  // Trial code redemption state
-  const [trialCode, setTrialCode] = useState("");
-  const [isRedeemingTrialCode, setIsRedeemingTrialCode] = useState(false);
-  const [trialCodeError, setTrialCodeError] = useState("");
-  const [redeemedTrial, setRedeemedTrial] = useState<{ duration_type: string; access_expires_at: string } | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   // Referral code from localStorage (set via /ref/:code link)
