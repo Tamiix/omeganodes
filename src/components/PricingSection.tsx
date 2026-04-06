@@ -113,8 +113,8 @@ const PricingSection = () => {
   const isWeekly = selectedCommitment === "weekly";
   const [swqosStakePackages, setSwqosStakePackages] = useState(1);
   
-  // Check if commitment discount is active (any commitment other than monthly, trial, or weekly)
-  const hasCommitmentDiscount = selectedCommitment !== "monthly" && selectedCommitment !== "trial" && selectedCommitment !== "weekly";
+  // Check if commitment discount is active (any commitment other than monthly or weekly)
+  const hasCommitmentDiscount = selectedCommitment !== "monthly" && selectedCommitment !== "weekly";
   
   // Get the final location for dedicated servers
   const getFinalLocation = () => {
