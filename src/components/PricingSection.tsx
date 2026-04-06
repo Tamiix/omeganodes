@@ -578,7 +578,7 @@ const PricingSection = () => {
                 </h3>
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
                   {commitments
-                    .filter(c => !c.trialOnly)
+                    .filter(c => c.sharedOnly ? false : true)
                     .map((c) => (
                       <button
                         key={c.id}
@@ -590,7 +590,7 @@ const PricingSection = () => {
                         }`}
                       >
                         <div className="text-sm font-medium">{c.name}</div>
-                        {c.label && !c.trialOnly && (
+                        {c.label && (
                           <div className={`text-xs mt-0.5 ${selectedCommitment === c.id ? "text-white/80" : "text-secondary"}`}>{c.label}</div>
                         )}
                       </button>
