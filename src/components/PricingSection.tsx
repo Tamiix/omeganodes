@@ -167,16 +167,12 @@ const PricingSection = () => {
     }
   }, []);
 
-  // Clear discount code when switching to a commitment with discount, or when switching to trial
+  // Clear discount code when switching to a commitment with discount
   useEffect(() => {
-    if ((hasCommitmentDiscount || selectedCommitment === "trial") && appliedDiscount) {
+    if (hasCommitmentDiscount && appliedDiscount) {
       setAppliedDiscount(null);
       setDiscountCode("");
       setDiscountError("");
-    }
-    // Also turn off trial mode when switching to trial
-    if (selectedCommitment === "trial" && isTrialMode) {
-      setIsTrialMode(false);
     }
   }, [hasCommitmentDiscount, selectedCommitment]);
 
