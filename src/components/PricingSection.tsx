@@ -384,7 +384,7 @@ const PricingSection = () => {
 
       const trialSignature = `TRIAL-${Date.now().toString(36).toUpperCase()}`;
       const expiresAt = new Date();
-      expiresAt.setMinutes(expiresAt.getMinutes() + 30);
+      expiresAt.setMinutes(expiresAt.getMinutes() + 60);
 
       if (user) {
         await supabase.from('orders').insert({
