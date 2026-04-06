@@ -33,7 +33,6 @@ const dedicatedSpecs = [
 ];
 
 const commitments = [
-  { id: "trial", name: "Trial", months: 0, discount: 0, label: "Trial only", trialOnly: true },
   { id: "weekly", name: "Weekly", months: 0, discount: 0, label: "", sharedOnly: true },
   { id: "monthly", name: "Monthly", months: 1, discount: 0, label: "" },
   { id: "3months", name: "3 Months", months: 3, discount: 0.08, label: "8% off" },
@@ -97,14 +96,8 @@ const PricingSection = () => {
   const [discountError, setDiscountError] = useState("");
   const [isValidatingCode, setIsValidatingCode] = useState(false);
   
-  // Unified code input (discount or trial)
+  // Unified code input (discount)
   const [unifiedCode, setUnifiedCode] = useState("");
-  
-  // Trial code redemption state
-  const [trialCode, setTrialCode] = useState("");
-  const [isRedeemingTrialCode, setIsRedeemingTrialCode] = useState(false);
-  const [trialCodeError, setTrialCodeError] = useState("");
-  const [redeemedTrial, setRedeemedTrial] = useState<{ duration_type: string; access_expires_at: string } | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   // Referral code from localStorage (set via /ref/:code link)
@@ -120,8 +113,8 @@ const PricingSection = () => {
   const isWeekly = selectedCommitment === "weekly";
   const [swqosStakePackages, setSwqosStakePackages] = useState(1);
   
-  // Check if commitment discount is active (any commitment other than monthly, trial, or weekly)
-  const hasCommitmentDiscount = selectedCommitment !== "monthly" && selectedCommitment !== "trial" && selectedCommitment !== "weekly";
+  // Check if commitment discount is active (any commitment other than monthly or weekly)
+  const hasCommitmentDiscount = selectedCommitment !== "monthly" && selectedCommitment !== "weekly";
   
   // Get the final location for dedicated servers
   const getFinalLocation = () => {
@@ -174,16 +167,12 @@ const PricingSection = () => {
     }
   }, []);
 
-  // Clear discount code when switching to a commitment with discount, or when switching to trial
+  // Clear discount code when switching to a commitment with discount
   useEffect(() => {
-    if ((hasCommitmentDiscount || selectedCommitment === "trial") && appliedDiscount) {
+    if (hasCommitmentDiscount && appliedDiscount) {
       setAppliedDiscount(null);
       setDiscountCode("");
       setDiscountError("");
-    }
-    // Also turn off trial mode when switching to trial
-    if (selectedCommitment === "trial" && isTrialMode) {
-      setIsTrialMode(false);
     }
   }, [hasCommitmentDiscount, selectedCommitment]);
 
@@ -329,76 +318,31 @@ const PricingSection = () => {
     const code = unifiedCode.trim().toUpperCase();
     if (!code) return;
     
-    // Check if it looks like a trial code (starts with TRIAL-)
-    if (code.startsWith('TRIAL-')) {
-      setTrialCode(code);
-      setUnifiedCode("");
-      // Trigger trial redemption
-      if (!user) {
-        setTrialCodeError("Login required to redeem trial codes");
-        return;
-      }
-      if (!isValidDiscordId) {
-        setTrialCodeError("Enter Discord ID first");
-        return;
-      }
-      setIsRedeemingTrialCode(true);
-      setTrialCodeError("");
-      try {
-        const { data, error } = await supabase.rpc('redeem_access_code', {
-          p_code: code,
-          p_discord_id: discordUserId.trim()
-        });
-        if (error) throw error;
-        const result = data as { success: boolean; error?: string; duration_type?: string; expires_at?: string; transaction_signature?: string };
-        if (!result.success) {
-          setTrialCodeError(result.error || "Invalid or already redeemed code");
-          return;
-        }
-        await supabase.functions.invoke('discord-order-notification', {
-          body: {
-            plan: `Trial (${TRIAL_DURATION_LABELS[result.duration_type || '1_day']})`,
-            commitment: "trial", serverType: "Shared", email: user.email,
-            discordId: discordUserId.trim(), totalAmount: 0,
-            transactionSignature: result.transaction_signature, isTestMode: false, isTrial: true
-          }
-        });
-        setRedeemedTrial({ duration_type: result.duration_type || '1_day', access_expires_at: result.expires_at || new Date().toISOString() });
-        const { toast } = await import("@/hooks/use-toast");
-        toast({ title: '🎉 Trial Code Redeemed!', description: `You now have ${TRIAL_DURATION_LABELS[result.duration_type || '1_day']} of free shared server access` });
-      } catch (error) {
-        console.error('Error redeeming trial code:', error);
-        setTrialCodeError("Failed to redeem code. Please try again.");
-      } finally {
-        setIsRedeemingTrialCode(false);
-      }
-    } else {
-      // Treat as discount code
-      setDiscountCode(code);
-      setIsValidatingCode(true);
+    // Treat as discount code
+    setDiscountCode(code);
+    setIsValidatingCode(true);
+    setDiscountError("");
+    try {
+      const { data, error } = await supabase.rpc('validate_discount_code', {
+        code_to_validate: code,
+        server_type: selectedServerType
+      });
+      if (error) { setDiscountError("Failed to validate code"); setAppliedDiscount(null); return; }
+      const result = data?.[0];
+      if (!result || !result.is_valid) { setDiscountError(result?.error_message || "Invalid code"); setAppliedDiscount(null); return; }
+      setAppliedDiscount({
+        code: result.code,
+        discount_type: result.discount_type as 'percentage' | 'flat',
+        discount_value: result.discount_value,
+        applicable_to: result.applicable_to
+      });
       setDiscountError("");
-      try {
-        const { data, error } = await supabase.rpc('validate_discount_code', {
-          code_to_validate: code,
-          server_type: selectedServerType
-        });
-        if (error) { setDiscountError("Failed to validate code"); setAppliedDiscount(null); return; }
-        const result = data?.[0];
-        if (!result || !result.is_valid) { setDiscountError(result?.error_message || "Invalid code"); setAppliedDiscount(null); return; }
-        setAppliedDiscount({
-          code: result.code,
-          discount_type: result.discount_type as 'percentage' | 'flat',
-          discount_value: result.discount_value,
-          applicable_to: result.applicable_to
-        });
-        setDiscountError("");
-        setUnifiedCode("");
-      } catch (err) {
-        setDiscountError("Failed to validate code");
-        setAppliedDiscount(null);
-      } finally {
-        setIsValidatingCode(false);
-      }
+      setUnifiedCode("");
+    } catch (err) {
+      setDiscountError("Failed to validate code");
+      setAppliedDiscount(null);
+    } finally {
+      setIsValidatingCode(false);
     }
   };
 
@@ -440,11 +384,11 @@ const PricingSection = () => {
 
       const trialSignature = `TRIAL-${Date.now().toString(36).toUpperCase()}`;
       const expiresAt = new Date();
-      expiresAt.setMinutes(expiresAt.getMinutes() + 30);
+      expiresAt.setMinutes(expiresAt.getMinutes() + 60);
 
       if (user) {
         await supabase.from('orders').insert({
-          user_id: user.id, order_number: "TEMP", plan_name: "Trial (30 min)", commitment: "trial",
+          user_id: user.id, order_number: "TEMP", plan_name: "Trial (1 Hour)", commitment: "trial",
           server_type: "shared", location: "all", rps: 100, tps: 50, amount_usd: 0,
           currency_code: "FREE", currency_amount: 0, payment_method: "trial",
           transaction_signature: trialSignature, status: "active", expires_at: expiresAt.toISOString(), is_test_order: false
@@ -453,88 +397,19 @@ const PricingSection = () => {
       
       await supabase.functions.invoke('discord-order-notification', {
         body: {
-          plan: "Trial (30 min)", commitment: "trial", serverType: "Shared", email: user?.email || "Not logged in",
+          plan: "Trial (1 Hour)", commitment: "trial", serverType: "Shared", email: user?.email || "Not logged in",
           discordId: discordUserId.trim(), totalAmount: 0, transactionSignature: trialSignature, isTestMode: false, isTrial: true
         }
       });
       
       const { toast } = await import("@/hooks/use-toast");
-      toast({ title: "Trial Activated!", description: "Check Discord for access details." });
+      toast({ title: "Trial Activated!", description: "You have 1 hour of free access. Check Discord for details." });
     } catch (err) {
       const { toast } = await import("@/hooks/use-toast");
       toast({ title: "Error", description: "Failed to activate trial.", variant: "destructive" });
     } finally {
       setIsTrialProcessing(false);
       setIsTrialMode(false);
-    }
-  };
-
-  const TRIAL_DURATION_LABELS: Record<string, string> = {
-    '1_hour': '1 Hour',
-    '1_day': '1 Day',
-    '1_week': '1 Week',
-    '1_month': '1 Month',
-  };
-
-  const handleRedeemTrialCode = async () => {
-    if (!trialCode.trim() || !user || !isValidDiscordId) return;
-    
-    setIsRedeemingTrialCode(true);
-    setTrialCodeError("");
-    
-    try {
-      // Use secure server-side RPC function to validate and redeem
-      const { data, error } = await supabase.rpc('redeem_access_code', {
-        p_code: trialCode.trim(),
-        p_discord_id: discordUserId.trim()
-      });
-
-      if (error) throw error;
-      
-      const result = data as { 
-        success: boolean; 
-        error?: string; 
-        duration_type?: string; 
-        expires_at?: string;
-        transaction_signature?: string;
-      };
-      
-      if (!result.success) {
-        setTrialCodeError(result.error || "Invalid or already redeemed code");
-        return;
-      }
-
-      // Send Discord notification
-      await supabase.functions.invoke('discord-order-notification', {
-        body: {
-          plan: `Trial (${TRIAL_DURATION_LABELS[result.duration_type || '1_day']})`,
-          commitment: "trial",
-          serverType: "Shared",
-          email: user.email,
-          discordId: discordUserId.trim(),
-          totalAmount: 0,
-          transactionSignature: result.transaction_signature,
-          isTestMode: false,
-          isTrial: true
-        }
-      });
-
-      setRedeemedTrial({
-        duration_type: result.duration_type || '1_day',
-        access_expires_at: result.expires_at || new Date().toISOString(),
-      });
-
-      const { toast } = await import("@/hooks/use-toast");
-      toast({
-        title: '🎉 Trial Code Redeemed!',
-        description: `You now have ${TRIAL_DURATION_LABELS[result.duration_type || '1_day']} of free shared server access`,
-      });
-      
-    } catch (error) {
-      console.error('Error redeeming trial code:', error);
-      setTrialCodeError("Failed to redeem code. Please try again.");
-    } finally {
-      setIsRedeemingTrialCode(false);
     }
   };
 
@@ -703,7 +578,7 @@ const PricingSection = () => {
                 </h3>
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
                   {commitments
-                    .filter(c => !c.trialOnly)
+                    .filter(c => c.sharedOnly ? false : true)
                     .map((c) => (
                       <button
                         key={c.id}
@@ -715,7 +590,7 @@ const PricingSection = () => {
                         }`}
                       >
                         <div className="text-sm font-medium">{c.name}</div>
-                        {c.label && !c.trialOnly && (
+                        {c.label && (
                           <div className={`text-xs mt-0.5 ${selectedCommitment === c.id ? "text-white/80" : "text-secondary"}`}>{c.label}</div>
                         )}
                       </button>
@@ -928,31 +803,24 @@ const PricingSection = () => {
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
                   {commitments
                     .filter(c => {
-                      if (c.trialOnly && isDedicated) return false;
                       if (c.sharedOnly && (isDedicated || isSwQoS)) return false;
                       return true;
                     })
                     .map((c) => {
-                      const isTrialOnlyCommitment = c.trialOnly === true;
-                      const isDisabled = isTrialOnlyCommitment && isDedicated;
-                      
                       return (
                         <button
                           key={c.id}
-                          onClick={() => !isDisabled && setSelectedCommitment(c.id)}
-                          disabled={isDisabled}
+                          onClick={() => setSelectedCommitment(c.id)}
                           className={`relative py-2.5 sm:py-3 px-2 sm:px-3 rounded-lg text-center transition-all ${
                             selectedCommitment === c.id
                               ? "bg-primary text-white"
-                              : isTrialOnlyCommitment
-                                ? "bg-muted/50 border border-dashed border-border text-muted-foreground"
-                                : "bg-muted border border-border hover:border-primary/40"
-                          } ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                              : "bg-muted border border-border hover:border-primary/40"
+                          }`}
                         >
                           <div className="text-sm font-medium">{c.name}</div>
                           {c.label && (
                             <div className={`text-xs mt-0.5 ${
-                              selectedCommitment === c.id ? "text-white/80" : isTrialOnlyCommitment ? "text-amber-500" : "text-secondary"
+                              selectedCommitment === c.id ? "text-white/80" : "text-secondary"
                             }`}>{c.label}</div>
                           )}
                         </button>
@@ -970,7 +838,7 @@ const PricingSection = () => {
                   <div>
                     <div className="text-lg text-muted-foreground line-through">{formatPrice(300)}</div>
                     <div className="text-4xl font-bold text-foreground">$0</div>
-                    <p className="text-sm text-secondary mt-1">30-minute free trial</p>
+                    <p className="text-sm text-secondary mt-1">1-hour free trial</p>
                   </div>
                 ) : isWeekly ? (
                   <div>
@@ -989,12 +857,6 @@ const PricingSection = () => {
                         <span className="text-xs font-medium text-secondary">10% referral discount applied</span>
                       </div>
                     )}
-                  </div>
-                ) : selectedCommitment === "trial" ? (
-                  <div>
-                    <div className="text-lg text-muted-foreground line-through">{formatPrice(300)}</div>
-                    <div className="text-4xl font-bold text-foreground">$0</div>
-                    <p className="text-sm text-amber-500 mt-1">Redeem trial code</p>
                   </div>
                 ) : (
                   <div>
@@ -1048,7 +910,7 @@ const PricingSection = () => {
                       </div>
                       <div>
                         <h3 className="text-sm font-medium">Free Trial</h3>
-                        <p className="text-xs text-muted-foreground">30 minutes, no payment required</p>
+                        <p className="text-xs text-muted-foreground">1 hour free, no payment required</p>
                       </div>
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -1262,54 +1124,17 @@ const PricingSection = () => {
 
               {/* Referral discount is applied silently - no banner shown */}
 
-              {/* Discount / Trial Codes */}
-              <div className={`p-4 rounded-lg border border-border bg-card ${hasCommitmentDiscount && !redeemedTrial ? 'opacity-60' : ''}`}>
+              {/* Discount Codes */}
+              <div className={`p-4 rounded-lg border border-border bg-card ${hasCommitmentDiscount ? 'opacity-60' : ''}`}>
                 <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
                   <Tag className="w-4 h-4 text-primary" />
-                  Discount / Trial Codes
+                  Discount Code
                 </h3>
                 
-                {redeemedTrial ? (
-                  <div className="p-3 rounded-lg bg-secondary/10 border border-secondary/20">
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-secondary" />
-                      <div>
-                        <p className="text-sm font-medium text-secondary">Trial Activated!</p>
-                        <p className="text-xs text-muted-foreground">
-                          {TRIAL_DURATION_LABELS[redeemedTrial.duration_type]} until {new Date(redeemedTrial.access_expires_at).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : hasCommitmentDiscount ? (
-                  <>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Discount codes cannot be combined with commitment discounts.
-                    </p>
-                    {!isDedicated && (
-                      <div className="pt-2 border-t border-border">
-                        <p className="text-xs text-muted-foreground mb-2">Trial codes still work:</p>
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="Enter code (discount or trial)"
-                            value={unifiedCode}
-                            onChange={(e) => { setUnifiedCode(e.target.value.toUpperCase()); setDiscountError(""); setTrialCodeError(""); }}
-                            className="font-mono text-sm"
-                          />
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={handleUnifiedCodeApply}
-                            disabled={!unifiedCode.trim() || isRedeemingTrialCode || isValidatingCode}
-                          >
-                            {(isRedeemingTrialCode || isValidatingCode) ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
-                          </Button>
-                        </div>
-                        {trialCodeError && <p className="text-xs text-destructive mt-1">{trialCodeError}</p>}
-                        {discountError && <p className="text-xs text-destructive mt-1">{discountError}</p>}
-                      </div>
-                    )}
-                  </>
+                {hasCommitmentDiscount ? (
+                  <p className="text-xs text-muted-foreground">
+                    Discount codes cannot be combined with commitment discounts.
+                  </p>
                 ) : appliedDiscount ? (
                   <div className="flex items-center justify-between p-2 rounded-lg bg-secondary/10 border border-secondary/20">
                     <div className="flex items-center gap-2">
@@ -1325,17 +1150,16 @@ const PricingSection = () => {
                   <div className="space-y-2">
                     <div className="flex gap-2">
                       <Input
-                        placeholder="Enter code (discount or trial)"
+                        placeholder="Enter discount code"
                         value={unifiedCode}
-                        onChange={(e) => { setUnifiedCode(e.target.value.toUpperCase()); setDiscountError(""); setTrialCodeError(""); }}
+                        onChange={(e) => { setUnifiedCode(e.target.value.toUpperCase()); setDiscountError(""); }}
                         className="font-mono text-sm"
                       />
-                      <Button variant="outline" size="sm" onClick={handleUnifiedCodeApply} disabled={!unifiedCode.trim() || isValidatingCode || isRedeemingTrialCode}>
-                        {(isValidatingCode || isRedeemingTrialCode) ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                      <Button variant="outline" size="sm" onClick={handleUnifiedCodeApply} disabled={!unifiedCode.trim() || isValidatingCode}>
+                        {isValidatingCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
                       </Button>
                     </div>
                     {discountError && <p className="text-xs text-destructive">{discountError}</p>}
-                    {trialCodeError && <p className="text-xs text-destructive">{trialCodeError}</p>}
                   </div>
                 )}
               </div>
@@ -1419,23 +1243,7 @@ const PricingSection = () => {
                 </div>
 
                 {/* CTA Button */}
-                {selectedCommitment === "trial" && !redeemedTrial ? (
-                  <div className="p-4 rounded-lg border border-dashed border-amber-500/50 bg-amber-500/5 text-center">
-                    <Gift className="w-5 h-5 text-amber-500 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-foreground">Trial Code Required</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Enter a trial code above to activate access
-                    </p>
-                  </div>
-                ) : redeemedTrial ? (
-                  <div className="p-4 rounded-lg border border-secondary/50 bg-secondary/5 text-center">
-                    <Check className="w-5 h-5 text-secondary mx-auto mb-2" />
-                    <p className="text-sm font-medium text-foreground">Trial Activated!</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {TRIAL_DURATION_LABELS[redeemedTrial.duration_type]} access until {new Date(redeemedTrial.access_expires_at).toLocaleString()}
-                    </p>
-                  </div>
-                ) : (
+                {(
                   <Button
                     className={`w-full text-sm font-medium ${
                       isTrialMode || price === 0
