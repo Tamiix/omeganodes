@@ -403,82 +403,13 @@ const PricingSection = () => {
       });
       
       const { toast } = await import("@/hooks/use-toast");
-      toast({ title: "Trial Activated!", description: "Check Discord for access details." });
+      toast({ title: "Trial Activated!", description: "You have 1 hour of free access. Check Discord for details." });
     } catch (err) {
       const { toast } = await import("@/hooks/use-toast");
       toast({ title: "Error", description: "Failed to activate trial.", variant: "destructive" });
     } finally {
       setIsTrialProcessing(false);
       setIsTrialMode(false);
-    }
-  };
-
-  const TRIAL_DURATION_LABELS: Record<string, string> = {
-    '1_hour': '1 Hour',
-    '1_day': '1 Day',
-    '1_week': '1 Week',
-    '1_month': '1 Month',
-  };
-
-  const handleRedeemTrialCode = async () => {
-    if (!trialCode.trim() || !user || !isValidDiscordId) return;
-    
-    setIsRedeemingTrialCode(true);
-    setTrialCodeError("");
-    
-    try {
-      // Use secure server-side RPC function to validate and redeem
-      const { data, error } = await supabase.rpc('redeem_access_code', {
-        p_code: trialCode.trim(),
-        p_discord_id: discordUserId.trim()
-      });
-
-      if (error) throw error;
-      
-      const result = data as { 
-        success: boolean; 
-        error?: string; 
-        duration_type?: string; 
-        expires_at?: string;
-        transaction_signature?: string;
-      };
-      
-      if (!result.success) {
-        setTrialCodeError(result.error || "Invalid or already redeemed code");
-        return;
-      }
-
-      // Send Discord notification
-      await supabase.functions.invoke('discord-order-notification', {
-        body: {
-          plan: `Trial (${TRIAL_DURATION_LABELS[result.duration_type || '1_day']})`,
-          commitment: "trial",
-          serverType: "Shared",
-          email: user.email,
-          discordId: discordUserId.trim(),
-          totalAmount: 0,
-          transactionSignature: result.transaction_signature,
-          isTestMode: false,
-          isTrial: true
-        }
-      });
-
-      setRedeemedTrial({
-        duration_type: result.duration_type || '1_day',
-        access_expires_at: result.expires_at || new Date().toISOString(),
-      });
-
-      const { toast } = await import("@/hooks/use-toast");
-      toast({
-        title: '🎉 Trial Code Redeemed!',
-        description: `You now have ${TRIAL_DURATION_LABELS[result.duration_type || '1_day']} of free shared server access`,
-      });
-      
-    } catch (error) {
-      console.error('Error redeeming trial code:', error);
-      setTrialCodeError("Failed to redeem code. Please try again.");
-    } finally {
-      setIsRedeemingTrialCode(false);
     }
   };
 
