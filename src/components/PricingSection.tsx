@@ -910,7 +910,7 @@ const PricingSection = () => {
                       </div>
                       <div>
                         <h3 className="text-sm font-medium">Free Trial</h3>
-                        <p className="text-xs text-muted-foreground">30 minutes, no payment required</p>
+                        <p className="text-xs text-muted-foreground">1 hour free, no payment required</p>
                       </div>
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
