@@ -318,76 +318,31 @@ const PricingSection = () => {
     const code = unifiedCode.trim().toUpperCase();
     if (!code) return;
     
-    // Check if it looks like a trial code (starts with TRIAL-)
-    if (code.startsWith('TRIAL-')) {
-      setTrialCode(code);
-      setUnifiedCode("");
-      // Trigger trial redemption
-      if (!user) {
-        setTrialCodeError("Login required to redeem trial codes");
-        return;
-      }
-      if (!isValidDiscordId) {
-        setTrialCodeError("Enter Discord ID first");
-        return;
-      }
-      setIsRedeemingTrialCode(true);
-      setTrialCodeError("");
-      try {
-        const { data, error } = await supabase.rpc('redeem_access_code', {
-          p_code: code,
-          p_discord_id: discordUserId.trim()
-        });
-        if (error) throw error;
-        const result = data as { success: boolean; error?: string; duration_type?: string; expires_at?: string; transaction_signature?: string };
-        if (!result.success) {
-          setTrialCodeError(result.error || "Invalid or already redeemed code");
-          return;
-        }
-        await supabase.functions.invoke('discord-order-notification', {
-          body: {
-            plan: `Trial (${TRIAL_DURATION_LABELS[result.duration_type || '1_day']})`,
-            commitment: "trial", serverType: "Shared", email: user.email,
-            discordId: discordUserId.trim(), totalAmount: 0,
-            transactionSignature: result.transaction_signature, isTestMode: false, isTrial: true
-          }
-        });
-        setRedeemedTrial({ duration_type: result.duration_type || '1_day', access_expires_at: result.expires_at || new Date().toISOString() });
-        const { toast } = await import("@/hooks/use-toast");
-        toast({ title: '🎉 Trial Code Redeemed!', description: `You now have ${TRIAL_DURATION_LABELS[result.duration_type || '1_day']} of free shared server access` });
-      } catch (error) {
-        console.error('Error redeeming trial code:', error);
-        setTrialCodeError("Failed to redeem code. Please try again.");
-      } finally {
-        setIsRedeemingTrialCode(false);
-      }
-    } else {
-      // Treat as discount code
-      setDiscountCode(code);
-      setIsValidatingCode(true);
+    // Treat as discount code
+    setDiscountCode(code);
+    setIsValidatingCode(true);
+    setDiscountError("");
+    try {
+      const { data, error } = await supabase.rpc('validate_discount_code', {
+        code_to_validate: code,
+        server_type: selectedServerType
+      });
+      if (error) { setDiscountError("Failed to validate code"); setAppliedDiscount(null); return; }
+      const result = data?.[0];
+      if (!result || !result.is_valid) { setDiscountError(result?.error_message || "Invalid code"); setAppliedDiscount(null); return; }
+      setAppliedDiscount({
+        code: result.code,
+        discount_type: result.discount_type as 'percentage' | 'flat',
+        discount_value: result.discount_value,
+        applicable_to: result.applicable_to
+      });
       setDiscountError("");
-      try {
-        const { data, error } = await supabase.rpc('validate_discount_code', {
-          code_to_validate: code,
-          server_type: selectedServerType
-        });
-        if (error) { setDiscountError("Failed to validate code"); setAppliedDiscount(null); return; }
-        const result = data?.[0];
-        if (!result || !result.is_valid) { setDiscountError(result?.error_message || "Invalid code"); setAppliedDiscount(null); return; }
-        setAppliedDiscount({
-          code: result.code,
-          discount_type: result.discount_type as 'percentage' | 'flat',
-          discount_value: result.discount_value,
-          applicable_to: result.applicable_to
-        });
-        setDiscountError("");
-        setUnifiedCode("");
-      } catch (err) {
-        setDiscountError("Failed to validate code");
-        setAppliedDiscount(null);
-      } finally {
-        setIsValidatingCode(false);
-      }
+      setUnifiedCode("");
+    } catch (err) {
+      setDiscountError("Failed to validate code");
+      setAppliedDiscount(null);
+    } finally {
+      setIsValidatingCode(false);
     }
   };
 
