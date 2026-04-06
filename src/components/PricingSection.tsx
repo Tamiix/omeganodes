@@ -388,7 +388,7 @@ const PricingSection = () => {
 
       if (user) {
         await supabase.from('orders').insert({
-          user_id: user.id, order_number: "TEMP", plan_name: "Trial (30 min)", commitment: "trial",
+          user_id: user.id, order_number: "TEMP", plan_name: "Trial (1 Hour)", commitment: "trial",
           server_type: "shared", location: "all", rps: 100, tps: 50, amount_usd: 0,
           currency_code: "FREE", currency_amount: 0, payment_method: "trial",
           transaction_signature: trialSignature, status: "active", expires_at: expiresAt.toISOString(), is_test_order: false
@@ -397,7 +397,7 @@ const PricingSection = () => {
       
       await supabase.functions.invoke('discord-order-notification', {
         body: {
-          plan: "Trial (30 min)", commitment: "trial", serverType: "Shared", email: user?.email || "Not logged in",
+          plan: "Trial (1 Hour)", commitment: "trial", serverType: "Shared", email: user?.email || "Not logged in",
           discordId: discordUserId.trim(), totalAmount: 0, transactionSignature: trialSignature, isTestMode: false, isTrial: true
         }
       });
