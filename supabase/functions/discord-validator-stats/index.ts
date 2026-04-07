@@ -321,13 +321,16 @@ serve(async (req) => {
 
     const epochChanged = !lastState.epoch || lastState.epoch !== currentEpoch;
     if (force || epochChanged) {
+      // Report is for the just-ended epoch, not the new one
+      const reportEpoch = epochChanged && lastState.epoch ? currentEpoch - 1 : currentEpoch;
       const [stakeAccounts, clusterStats] = await Promise.all([
         fetchJSON(`https://api.stakewiz.com/validator_epoch_stake_accounts/${VOTE_ACCOUNT}`),
         fetchJSON(`https://api.stakewiz.com/cluster_stats`),
       ]);
-      await postEpochReport(validator, stakeAccounts, clusterStats, lastState.stake);
-      actions.push(`epoch_report:${currentEpoch}`);
-      console.log(`Epoch report posted for epoch ${currentEpoch}`);
+      const reportValidator = { ...validator, epoch: reportEpoch };
+      await postEpochReport(reportValidator, stakeAccounts, clusterStats, lastState.stake);
+      actions.push(`epoch_report:${reportEpoch}`);
+      console.log(`Epoch report posted for epoch ${reportEpoch}`);
     }
 
     if (!epochChanged && lastState.stake != null) {
