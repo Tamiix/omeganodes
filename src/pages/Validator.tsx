@@ -533,7 +533,7 @@ const Validator = () => {
                         </div>
                         <div className="divide-y divide-border/10">
                           {[
-                            { label: 'Vote Success', val: v.credit_ratio, avg: cluster.avg_credit_ratio, higher: true },
+                            { label: 'Vote Success', val: v.vote_success, avg: cluster.avg_credit_ratio ? Math.min(cluster.avg_credit_ratio, 100) : 0, higher: true },
                             { label: 'Skip Rate', val: v.skip_rate, avg: cluster.avg_skip_rate, higher: false },
                             { label: 'APY', val: v.total_apy, avg: cluster.avg_apy, higher: true },
                             { label: 'Commission', val: v.commission, avg: cluster.avg_commission, higher: false },
