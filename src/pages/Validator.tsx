@@ -534,7 +534,6 @@ const Validator = () => {
                         <div className="divide-y divide-border/10">
                           {[
                             { label: 'Skip Rate', val: v.skip_rate, avg: cluster.avg_skip_rate, higher: false },
-                            { label: 'Skip Rate', val: v.skip_rate, avg: cluster.avg_skip_rate, higher: false },
                             { label: 'APY', val: v.total_apy, avg: cluster.avg_apy, higher: true },
                             { label: 'Commission', val: v.commission, avg: cluster.avg_commission, higher: false },
                           ].map(m => {
