@@ -33,7 +33,28 @@ function getSupabaseClient() {
   );
 }
 
-async function getLastState(supabase: any): Promise<{ epoch?: number; stake?: number }> {
+interface ValidatorState {
+  epoch?: number;
+  stake?: number;
+  // Cached validator metrics for accurate epoch reports
+  wiz_score?: number;
+  rank?: number;
+  commission?: number;
+  staking_apy?: number;
+  jito_apy?: number;
+  total_apy?: number;
+  skip_rate?: number;
+  vote_success?: number;
+  uptime?: number;
+  version?: string;
+  ip_city?: string;
+  ip_country?: string;
+  ip_org?: string;
+  ip_asn?: string;
+  delinquent?: boolean;
+}
+
+async function getLastState(supabase: any): Promise<ValidatorState> {
   const { data } = await supabase
     .from('app_settings')
     .select('value')
@@ -42,13 +63,34 @@ async function getLastState(supabase: any): Promise<{ epoch?: number; stake?: nu
   return data?.value || {};
 }
 
-async function saveLastState(supabase: any, state: { epoch: number; stake: number; posted_at: string }) {
+async function saveLastState(supabase: any, state: ValidatorState & { posted_at: string }) {
   await supabase
     .from('app_settings')
     .upsert(
       { key: 'last_validator_state', value: state, updated_at: new Date().toISOString() },
       { onConflict: 'key' }
     );
+}
+
+/** Extract the fields we want to cache from the validator API response */
+function extractValidatorMetrics(validator: any): Omit<ValidatorState, 'epoch' | 'stake'> {
+  return {
+    wiz_score: validator.wiz_score,
+    rank: validator.rank,
+    commission: validator.commission,
+    staking_apy: validator.staking_apy || validator.apy_estimate,
+    jito_apy: validator.jito_apy,
+    total_apy: validator.total_apy || ((validator.staking_apy || validator.apy_estimate || 0) + (validator.jito_apy || 0)),
+    skip_rate: validator.skip_rate ?? validator.wiz_skip_rate,
+    vote_success: validator.vote_success,
+    uptime: validator.uptime,
+    version: validator.version,
+    ip_city: validator.ip_city,
+    ip_country: validator.ip_country,
+    ip_org: validator.ip_org,
+    ip_asn: validator.ip_asn,
+    delinquent: validator.delinquent === true,
+  };
 }
 
 function sumStakeAccounts(accounts: any): number {
@@ -69,118 +111,85 @@ function countStakeAccounts(accounts: any): number {
   return 0;
 }
 
-async function postEpochReport(validator: any, stakeAccounts: any, clusterStats: any, previousStake: number | undefined) {
-  const totalStakeSol = validator.activated_stake || 0;
-  
-  // Calculate epoch delta from previous state if available
+/**
+ * Build and post the epoch report embed.
+ * `reportData` contains the metrics to display — either from cached state (epoch change)
+ * or from the live API (force/manual).
+ */
+async function postEpochReport(
+  reportData: {
+    epoch: number;
+    totalStakeSol: number;
+    previousStake?: number;
+    wiz_score?: number;
+    rank?: number;
+    commission?: number;
+    staking_apy?: number;
+    jito_apy?: number;
+    total_apy?: number;
+    skip_rate?: number;
+    vote_success?: number;
+    uptime?: number;
+    version?: string;
+    ip_city?: string;
+    ip_country?: string;
+    ip_org?: string;
+    ip_asn?: string;
+    delinquent?: boolean;
+  },
+  stakeAccounts: any,
+  clusterStats: any,
+) {
+  const { epoch, totalStakeSol, previousStake } = reportData;
+
   const epochDelta = previousStake != null ? totalStakeSol - previousStake : 0;
   const deltaSign = epochDelta >= 0 ? '+' : '';
   const deltaEmoji = epochDelta > 0 ? '📈' : epochDelta < 0 ? '📉' : '➡️';
 
-  // Parse activating/deactivating from stake accounts response
   const activatingSOL = sumStakeAccounts(stakeAccounts?.activating);
   const deactivatingSOL = sumStakeAccounts(stakeAccounts?.deactivating);
   const activatingCount = countStakeAccounts(stakeAccounts?.activating);
   const deactivatingCount = countStakeAccounts(stakeAccounts?.deactivating);
 
-  const wizScore = validator.wiz_score;
+  const wizScore = reportData.wiz_score;
   const wizDisplay = wizScore != null ? `${(wizScore / 10).toFixed(1)} / 10` : 'N/A';
-  const commission = validator.commission;
-  const skipRate = validator.skip_rate ?? validator.wiz_skip_rate;
+  const commission = reportData.commission;
+  const skipRate = reportData.skip_rate;
   const clusterSkipRate = clusterStats?.avg_skip_rate;
-  const voteSuccess = validator.vote_success;
+  const voteSuccess = reportData.vote_success;
   const clusterVoteSuccess = clusterStats?.avg_credit_ratio;
-  const stakingApy = validator.staking_apy || validator.apy_estimate;
-  const jitoApy = validator.jito_apy;
-  const totalApy = validator.total_apy || ((stakingApy || 0) + (jitoApy || 0));
-  const version = validator.version || 'Unknown';
-  const datacenter = validator.ip_city && validator.ip_country
-    ? `${validator.ip_city}, ${validator.ip_country} (${validator.ip_org || validator.ip_asn || ''})`
+  const stakingApy = reportData.staking_apy;
+  const jitoApy = reportData.jito_apy;
+  const totalApy = reportData.total_apy || ((stakingApy || 0) + (jitoApy || 0));
+  const version = reportData.version || 'Unknown';
+  const datacenter = reportData.ip_city && reportData.ip_country
+    ? `${reportData.ip_city}, ${reportData.ip_country} (${reportData.ip_org || reportData.ip_asn || ''})`
     : 'Unknown';
-  const delinquent = validator.delinquent === true;
+  const delinquent = reportData.delinquent === true;
   const statusColor = delinquent ? 0xEF4444 : 0x5B4EE4;
   const statusText = delinquent ? '🔴 DELINQUENT' : '🟢 Active';
-  const epoch = validator.epoch;
 
   const embed = {
     title: `⚡ OmegaNode Validator — Epoch ${epoch}`,
     url: `https://omeganodes.io/epochreport/${epoch}`,
     color: statusColor,
     fields: [
-      {
-        name: 'Status',
-        value: statusText,
-        inline: true,
-      },
-      {
-        name: 'Total Stake',
-        value: `◎ ${fmt(totalStakeSol)}`,
-        inline: true,
-      },
-      {
-        name: 'Epoch Delta',
-        value: `${deltaEmoji} ${deltaSign}◎ ${fmt(epochDelta)}`,
-        inline: true,
-      },
-      {
-        name: 'Incoming',
-        value: `+◎ ${fmt(activatingSOL)} (${activatingCount})`,
-        inline: true,
-      },
-      {
-        name: 'Leaving',
-        value: `-◎ ${fmt(deactivatingSOL)} (${deactivatingCount})`,
-        inline: true,
-      },
-      {
-        name: 'Wiz Score',
-        value: wizDisplay,
-        inline: true,
-      },
-      {
-        name: 'Rank',
-        value: `#${validator.rank || 'N/A'}`,
-        inline: true,
-      },
-      {
-        name: 'Commission',
-        value: commission != null ? `${commission}%` : 'N/A',
-        inline: true,
-      },
-      {
-        name: 'True APY',
-        value: `${pct(totalApy)}\n↳ ${pct(stakingApy)} + ${pct(jitoApy)} MEV`,
-        inline: true,
-      },
-      {
-        name: 'Skip Rate',
-        value: `${pct(skipRate)}\n↳ cluster: ${pct(clusterSkipRate)}`,
-        inline: true,
-      },
-      {
-        name: 'Vote Success',
-        value: `${pct(voteSuccess)}\n↳ cluster: ${pct(clusterVoteSuccess)}`,
-        inline: true,
-      },
-      {
-        name: 'Version',
-        value: `\`${version}\``,
-        inline: true,
-      },
-      {
-        name: 'Data Center',
-        value: datacenter,
-        inline: true,
-      },
-      {
-        name: 'Vote Account',
-        value: `\`${VOTE_ACCOUNT.slice(0, 8)}…${VOTE_ACCOUNT.slice(-8)}\``,
-        inline: true,
-      },
+      { name: 'Status', value: statusText, inline: true },
+      { name: 'Total Stake', value: `◎ ${fmt(totalStakeSol)}`, inline: true },
+      { name: 'Epoch Delta', value: `${deltaEmoji} ${deltaSign}◎ ${fmt(epochDelta)}`, inline: true },
+      { name: 'Incoming', value: `+◎ ${fmt(activatingSOL)} (${activatingCount})`, inline: true },
+      { name: 'Leaving', value: `-◎ ${fmt(deactivatingSOL)} (${deactivatingCount})`, inline: true },
+      { name: 'Wiz Score', value: wizDisplay, inline: true },
+      { name: 'Rank', value: `#${reportData.rank || 'N/A'}`, inline: true },
+      { name: 'Commission', value: commission != null ? `${commission}%` : 'N/A', inline: true },
+      { name: 'True APY', value: `${pct(totalApy)}\n↳ ${pct(stakingApy)} + ${pct(jitoApy)} MEV`, inline: true },
+      { name: 'Skip Rate', value: `${pct(skipRate)}\n↳ cluster: ${pct(clusterSkipRate)}`, inline: true },
+      { name: 'Vote Success', value: `${pct(voteSuccess)}\n↳ cluster: ${pct(clusterVoteSuccess)}`, inline: true },
+      { name: 'Version', value: `\`${version}\``, inline: true },
+      { name: 'Data Center', value: datacenter, inline: true },
+      { name: 'Vote Account', value: `\`${VOTE_ACCOUNT.slice(0, 8)}…${VOTE_ACCOUNT.slice(-8)}\``, inline: true },
     ],
-    footer: {
-      text: `OmegaNode • Epoch ${epoch} • Uptime ${pct(validator.uptime)}`,
-    },
+    footer: { text: `OmegaNode • Epoch ${epoch} • Uptime ${pct(reportData.uptime)}` },
     timestamp: new Date().toISOString(),
   };
 
@@ -189,13 +198,10 @@ async function postEpochReport(validator: any, stakeAccounts: any, clusterStats:
     content = '⚠️ **VALIDATOR DELINQUENT** — Immediate attention required!\n||<@404356986340114442> <@545046451219070980>||';
   }
 
-  // Send full report to main webhook
   const fullPayload = JSON.stringify({ content: content || undefined, embeds: [embed] });
 
-  // Send compact stats embed to second webhook (no auto-unfurl)
-  const wizDisplay2 = validator.wiz_score != null ? `${(validator.wiz_score / 10).toFixed(1)}` : 'N/A';
-  const stakingApy2 = validator.staking_apy || validator.apy_estimate;
-  const totalApy2 = validator.total_apy || ((stakingApy2 || 0) + (validator.jito_apy || 0));
+  // Compact link embed for second webhook
+  const wizDisplay2 = wizScore != null ? `${(wizScore / 10).toFixed(1)}` : 'N/A';
   const reportUrl = `https://omeganodes.io/epochreport/${epoch}`;
   const linkEmbed = {
     title: `⚡ Epoch ${epoch} — Validator Report`,
@@ -203,10 +209,10 @@ async function postEpochReport(validator: any, stakeAccounts: any, clusterStats:
     fields: [
       { name: 'Total Stake', value: `◎ ${fmt(totalStakeSol)}`, inline: true },
       { name: 'Delta', value: `${deltaEmoji} ${deltaSign}◎ ${fmt(epochDelta)}`, inline: true },
-      { name: 'APY', value: `${pct(totalApy2)}`, inline: true },
+      { name: 'APY', value: `${pct(totalApy)}`, inline: true },
       { name: 'Wiz Score', value: `${wizDisplay2}/10`, inline: true },
-      { name: 'Rank', value: `#${validator.rank || 'N/A'}`, inline: true },
-      { name: 'Commission', value: `${validator.commission ?? 0}%`, inline: true },
+      { name: 'Rank', value: `#${reportData.rank || 'N/A'}`, inline: true },
+      { name: 'Commission', value: `${reportData.commission ?? 0}%`, inline: true },
       { name: '🔗 Full Report', value: `[View on OmegaNodes](${reportUrl})`, inline: false },
     ],
     footer: { text: 'OmegaNode Validator' },
@@ -296,9 +302,16 @@ serve(async (req) => {
       const stakeAtEpoch = targetEntry.stake || 0;
       const delta = nextEntry ? nextEntry.stake - targetEntry.stake : 0;
 
-      // Override validator fields for the historical report
-      const historicalValidator = { ...validator, epoch: targetEpoch, activated_stake: stakeAtEpoch };
-      await postEpochReport(historicalValidator, null, clusterStats, stakeAtEpoch - delta);
+      await postEpochReport(
+        {
+          epoch: targetEpoch,
+          totalStakeSol: stakeAtEpoch,
+          previousStake: stakeAtEpoch - delta,
+          ...extractValidatorMetrics(validator),
+        },
+        null,
+        clusterStats,
+      );
 
       return new Response(
         JSON.stringify({ success: true, actions: [`epoch_report:${targetEpoch}`], epoch: targetEpoch, stake: stakeAtEpoch }),
@@ -312,6 +325,7 @@ serve(async (req) => {
     const validator = await fetchJSON(`https://api.stakewiz.com/validator/${VOTE_ACCOUNT}`);
     const currentEpoch = validator.epoch;
     const currentStake = validator.activated_stake || 0;
+    const currentMetrics = extractValidatorMetrics(validator);
 
     if (!currentEpoch) {
       throw new Error('Could not determine current epoch from API');
@@ -321,16 +335,50 @@ serve(async (req) => {
 
     const epochChanged = !lastState.epoch || lastState.epoch !== currentEpoch;
     if (force || epochChanged) {
-      // Report is for the just-ended epoch, not the new one
       const reportEpoch = epochChanged && lastState.epoch ? currentEpoch - 1 : currentEpoch;
+
       const [stakeAccounts, clusterStats] = await Promise.all([
         fetchJSON(`https://api.stakewiz.com/validator_epoch_stake_accounts/${VOTE_ACCOUNT}`),
         fetchJSON(`https://api.stakewiz.com/cluster_stats`),
       ]);
-      const reportValidator = { ...validator, epoch: reportEpoch };
-      await postEpochReport(reportValidator, stakeAccounts, clusterStats, lastState.stake);
+
+      // CRITICAL: When epoch just changed, use CACHED metrics from the previous poll
+      // because the API now returns incomplete/zero data for the brand-new epoch.
+      // For forced reports (same epoch), use fresh API data.
+      const metricsForReport = (epochChanged && lastState.wiz_score != null)
+        ? {
+            wiz_score: lastState.wiz_score,
+            rank: lastState.rank,
+            commission: lastState.commission,
+            staking_apy: lastState.staking_apy,
+            jito_apy: lastState.jito_apy,
+            total_apy: lastState.total_apy,
+            skip_rate: lastState.skip_rate,
+            vote_success: lastState.vote_success,
+            uptime: lastState.uptime,
+            version: lastState.version,
+            ip_city: lastState.ip_city,
+            ip_country: lastState.ip_country,
+            ip_org: lastState.ip_org,
+            ip_asn: lastState.ip_asn,
+            delinquent: lastState.delinquent,
+          }
+        : currentMetrics;
+
+      const reportStake = epochChanged ? (lastState.stake || currentStake) : currentStake;
+
+      await postEpochReport(
+        {
+          epoch: reportEpoch,
+          totalStakeSol: reportStake,
+          previousStake: lastState.stake,
+          ...metricsForReport,
+        },
+        stakeAccounts,
+        clusterStats,
+      );
       actions.push(`epoch_report:${reportEpoch}`);
-      console.log(`Epoch report posted for epoch ${reportEpoch}`);
+      console.log(`Epoch report posted for epoch ${reportEpoch} (used ${epochChanged && lastState.wiz_score != null ? 'cached' : 'live'} metrics)`);
     }
 
     if (!epochChanged && lastState.stake != null) {
@@ -342,9 +390,11 @@ serve(async (req) => {
       }
     }
 
+    // Save current state WITH all metrics for next epoch-change report
     await saveLastState(supabase, {
       epoch: currentEpoch,
       stake: currentStake,
+      ...currentMetrics,
       posted_at: new Date().toISOString(),
     });
 
