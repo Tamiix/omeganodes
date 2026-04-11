@@ -20,6 +20,7 @@ import OfficialLinks from "./pages/OfficialLinks";
 import AdminEmails from "./pages/AdminEmails";
 import Validator from "./pages/Validator";
 import EpochReport from "./pages/EpochReport";
+import Lucas from "./pages/Lucas";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="/epochreport/:epochNumber" element={<EpochReport />} />
               <Route path="/referral" element={<Referral />} />
               <Route path="/ref/:code" element={<RefRedirect />} />
+              <Route path="/lucas" element={<Lucas />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
