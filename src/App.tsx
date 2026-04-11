@@ -20,6 +20,7 @@ import OfficialLinks from "./pages/OfficialLinks";
 import AdminEmails from "./pages/AdminEmails";
 import Validator from "./pages/Validator";
 import EpochReport from "./pages/EpochReport";
+import Tord from "./pages/Tord";
 
 const queryClient = new QueryClient();
 
