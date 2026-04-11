@@ -47,6 +47,7 @@ const App = () => (
               <Route path="/epochreport/:epochNumber" element={<EpochReport />} />
               <Route path="/referral" element={<Referral />} />
               <Route path="/ref/:code" element={<RefRedirect />} />
+              <Route path="/lucas" element={<Lucas />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
