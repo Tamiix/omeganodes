@@ -235,16 +235,16 @@ async function postEpochReport(
 
 async function postStakeChangeAlert(currentStake: number, previousStake: number, epoch: number) {
   const delta = currentStake - previousStake;
-  const deltaSign = delta >= 0 ? '+' : '';
+  const deltaSign = delta > 0 ? '+' : delta < 0 ? '-' : '';
   const emoji = delta > 0 ? '📈' : '📉';
 
-  const embed = {
+  ...
     title: `${emoji} Stake Change Detected`,
     color: delta > 0 ? 0x22C55E : 0xF59E0B,
-    fields: [
+    ...
       { name: 'Previous', value: `◎ ${fmt(previousStake)}`, inline: true },
       { name: 'Current', value: `◎ ${fmt(currentStake)}`, inline: true },
-      { name: 'Change', value: `${deltaSign}◎ ${fmt(delta)}`, inline: true },
+      { name: 'Change', value: `${deltaSign}◎ ${fmt(Math.abs(delta))}`, inline: true },
     ],
     footer: { text: `OmegaNode • Epoch ${epoch} • Stake Monitor` },
     timestamp: new Date().toISOString(),
