@@ -132,8 +132,8 @@ const PricingSection = () => {
     return null;
   };
   
-  // Check if dedicated location is valid
-  const hasValidLocation = !isDedicated || (isCustomLocationMode ? customLocation.trim().length > 0 : selectedLocation !== null);
+  // Check if dedicated/swqos location is valid
+  const hasValidLocation = !(isDedicated || isSwQoS) || (isCustomLocationMode ? customLocation.trim().length > 0 : selectedLocation !== null);
 
   // Fetch trials enabled setting from database
   useEffect(() => {
