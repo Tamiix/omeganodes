@@ -439,7 +439,7 @@ const PricingSection = () => {
         plan_name: planName,
         commitment: selectedCommitment,
         server_type: selectedServerType,
-        location: isDedicated ? (getFinalLocation() || "custom") : "all",
+        location: (isDedicated || isSwQoS) ? (getFinalLocation() || "custom") : "all",
         rps: 100,
         tps: 50,
         amount_usd: 0,
