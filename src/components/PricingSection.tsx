@@ -684,6 +684,68 @@ const PricingSection = () => {
               className="lg:col-span-1"
             >
               <div className="sticky top-20 space-y-3">
+                {/* Location Selection (SwQoS) */}
+                <div className="p-4 rounded-lg border border-border bg-card">
+                  <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
+                    <MapPin className="w-3.5 h-3.5 text-primary" />
+                    Server Location
+                  </h4>
+                  {!isCustomLocationMode ? (
+                    <div className="space-y-2">
+                      {dedicatedLocations.map((loc) => (
+                        <button
+                          key={loc.id}
+                          onClick={() => setSelectedLocation(loc.id)}
+                          className={`w-full p-2.5 rounded-lg border flex items-center gap-2.5 transition-all ${
+                            selectedLocation === loc.id
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:border-primary/40"
+                          }`}
+                        >
+                          <span className="text-lg">{loc.flag}</span>
+                          <span className="text-sm font-medium">{loc.name}</span>
+                          {selectedLocation === loc.id && (
+                            <Check className="w-4 h-4 text-primary ml-auto" />
+                          )}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => {
+                          setIsCustomLocationMode(true);
+                          setSelectedLocation(null);
+                        }}
+                        className="w-full p-2.5 rounded-lg border border-dashed border-border hover:border-primary/40 flex items-center gap-2.5 transition-all text-muted-foreground hover:text-foreground text-sm"
+                      >
+                        <span className="text-lg">🌍</span>
+                        <span>Other location</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Input
+                        placeholder="e.g., Seoul, Sydney..."
+                        value={customLocation}
+                        onChange={(e) => setCustomLocation(e.target.value)}
+                        className={`text-sm ${customLocation.trim() ? "border-secondary" : ""}`}
+                      />
+                      {customLocation.trim() && (
+                        <p className="text-xs text-secondary flex items-center gap-1">
+                          <Check className="w-3 h-3" /> Custom location selected
+                        </p>
+                      )}
+                      <button
+                        onClick={() => {
+                          setIsCustomLocationMode(false);
+                          setCustomLocation("");
+                        }}
+                        className="text-xs text-muted-foreground hover:text-primary"
+                      >
+                        ← Standard locations
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 <div className="p-4 rounded-lg border border-border bg-card">
                   <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">What's Included</h4>
                   <div className="space-y-2">
