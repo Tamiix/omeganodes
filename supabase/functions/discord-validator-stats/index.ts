@@ -295,18 +295,18 @@ serve(async (req) => {
 
       const sorted = [...epochHistory].sort((a: any, b: any) => b.epoch - a.epoch);
       const targetEntry = sorted.find((e: any) => e.epoch === targetEpoch);
-      const nextEntry = sorted.find((e: any) => e.epoch === targetEpoch + 1);
+      const prevEntry = sorted.find((e: any) => e.epoch === targetEpoch - 1);
 
       if (!targetEntry) throw new Error(`Epoch ${targetEpoch} not found in history`);
 
       const stakeAtEpoch = targetEntry.stake || 0;
-      const delta = nextEntry ? nextEntry.stake - targetEntry.stake : 0;
+      const previousStake = prevEntry?.stake;
 
       await postEpochReport(
         {
           epoch: targetEpoch,
           totalStakeSol: stakeAtEpoch,
-          previousStake: stakeAtEpoch - delta,
+          previousStake,
           ...extractValidatorMetrics(validator),
         },
         null,
