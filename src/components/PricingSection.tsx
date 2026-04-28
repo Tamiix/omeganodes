@@ -65,14 +65,26 @@ interface AppliedDiscount {
 }
 
 const dedicatedLocations = [
-  { id: "frankfurt", name: "Frankfurt", flag: "🇩🇪" },
-  { id: "amsterdam", name: "Amsterdam", flag: "🇳🇱" },
-  { id: "newyork", name: "New York", flag: "🇺🇸" },
-  { id: "london", name: "London", flag: "🇬🇧" },
-  { id: "tokyo", name: "Tokyo", flag: "🇯🇵" },
-  { id: "lithuania", name: "Lithuania", flag: "🇱🇹" },
-  { id: "singapore", name: "Singapore", flag: "🇸🇬" },
+  { id: "frankfurt", name: "Frankfurt", cc: "de" },
+  { id: "amsterdam", name: "Amsterdam", cc: "nl" },
+  { id: "newyork", name: "New York", cc: "us" },
+  { id: "london", name: "London", cc: "gb" },
+  { id: "tokyo", name: "Tokyo", cc: "jp" },
+  { id: "lithuania", name: "Lithuania", cc: "lt" },
+  { id: "singapore", name: "Singapore", cc: "sg" },
 ];
+
+const FlagIcon = ({ cc, className = "" }: { cc: string; className?: string }) => (
+  <img
+    src={`https://flagcdn.com/w40/${cc}.png`}
+    srcSet={`https://flagcdn.com/w80/${cc}.png 2x`}
+    width={24}
+    height={18}
+    alt=""
+    className={`inline-block rounded-sm shadow-sm object-cover ${className}`}
+    loading="lazy"
+  />
+);
 
 const PricingSection = () => {
   const [selectedCommitment, setSelectedCommitment] = useState<string>("monthly");
