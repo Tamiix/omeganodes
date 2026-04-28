@@ -1268,8 +1268,10 @@ const PricingSection = () => {
 
                 {/* Regions */}
                 {!isDedicated && (
-                  <div className="p-2.5 rounded-lg bg-muted/50 border border-border text-center">
-                    <span className="text-xs">🇩🇪 Frankfurt • 🇳🇱 Amsterdam</span>
+                  <div className="p-2.5 rounded-lg bg-muted/50 border border-border flex items-center justify-center gap-3">
+                    <span className="inline-flex items-center gap-1.5 text-xs"><FlagIcon cc="de" className="!w-4 !h-3" /> Frankfurt</span>
+                    <span className="text-muted-foreground/40">•</span>
+                    <span className="inline-flex items-center gap-1.5 text-xs"><FlagIcon cc="nl" className="!w-4 !h-3" /> Amsterdam</span>
                   </div>
                 )}
 
