@@ -143,7 +143,7 @@ async function postEpochReport(
   const { epoch, totalStakeSol, previousStake } = reportData;
 
   const epochDelta = previousStake != null ? totalStakeSol - previousStake : 0;
-  const deltaSign = epochDelta >= 0 ? '+' : '';
+  const deltaSign = epochDelta > 0 ? '+' : epochDelta < 0 ? '-' : '';
   const deltaEmoji = epochDelta > 0 ? '📈' : epochDelta < 0 ? '📉' : '➡️';
 
   const activatingSOL = sumStakeAccounts(stakeAccounts?.activating);
