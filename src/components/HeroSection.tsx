@@ -105,22 +105,20 @@ const HeroSection = () => {
                 <p className="text-sm text-muted-foreground mt-1">SOL Staked</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl sm:text-3xl font-bold text-foreground">3</p>
+                <p className="text-2xl sm:text-3xl font-bold text-foreground">7</p>
                 <p className="text-sm text-muted-foreground mt-1">Regions</p>
               </div>
             </div>
 
             {/* Region flags */}
-            <div className="flex items-center justify-center gap-4 sm:gap-6 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>🇺🇸</span> New York
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>🇩🇪</span> Frankfurt
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>🇳🇱</span> Amsterdam
-              </div>
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:gap-x-5 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border">
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground"><span>🇩🇪</span> Frankfurt</div>
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground"><span>🇳🇱</span> Amsterdam</div>
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground"><span>🇺🇸</span> New York</div>
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground"><span>🇬🇧</span> London</div>
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground"><span>🇯🇵</span> Tokyo</div>
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground"><span>🇱🇹</span> Lithuania</div>
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground"><span>🇸🇬</span> Singapore</div>
             </div>
           </motion.div>
         </div>
