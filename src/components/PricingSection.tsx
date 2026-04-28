@@ -1393,7 +1393,7 @@ const PricingSection = () => {
         commitment={selectedCommitment}
         planName={isSwQoS ? `swQoS (${swqosStakePackages * 100}K SOL)` : isDedicated ? `Dedicated (${dedicatedSpecs.find(s => s.id === selectedDedicatedSpec)?.cpu || 'Custom'})` : 'Shared'}
         serverType={selectedServerType}
-        location={isDedicated ? getFinalLocation() : isSwQoS ? "N/A" : "all"}
+        location={(isDedicated || isSwQoS) ? (getFinalLocation() || "custom") : "all"}
         rentAccessEnabled={isSwQoS ? false : rentAccessEnabled}
         isTestMode={isTestMode}
         discordUserId={discordUserId.trim()}
