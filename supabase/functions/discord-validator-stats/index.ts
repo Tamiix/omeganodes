@@ -176,7 +176,7 @@ async function postEpochReport(
     fields: [
       { name: 'Status', value: statusText, inline: true },
       { name: 'Total Stake', value: `◎ ${fmt(totalStakeSol)}`, inline: true },
-      { name: 'Epoch Delta', value: `${deltaEmoji} ${deltaSign}◎ ${fmt(epochDelta)}`, inline: true },
+      { name: 'Epoch Delta', value: `${deltaEmoji} ${deltaSign}◎ ${fmt(Math.abs(epochDelta))}`, inline: true },
       { name: 'Incoming', value: `+◎ ${fmt(activatingSOL)} (${activatingCount})`, inline: true },
       { name: 'Leaving', value: `-◎ ${fmt(deactivatingSOL)} (${deactivatingCount})`, inline: true },
       { name: 'Wiz Score', value: wizDisplay, inline: true },
