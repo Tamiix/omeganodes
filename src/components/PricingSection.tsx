@@ -470,7 +470,7 @@ const PricingSection = () => {
           isTestMode: false,
           isTrial: false,
           discountCode: appliedDiscount?.code,
-          location: isDedicated ? getFinalLocation() : "all",
+          location: (isDedicated || isSwQoS) ? getFinalLocation() : "all",
           additionalStakePackages: isDedicated ? additionalStakePackages : 0,
           privateShredsEnabled: isDedicated ? privateShredsEnabled : false,
           rentAccessEnabled: rentAccessEnabled
