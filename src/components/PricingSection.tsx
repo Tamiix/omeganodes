@@ -52,7 +52,7 @@ const sharedFeatures = [
   "RPC included",
   "gRPC included",
   "WebSocket included",
-  "All 3 regions included",
+  "Frankfurt & Amsterdam regions",
   "99.99% uptime guarantee",
   "Priority Discord support",
 ];
@@ -68,6 +68,10 @@ const dedicatedLocations = [
   { id: "frankfurt", name: "Frankfurt", flag: "🇩🇪" },
   { id: "amsterdam", name: "Amsterdam", flag: "🇳🇱" },
   { id: "newyork", name: "New York", flag: "🇺🇸" },
+  { id: "london", name: "London", flag: "🇬🇧" },
+  { id: "tokyo", name: "Tokyo", flag: "🇯🇵" },
+  { id: "lithuania", name: "Lithuania", flag: "🇱🇹" },
+  { id: "singapore", name: "Singapore", flag: "🇸🇬" },
 ];
 
 const PricingSection = () => {
@@ -1189,7 +1193,7 @@ const PricingSection = () => {
                 {/* Regions */}
                 {!isDedicated && (
                   <div className="p-2.5 rounded-lg bg-muted/50 border border-border text-center">
-                    <span className="text-xs">🇺🇸 NY • 🇩🇪 Frankfurt • 🇳🇱 Amsterdam</span>
+                    <span className="text-xs">🇩🇪 Frankfurt • 🇳🇱 Amsterdam</span>
                   </div>
                 )}
 

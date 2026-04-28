@@ -25,7 +25,7 @@ const features = [
   {
     icon: Globe,
     title: "Global Network",
-    description: "Nodes in NYC, Frankfurt, and Amsterdam. Pick one or use all three.",
+    description: "7 regions: Frankfurt, Amsterdam, New York, London, Tokyo, Lithuania & Singapore.",
   },
   {
     icon: Cpu,

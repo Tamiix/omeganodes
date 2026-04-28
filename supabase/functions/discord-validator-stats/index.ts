@@ -295,18 +295,18 @@ serve(async (req) => {
 
       const sorted = [...epochHistory].sort((a: any, b: any) => b.epoch - a.epoch);
       const targetEntry = sorted.find((e: any) => e.epoch === targetEpoch);
-      const nextEntry = sorted.find((e: any) => e.epoch === targetEpoch + 1);
+      const prevEntry = sorted.find((e: any) => e.epoch === targetEpoch - 1);
 
       if (!targetEntry) throw new Error(`Epoch ${targetEpoch} not found in history`);
 
       const stakeAtEpoch = targetEntry.stake || 0;
-      const delta = nextEntry ? nextEntry.stake - targetEntry.stake : 0;
+      const previousStake = prevEntry?.stake;
 
       await postEpochReport(
         {
           epoch: targetEpoch,
           totalStakeSol: stakeAtEpoch,
-          previousStake: stakeAtEpoch - delta,
+          previousStake,
           ...extractValidatorMetrics(validator),
         },
         null,
@@ -337,9 +337,10 @@ serve(async (req) => {
     if (force || epochChanged) {
       const reportEpoch = epochChanged && lastState.epoch ? currentEpoch - 1 : currentEpoch;
 
-      const [stakeAccounts, clusterStats] = await Promise.all([
+      const [stakeAccounts, clusterStats, epochHistory] = await Promise.all([
         fetchJSON(`https://api.stakewiz.com/validator_epoch_stake_accounts/${VOTE_ACCOUNT}`),
         fetchJSON(`https://api.stakewiz.com/cluster_stats`),
+        fetchJSON(`https://api.stakewiz.com/validator_total_stakes/${VOTE_ACCOUNT}`).catch(() => null),
       ]);
 
       // CRITICAL: When epoch just changed, use CACHED metrics from the previous poll
@@ -365,20 +366,31 @@ serve(async (req) => {
           }
         : currentMetrics;
 
-      const reportStake = epochChanged ? (lastState.stake || currentStake) : currentStake;
+      // Use authoritative historical stake values from StakeWiz so the delta is correct.
+      // The history endpoint records the END-OF-EPOCH stake for each epoch.
+      let reportStake = epochChanged ? (lastState.stake || currentStake) : currentStake;
+      let previousStakeForReport: number | undefined = lastState.stake;
+
+      if (Array.isArray(epochHistory) && epochHistory.length > 0) {
+        const sorted = [...epochHistory].sort((a: any, b: any) => b.epoch - a.epoch);
+        const reportEntry = sorted.find((e: any) => e.epoch === reportEpoch);
+        const prevEntry = sorted.find((e: any) => e.epoch === reportEpoch - 1);
+        if (reportEntry?.stake) reportStake = reportEntry.stake;
+        if (prevEntry?.stake) previousStakeForReport = prevEntry.stake;
+      }
 
       await postEpochReport(
         {
           epoch: reportEpoch,
           totalStakeSol: reportStake,
-          previousStake: lastState.stake,
+          previousStake: previousStakeForReport,
           ...metricsForReport,
         },
         stakeAccounts,
         clusterStats,
       );
       actions.push(`epoch_report:${reportEpoch}`);
-      console.log(`Epoch report posted for epoch ${reportEpoch} (used ${epochChanged && lastState.wiz_score != null ? 'cached' : 'live'} metrics)`);
+      console.log(`Epoch report posted for epoch ${reportEpoch} stake=${reportStake} prev=${previousStakeForReport} (metrics: ${epochChanged && lastState.wiz_score != null ? 'cached' : 'live'})`);
     }
 
     if (!epochChanged && lastState.stake != null) {
