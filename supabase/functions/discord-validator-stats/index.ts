@@ -208,7 +208,7 @@ async function postEpochReport(
     color: 0x5B4EE4,
     fields: [
       { name: 'Total Stake', value: `◎ ${fmt(totalStakeSol)}`, inline: true },
-      { name: 'Delta', value: `${deltaEmoji} ${deltaSign}◎ ${fmt(epochDelta)}`, inline: true },
+      { name: 'Delta', value: `${deltaEmoji} ${deltaSign}◎ ${fmt(Math.abs(epochDelta))}`, inline: true },
       { name: 'APY', value: `${pct(totalApy)}`, inline: true },
       { name: 'Wiz Score', value: `${wizDisplay2}/10`, inline: true },
       { name: 'Rank', value: `#${reportData.rank || 'N/A'}`, inline: true },
