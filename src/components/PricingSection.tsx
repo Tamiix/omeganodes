@@ -714,8 +714,9 @@ const PricingSection = () => {
                               : "border-border hover:border-primary/40"
                           }`}
                         >
-                          <span className="text-lg">{loc.flag}</span>
-                          <span className="text-sm font-medium">{loc.name}</span>
+                          <FlagIcon cc={loc.cc} />
+                          <span className="text-sm font-medium tracking-tight">{loc.name}</span>
+                          <span className="text-[10px] font-mono uppercase text-muted-foreground/70 tracking-widest">{loc.cc}</span>
                           {selectedLocation === loc.id && (
                             <Check className="w-4 h-4 text-primary ml-auto" />
                           )}
