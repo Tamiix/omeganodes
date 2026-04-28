@@ -788,7 +788,7 @@ const PricingSection = () => {
                 {/* CTA */}
                 <Button
                   className="w-full text-sm font-medium bg-gradient-omega hover:opacity-90"
-                  disabled={!isValidDiscordId || (price === 0 && !user)}
+                  disabled={!isValidDiscordId || !hasValidLocation || (price === 0 && !user)}
                   onClick={() => {
                     if (price === 0) {
                       handleFreeOrder();
@@ -797,7 +797,7 @@ const PricingSection = () => {
                     }
                   }}
                 >
-                  {!isValidDiscordId ? "Enter Discord ID" : "Continue to Payment"}
+                  {!hasValidLocation ? "Select Location" : !isValidDiscordId ? "Enter Discord ID" : "Continue to Payment"}
                 </Button>
                 <p className="text-xs text-center text-muted-foreground">USDC/USDT payment</p>
               </div>
