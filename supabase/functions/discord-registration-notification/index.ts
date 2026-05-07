@@ -22,7 +22,22 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const details: RegistrationDetails = await req.json();
+    // Rate limit per IP — public endpoint: 5 registrations / 10 min
+    const rl = checkRateLimit(clientKey(req, 'reg'), { limit: 5, windowMs: 10 * 60_000 });
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
+
+    const raw = await req.text();
+    if (raw.length > MAX_BODY_BYTES) {
+      return new Response(JSON.stringify({ error: 'Payload too large' }), {
+        status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    let details: RegistrationDetails;
+    try { details = JSON.parse(raw) as RegistrationDetails; } catch {
+      return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const email = typeof details.email === 'string' ? details.email.trim().slice(0, 255) : '';
     if (!EMAIL_RE.test(email)) {
