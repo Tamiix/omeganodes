@@ -335,7 +335,15 @@ serve(async (req) => {
 
     const epochChanged = !lastState.epoch || lastState.epoch !== currentEpoch;
     if (force || epochChanged) {
+      // Stake delegated DURING epoch N activates at the boundary N→N+1.
+      // StakeWiz's history endpoint records the stake at the START of each epoch,
+      // so `stake[N+1] - stake[N]` = activations that happened during epoch N.
+      // We label the report under epoch N (when the delegation actually occurred),
+      // using stake[N+1] as the resulting total.
+      // After the chain transitions from epoch X-1 → X (currentEpoch=X), we report
+      // for reportEpoch = X-1, with delta = stake[X] - stake[X-1].
       const reportEpoch = epochChanged && lastState.epoch ? currentEpoch - 1 : currentEpoch;
+      const stakeReadEpoch = reportEpoch + 1; // epoch whose start-of-epoch stake reflects the activations
 
       const [stakeAccounts, clusterStats, epochHistory] = await Promise.all([
         fetchJSON(`https://api.stakewiz.com/validator_epoch_stake_accounts/${VOTE_ACCOUNT}`),
@@ -366,15 +374,16 @@ serve(async (req) => {
           }
         : currentMetrics;
 
-      // Use authoritative historical stake values from StakeWiz so the delta is correct.
-      // The history endpoint records the END-OF-EPOCH stake for each epoch.
-      let reportStake = epochChanged ? (lastState.stake || currentStake) : currentStake;
+      // Use authoritative historical stake values from StakeWiz.
+      // reportStake = stake at the start of (reportEpoch + 1) — this reflects what activated during reportEpoch.
+      // previousStake = stake at the start of reportEpoch — baseline before activations.
+      let reportStake = epochChanged ? currentStake : currentStake;
       let previousStakeForReport: number | undefined = lastState.stake;
 
       if (Array.isArray(epochHistory) && epochHistory.length > 0) {
         const sorted = [...epochHistory].sort((a: any, b: any) => b.epoch - a.epoch);
-        const reportEntry = sorted.find((e: any) => e.epoch === reportEpoch);
-        const prevEntry = sorted.find((e: any) => e.epoch === reportEpoch - 1);
+        const reportEntry = sorted.find((e: any) => e.epoch === stakeReadEpoch);
+        const prevEntry = sorted.find((e: any) => e.epoch === reportEpoch);
         if (reportEntry?.stake) reportStake = reportEntry.stake;
         if (prevEntry?.stake) previousStakeForReport = prevEntry.stake;
       }
