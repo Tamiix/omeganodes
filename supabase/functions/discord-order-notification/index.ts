@@ -195,8 +195,33 @@ serve(async (req) => {
       );
     }
 
-    const orderDetails: OrderDetails = await req.json();
-    console.log("Sending Discord notification for order:", orderDetails);
+    const userId = claimsData.claims.sub;
+
+    // Rate limit per authenticated user: 10 order notifications / minute
+    const rl = checkRateLimit(`order:${userId}`, { limit: 10, windowMs: 60_000 });
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
+
+    // Body size cap
+    const raw = await req.text();
+    if (raw.length > MAX_BODY_BYTES) {
+      return new Response(JSON.stringify({ error: 'Payload too large' }), {
+        status: 413,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    let parsed: unknown;
+    try { parsed = JSON.parse(raw); } catch {
+      return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const validation = validateOrder(parsed);
+    if (!validation.ok) {
+      return new Response(JSON.stringify({ error: validation.error }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const orderDetails: OrderDetails = validation.data;
 
     const isDedicated = orderDetails.serverType === "dedicated" || orderDetails.serverType === "Dedicated";
 
