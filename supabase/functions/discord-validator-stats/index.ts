@@ -335,6 +335,11 @@ serve(async (req) => {
 
     const epochChanged = !lastState.epoch || lastState.epoch !== currentEpoch;
     if (force || epochChanged) {
+      // Solana stake activated DURING epoch N becomes active at the start of epoch N+1.
+      // So when the chain transitions to epoch X, the activations that "belong" to epoch X-1
+      // are now reflected as the difference between stake[X] and stake[X-1].
+      // We label the report under epoch X-1 so users see the delta under the epoch
+      // when stake was actually delegated.
       const reportEpoch = epochChanged && lastState.epoch ? currentEpoch - 1 : currentEpoch;
 
       const [stakeAccounts, clusterStats, epochHistory] = await Promise.all([
