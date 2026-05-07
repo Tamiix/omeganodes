@@ -40,15 +40,24 @@ serve(async (req) => {
 
   try {
     const { tokenType, expectedAmount, isTestMode, isWeekly } = await req.json() as VerifyPaymentRequest;
-    
-    console.log(`Verifying payment: ${tokenType}, expected amount: ${isWeekly ? '1 SOL' : `$${expectedAmount}`}, test mode: ${isTestMode}, weekly: ${isWeekly}`);
-    
-    if (!tokenType || !expectedAmount) {
+
+    // Input validation
+    const VALID_TOKENS = ['sol', 'usdc', 'usdt'];
+    const normalizedToken = typeof tokenType === 'string' ? tokenType.toLowerCase() : '';
+    if (!VALID_TOKENS.includes(normalizedToken)) {
       return new Response(
-        JSON.stringify({ success: false, error: "Missing required parameters" }),
+        JSON.stringify({ success: false, error: "Invalid token type" }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    if (typeof expectedAmount !== 'number' || !isFinite(expectedAmount) || expectedAmount <= 0 || expectedAmount > 1_000_000) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid amount" }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Verifying payment: token=${normalizedToken}, weekly=${!!isWeekly}, test=${!!isTestMode}`);
     // Use test wallet if in test mode, otherwise use production wallet
     const receiverAddress = isWeekly ? WEEKLY_WALLET : (isTestMode ? TEST_WALLET : WALLET_ADDRESSES[tokenType.toLowerCase()]);
     if (!receiverAddress || receiverAddress.includes("OMEGA_")) {
