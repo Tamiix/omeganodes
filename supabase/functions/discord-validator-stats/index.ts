@@ -293,11 +293,12 @@ serve(async (req) => {
 
       if (!Array.isArray(epochHistory)) throw new Error('Could not fetch epoch history');
 
+      // Same convention as live mode: stake[N+1] reflects activations during epoch N.
       const sorted = [...epochHistory].sort((a: any, b: any) => b.epoch - a.epoch);
-      const targetEntry = sorted.find((e: any) => e.epoch === targetEpoch);
-      const prevEntry = sorted.find((e: any) => e.epoch === targetEpoch - 1);
+      const targetEntry = sorted.find((e: any) => e.epoch === targetEpoch + 1);
+      const prevEntry = sorted.find((e: any) => e.epoch === targetEpoch);
 
-      if (!targetEntry) throw new Error(`Epoch ${targetEpoch} not found in history`);
+      if (!targetEntry) throw new Error(`Epoch ${targetEpoch} not found in history (need stake at epoch ${targetEpoch + 1})`);
 
       const stakeAtEpoch = targetEntry.stake || 0;
       const previousStake = prevEntry?.stake;
