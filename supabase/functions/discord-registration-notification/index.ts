@@ -1,7 +1,4 @@
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { buildCorsHeaders } from "../_shared/cors.ts";
 
 const DISCORD_WEBHOOK_URL = Deno.env.get('DISCORD_REGISTRATION_WEBHOOK_URL') || '';
 
@@ -11,20 +8,32 @@ interface RegistrationDetails {
   registerDate: string;
 }
 
+// Public endpoint — invoked during signup before a session exists.
+// CORS is restricted to known origins; inputs are strictly validated.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 Deno.serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const details: RegistrationDetails = await req.json();
-    console.log('Registration notification:', details);
 
-    const email = details.email || 'Unknown';
-    const username = details.username || email.split('@')[0];
+    const email = typeof details.email === 'string' ? details.email.trim().slice(0, 255) : '';
+    if (!EMAIL_RE.test(email)) {
+      return new Response(JSON.stringify({ error: 'Invalid email' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const usernameRaw = typeof details.username === 'string' ? details.username : email.split('@')[0];
+    const username = usernameRaw.replace(/[^\w.\-]/g, '').slice(0, 64) || email.split('@')[0];
     const domain = email.split('@')[1] || 'Unknown';
-    const registerDate = details.registerDate || new Date().toISOString();
+    const registerDate = typeof details.registerDate === 'string' ? details.registerDate : new Date().toISOString();
     const date = new Date(registerDate);
+
 
     const timestamp = `<t:${Math.floor(date.getTime() / 1000)}:F>`;
     const relativeTime = `<t:${Math.floor(date.getTime() / 1000)}:R>`;
@@ -81,9 +90,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error:', error);
-    return new Response(JSON.stringify({ error: msg }), {
+    return new Response(JSON.stringify({ error: 'Internal error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
