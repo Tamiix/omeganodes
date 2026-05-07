@@ -1,8 +1,32 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { checkRateLimit, clientKey, rateLimitResponse } from "../_shared/rate-limit.ts";
 
 const DISCORD_WEBHOOK_URL = Deno.env.get('DISCORD_ORDER_WEBHOOK_URL') || '';
+
+const MAX_BODY_BYTES = 8 * 1024; // 8 KB cap for order payloads
+const STR = (max: number) => (v: unknown) => typeof v === 'string' && v.length <= max;
+const NUM = (min: number, max: number) => (v: unknown) =>
+  typeof v === 'number' && isFinite(v) && v >= min && v <= max;
+
+function validateOrder(o: any): { ok: true; data: OrderDetails } | { ok: false; error: string } {
+  if (!o || typeof o !== 'object') return { ok: false, error: 'Invalid payload' };
+  if (!STR(64)(o.plan)) return { ok: false, error: 'Invalid plan' };
+  if (!STR(64)(o.commitment)) return { ok: false, error: 'Invalid commitment' };
+  if (!STR(32)(o.serverType)) return { ok: false, error: 'Invalid serverType' };
+  if (!STR(255)(o.email)) return { ok: false, error: 'Invalid email' };
+  if (o.discordId != null && !(typeof o.discordId === 'string' && /^\d{17,19}$/.test(o.discordId)))
+    return { ok: false, error: 'Invalid discordId' };
+  if (o.discordUsername != null && !STR(64)(o.discordUsername))
+    return { ok: false, error: 'Invalid discordUsername' };
+  if (!NUM(0, 1_000_000)(o.totalAmount)) return { ok: false, error: 'Invalid totalAmount' };
+  if (!STR(128)(o.transactionSignature ?? '')) return { ok: false, error: 'Invalid transactionSignature' };
+  if (typeof o.isTestMode !== 'boolean') return { ok: false, error: 'Invalid isTestMode' };
+  if (o.discountCode != null && !STR(64)(o.discountCode)) return { ok: false, error: 'Invalid discountCode' };
+  if (o.swqosLabel != null && !STR(64)(o.swqosLabel)) return { ok: false, error: 'Invalid swqosLabel' };
+  return { ok: true, data: o as OrderDetails };
+}
 
 interface OrderDetails {
   plan: string;
