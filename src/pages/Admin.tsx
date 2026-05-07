@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import AdminHeader from '@/components/admin/AdminHeader';
 import AdminStats from '@/components/admin/AdminStats';
 import UserCard from '@/components/admin/UserCard';
+import BackfillValidatorWebhooks from '@/components/admin/BackfillValidatorWebhooks';
 
 interface UserProfile {
   id: string;
@@ -212,6 +213,10 @@ const Admin = () => {
 
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <AdminStats totalUsers={users.length} adminCount={adminCount} />
+
+        <div className="mb-6">
+          <BackfillValidatorWebhooks />
+        </div>
 
         {/* Search + Filters */}
         <div className="space-y-3 mb-6">
