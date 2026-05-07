@@ -1,4 +1,7 @@
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { checkRateLimit, clientKey, rateLimitResponse } from "../_shared/rate-limit.ts";
+
+const MAX_BODY_BYTES = 2 * 1024;
 
 const DISCORD_WEBHOOK_URL = Deno.env.get('DISCORD_REGISTRATION_WEBHOOK_URL') || '';
 
