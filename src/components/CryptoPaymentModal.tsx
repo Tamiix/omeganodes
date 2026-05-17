@@ -275,6 +275,11 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, planName, rps
               await supabase.rpc('increment_discount_code_usage', { p_code: appliedDiscount.code });
             }
 
+            // Increment swqos code usage
+            if (!orderError && swqosCode?.code) {
+              await supabase.rpc('increment_swqos_code_usage', { p_code: swqosCode.code });
+            }
+
             // Create referral record if a referral code was used
             if (!orderError && orderData && referralInfo) {
               // Commission is 10% of the discounted amount
