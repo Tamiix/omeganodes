@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Shield, Users, UserCheck, Tag, Clock, Gift, Mail } from 'lucide-react';
+import { ArrowLeft, Shield, Users, UserCheck, Tag, Clock, Gift, Mail, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const AdminHeader = () => {
@@ -9,6 +9,7 @@ const AdminHeader = () => {
   const isCustomersPage = location.pathname === '/admin/customers';
   const isDiscountCodesPage = location.pathname === '/admin/discount-codes';
   const isAccessCodesPage = location.pathname === '/admin/access-codes';
+  const isSwqosCodesPage = location.pathname === '/admin/swqos-codes';
   const isReferralsPage = location.pathname === '/admin/referrals';
   const isEmailsPage = location.pathname === '/admin/emails';
 
