@@ -11,6 +11,7 @@ import Admin from "./pages/Admin";
 import Customers from "./pages/Customers";
 import DiscountCodes from "./pages/DiscountCodes";
 import AccessCodes from "./pages/AccessCodes";
+import SwqosCodes from "./pages/SwqosCodes";
 import NotFound from "./pages/NotFound";
 import Terms from "./pages/Terms";
 import Referral from "./pages/Referral";
