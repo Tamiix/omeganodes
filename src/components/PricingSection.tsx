@@ -269,6 +269,13 @@ const PricingSection = () => {
       serverPrice = Math.round(totalStake * (1 - discountPercent));
       addOnsPrice = 0;
       beforeDiscount = totalStake;
+
+      // SwQoS redeem code overrides everything
+      if (swqosAppliedCode) {
+        serverPrice = swqosAppliedCode.price_usd;
+        beforeDiscount = swqosAppliedCode.price_usd;
+        discountPercent = 0;
+      }
     } else if (isDedicated) {
       const spec = dedicatedSpecs.find(s => s.id === selectedDedicatedSpec);
       const basePrice = spec?.price || 2700;
