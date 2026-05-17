@@ -334,7 +334,7 @@ const PricingSection = () => {
       referralDiscountAmount,
       priceBeforeDiscount: totalBeforeCodeDiscount
     };
-  }, [selectedCommitment, selectedServerType, selectedDedicatedSpec, additionalStakePackages, privateShredsEnabled, isDedicated, isSwQoS, swqosStakePackages, rentAccessEnabled, appliedDiscount, referralBanner]);
+  }, [selectedCommitment, selectedServerType, selectedDedicatedSpec, additionalStakePackages, privateShredsEnabled, isDedicated, isSwQoS, swqosStakePackages, rentAccessEnabled, appliedDiscount, referralBanner, swqosAppliedCode]);
 
   const validateDiscountCode = async () => {
     if (!discountCode.trim()) return;
