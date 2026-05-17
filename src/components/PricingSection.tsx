@@ -1517,6 +1517,7 @@ const PricingSection = () => {
         appliedDiscount={appliedDiscount}
         includeShredsFromPricing={isSwQoS ? false : privateShredsEnabled}
         additionalStakePackages={isSwQoS ? swqosStakePackages : additionalStakePackages}
+        swqosCode={isSwQoS ? swqosAppliedCode : null}
         initialReferralCode={storedReferralCode || undefined}
       />
 
