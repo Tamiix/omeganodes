@@ -13,6 +13,13 @@ interface AppliedDiscount {
   discount_value: number;
 }
 
+interface SwqosCodeApplied {
+  code: string;
+  stake_packages: number;
+  duration_days: number;
+  price_usd: number;
+}
+
 interface CryptoPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -30,6 +37,7 @@ interface CryptoPaymentModalProps {
   includeShredsFromPricing?: boolean;
   additionalStakePackages?: number;
   initialReferralCode?: string;
+  swqosCode?: SwqosCodeApplied | null;
 }
 
 const PRODUCTION_WALLET = "8b6cCUhEYL2B7UMC15phYkf9y9GEs3cUV2UQ4zECHroA";
@@ -62,7 +70,7 @@ const SHREDS_PRICE = 800; // USD per month
 
 type PaymentStep = "select" | "processing" | "success" | "failed" | "partial";
 
-const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, planName, rps = 100, tps = 50, serverType = "shared", location = "all", rentAccessEnabled = false, isTestMode = false, discordUserId = "", appliedDiscount = null, includeShredsFromPricing = false, additionalStakePackages = 0, initialReferralCode }: CryptoPaymentModalProps) => {
+const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, planName, rps = 100, tps = 50, serverType = "shared", location = "all", rentAccessEnabled = false, isTestMode = false, discordUserId = "", appliedDiscount = null, includeShredsFromPricing = false, additionalStakePackages = 0, initialReferralCode, swqosCode = null }: CryptoPaymentModalProps) => {
   const [selectedCrypto, setSelectedCrypto] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [paymentStep, setPaymentStep] = useState<PaymentStep>("select");
@@ -129,6 +137,10 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, planName, rps
 
   const getTotalAmount = () => {
     if (isTestMode) return TEST_AMOUNT;
+    if (swqosCode) {
+      const referralDiscount = referralInfo ? Math.round(swqosCode.price_usd * 0.10 * 100) / 100 : 0;
+      return Math.max(0, swqosCode.price_usd - referralDiscount);
+    }
     if (isWeekly) {
       let weeklyTotal = 120;
       // Apply discount code to weekly
@@ -220,9 +232,11 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, planName, rps
         const signature = data.signature || `OMG-${Date.now().toString(36).toUpperCase()}`;
         setTransactionRef(signature);
         
-        // Calculate expiration date based on commitment
+        // Calculate expiration date based on commitment / swqos code
         const expiresAt = new Date();
-        if (isWeekly) {
+        if (swqosCode) {
+          expiresAt.setDate(expiresAt.getDate() + swqosCode.duration_days);
+        } else if (isWeekly) {
           expiresAt.setDate(expiresAt.getDate() + 7);
         } else {
           const months = getTotalMonths();
@@ -259,6 +273,11 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, planName, rps
             // Increment discount code usage
             if (!orderError && appliedDiscount?.code) {
               await supabase.rpc('increment_discount_code_usage', { p_code: appliedDiscount.code });
+            }
+
+            // Increment swqos code usage
+            if (!orderError && swqosCode?.code) {
+              await supabase.rpc('increment_swqos_code_usage', { p_code: swqosCode.code });
             }
 
             // Create referral record if a referral code was used

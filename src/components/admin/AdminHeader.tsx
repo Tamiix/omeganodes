@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Shield, Users, UserCheck, Tag, Clock, Gift, Mail } from 'lucide-react';
+import { ArrowLeft, Shield, Users, UserCheck, Tag, Clock, Gift, Mail, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const AdminHeader = () => {
@@ -9,6 +9,7 @@ const AdminHeader = () => {
   const isCustomersPage = location.pathname === '/admin/customers';
   const isDiscountCodesPage = location.pathname === '/admin/discount-codes';
   const isAccessCodesPage = location.pathname === '/admin/access-codes';
+  const isSwqosCodesPage = location.pathname === '/admin/swqos-codes';
   const isReferralsPage = location.pathname === '/admin/referrals';
   const isEmailsPage = location.pathname === '/admin/emails';
 
@@ -39,7 +40,7 @@ const AdminHeader = () => {
           {/* Navigation Tabs - horizontally scrollable on mobile */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
             <Button
-              variant={!isCustomersPage && !isDiscountCodesPage && !isAccessCodesPage && !isReferralsPage && !isEmailsPage ? "default" : "ghost"}
+              variant={!isCustomersPage && !isDiscountCodesPage && !isAccessCodesPage && !isSwqosCodesPage && !isReferralsPage && !isEmailsPage ? "default" : "ghost"}
               size="sm"
               onClick={() => navigate('/admin')}
               className="gap-1.5 shrink-0 text-xs sm:text-sm h-8"
@@ -73,6 +74,15 @@ const AdminHeader = () => {
             >
               <Clock className="w-3.5 h-3.5" />
               Trials
+            </Button>
+            <Button
+              variant={isSwqosCodesPage ? "default" : "ghost"}
+              size="sm"
+              onClick={() => navigate('/admin/swqos-codes')}
+              className="gap-1.5 shrink-0 text-xs sm:text-sm h-8"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              SwQoS
             </Button>
             <Button
               variant={isReferralsPage ? "default" : "ghost"}

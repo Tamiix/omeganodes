@@ -387,6 +387,51 @@ export type Database = {
         }
         Relationships: []
       }
+      swqos_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string
+          current_uses: number
+          duration_days: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          price_usd: number
+          stake_packages: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by: string
+          current_uses?: number
+          duration_days: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          price_usd: number
+          stake_packages: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string
+          current_uses?: number
+          duration_days?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          price_usd?: number
+          stake_packages?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       trial_usage: {
         Row: {
           created_at: string
@@ -458,6 +503,10 @@ export type Database = {
         Args: { p_code: string }
         Returns: undefined
       }
+      increment_swqos_code_usage: {
+        Args: { p_code: string }
+        Returns: undefined
+      }
       is_owner: { Args: { _user_id: string }; Returns: boolean }
       redeem_access_code: {
         Args: { p_code: string; p_discord_id: string }
@@ -486,6 +535,17 @@ export type Database = {
           is_valid: boolean
           referrer_id: string
           referrer_username: string
+        }[]
+      }
+      validate_swqos_code: {
+        Args: { p_code: string }
+        Returns: {
+          code: string
+          duration_days: number
+          error_message: string
+          is_valid: boolean
+          price_usd: number
+          stake_packages: number
         }[]
       }
     }

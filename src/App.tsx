@@ -11,6 +11,7 @@ import Admin from "./pages/Admin";
 import Customers from "./pages/Customers";
 import DiscountCodes from "./pages/DiscountCodes";
 import AccessCodes from "./pages/AccessCodes";
+import SwqosCodes from "./pages/SwqosCodes";
 import NotFound from "./pages/NotFound";
 import Terms from "./pages/Terms";
 import Referral from "./pages/Referral";
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="/admin/customers" element={<Customers />} />
               <Route path="/admin/discount-codes" element={<DiscountCodes />} />
               <Route path="/admin/access-codes" element={<AccessCodes />} />
+              <Route path="/admin/swqos-codes" element={<SwqosCodes />} />
               <Route path="/admin/referrals" element={<AdminReferrals />} />
               <Route path="/admin/emails" element={<AdminEmails />} />
               <Route path="/terms" element={<Terms />} />

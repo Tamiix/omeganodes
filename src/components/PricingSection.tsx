@@ -128,6 +128,56 @@ const PricingSection = () => {
   const isSwQoS = selectedServerType === "swqos";
   const isWeekly = selectedCommitment === "weekly";
   const [swqosStakePackages, setSwqosStakePackages] = useState(1);
+
+  // SwQoS redeem code (admin-issued: custom packages / duration / price)
+  const [swqosCodeInput, setSwqosCodeInput] = useState("");
+  const [swqosAppliedCode, setSwqosAppliedCode] = useState<{
+    code: string;
+    stake_packages: number;
+    duration_days: number;
+    price_usd: number;
+  } | null>(null);
+  const [swqosCodeError, setSwqosCodeError] = useState("");
+  const [isValidatingSwqosCode, setIsValidatingSwqosCode] = useState(false);
+
+  const applySwqosCode = async () => {
+    const code = swqosCodeInput.trim().toUpperCase();
+    if (!code) return;
+    if (!user) {
+      setSwqosCodeError("Please sign in to apply a code");
+      return;
+    }
+    setIsValidatingSwqosCode(true);
+    setSwqosCodeError("");
+    try {
+      const { data, error } = await supabase.rpc('validate_swqos_code', { p_code: code });
+      if (error) { setSwqosCodeError("Failed to validate code"); return; }
+      const result = data?.[0];
+      if (!result || !result.is_valid) {
+        setSwqosCodeError(result?.error_message || "Invalid code");
+        setSwqosAppliedCode(null);
+        return;
+      }
+      setSwqosAppliedCode({
+        code: result.code,
+        stake_packages: result.stake_packages,
+        duration_days: result.duration_days,
+        price_usd: Number(result.price_usd),
+      });
+      setSwqosStakePackages(result.stake_packages);
+      setSwqosCodeInput("");
+    } catch (err) {
+      setSwqosCodeError("Failed to validate code");
+    } finally {
+      setIsValidatingSwqosCode(false);
+    }
+  };
+
+  const removeSwqosCode = () => {
+    setSwqosAppliedCode(null);
+    setSwqosCodeError("");
+    setSwqosCodeInput("");
+  };
   
   // Check if commitment discount is active (any commitment other than monthly or weekly)
   const hasCommitmentDiscount = selectedCommitment !== "monthly" && selectedCommitment !== "weekly";
@@ -219,6 +269,13 @@ const PricingSection = () => {
       serverPrice = Math.round(totalStake * (1 - discountPercent));
       addOnsPrice = 0;
       beforeDiscount = totalStake;
+
+      // SwQoS redeem code overrides everything
+      if (swqosAppliedCode) {
+        serverPrice = swqosAppliedCode.price_usd;
+        beforeDiscount = swqosAppliedCode.price_usd;
+        discountPercent = 0;
+      }
     } else if (isDedicated) {
       const spec = dedicatedSpecs.find(s => s.id === selectedDedicatedSpec);
       const basePrice = spec?.price || 2700;
@@ -277,7 +334,7 @@ const PricingSection = () => {
       referralDiscountAmount,
       priceBeforeDiscount: totalBeforeCodeDiscount
     };
-  }, [selectedCommitment, selectedServerType, selectedDedicatedSpec, additionalStakePackages, privateShredsEnabled, isDedicated, isSwQoS, swqosStakePackages, rentAccessEnabled, appliedDiscount, referralBanner]);
+  }, [selectedCommitment, selectedServerType, selectedDedicatedSpec, additionalStakePackages, privateShredsEnabled, isDedicated, isSwQoS, swqosStakePackages, rentAccessEnabled, appliedDiscount, referralBanner, swqosAppliedCode]);
 
   const validateDiscountCode = async () => {
     if (!discountCode.trim()) return;
@@ -645,8 +702,50 @@ const PricingSection = () => {
               viewport={{ once: true }}
               className="lg:col-span-2 space-y-3"
             >
-              {/* Stake Package Selector */}
+              {/* SwQoS Redeem Code */}
               <div className="p-4 rounded-lg border border-border bg-card">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                  <Tag className="w-4 h-4 text-primary" />
+                  Redeem Code
+                </h3>
+                {swqosAppliedCode ? (
+                  <div className="flex items-center justify-between gap-3 p-2.5 rounded-md bg-primary/10 border border-primary/30">
+                    <div className="text-xs">
+                      <div className="font-mono font-semibold text-primary">{swqosAppliedCode.code}</div>
+                      <div className="text-muted-foreground">
+                        {swqosAppliedCode.stake_packages}× pkg ({(swqosAppliedCode.stake_packages * 100000).toLocaleString()} SOL) ·
+                        {' '}${swqosAppliedCode.price_usd} · {swqosAppliedCode.duration_days} days
+                      </div>
+                    </div>
+                    <Button size="sm" variant="ghost" onClick={removeSwqosCode}>Remove</Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="SWQOS-XXXXXXXX"
+                        value={swqosCodeInput}
+                        onChange={(e) => setSwqosCodeInput(e.target.value.toUpperCase())}
+                        className="text-sm font-mono"
+                        disabled={!user}
+                      />
+                      <Button
+                        size="sm"
+                        onClick={applySwqosCode}
+                        disabled={!user || !swqosCodeInput.trim() || isValidatingSwqosCode}
+                      >
+                        {isValidatingSwqosCode ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
+                      </Button>
+                    </div>
+                    {swqosCodeError && (
+                      <p className="text-xs text-destructive mt-2">{swqosCodeError}</p>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Stake Package Selector */}
+              <div className={`p-4 rounded-lg border border-border bg-card ${swqosAppliedCode ? 'opacity-60 pointer-events-none' : ''}`}>
                 <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-primary" />
                   Stake Packages
@@ -659,19 +758,21 @@ const PricingSection = () => {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setSwqosStakePackages(Math.max(1, swqosStakePackages - 1))}
-                      disabled={swqosStakePackages <= 1}
+                      disabled={swqosStakePackages <= 1 || !!swqosAppliedCode}
                       className="w-10 h-10 sm:w-8 sm:h-8 rounded-md bg-muted flex items-center justify-center font-medium hover:bg-muted/80 disabled:opacity-40"
                     >−</button>
                     <span className="w-6 text-center font-semibold">{swqosStakePackages}</span>
                     <button
                       onClick={() => setSwqosStakePackages(Math.min(10, swqosStakePackages + 1))}
-                      className="w-10 h-10 sm:w-8 sm:h-8 rounded-md bg-primary text-white flex items-center justify-center font-medium hover:bg-primary/90"
+                      disabled={!!swqosAppliedCode}
+                      className="w-10 h-10 sm:w-8 sm:h-8 rounded-md bg-primary text-white flex items-center justify-center font-medium hover:bg-primary/90 disabled:opacity-40"
                     >+</button>
                   </div>
                 </div>
                 <p className="text-xs text-secondary mt-2">
                   Total stake: {(swqosStakePackages * 100000).toLocaleString()} SOL
-                  {swqosStakePackages >= 10 && ' — Save $4,000/mo vs per-package pricing'}
+                  {swqosAppliedCode && ` · Custom (${swqosAppliedCode.duration_days} days for $${swqosAppliedCode.price_usd})`}
+                  {!swqosAppliedCode && swqosStakePackages >= 10 && ' — Save $4,000/mo vs per-package pricing'}
                 </p>
               </div>
 
@@ -1416,6 +1517,7 @@ const PricingSection = () => {
         appliedDiscount={appliedDiscount}
         includeShredsFromPricing={isSwQoS ? false : privateShredsEnabled}
         additionalStakePackages={isSwQoS ? swqosStakePackages : additionalStakePackages}
+        swqosCode={isSwQoS ? swqosAppliedCode : null}
         initialReferralCode={storedReferralCode || undefined}
       />
 
