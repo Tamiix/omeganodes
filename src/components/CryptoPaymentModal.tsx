@@ -137,6 +137,10 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, planName, rps
 
   const getTotalAmount = () => {
     if (isTestMode) return TEST_AMOUNT;
+    if (swqosCode) {
+      const referralDiscount = referralInfo ? Math.round(swqosCode.price_usd * 0.10 * 100) / 100 : 0;
+      return Math.max(0, swqosCode.price_usd - referralDiscount);
+    }
     if (isWeekly) {
       let weeklyTotal = 120;
       // Apply discount code to weekly
