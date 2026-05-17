@@ -76,6 +76,15 @@ const AdminHeader = () => {
               Trials
             </Button>
             <Button
+              variant={isSwqosCodesPage ? "default" : "ghost"}
+              size="sm"
+              onClick={() => navigate('/admin/swqos-codes')}
+              className="gap-1.5 shrink-0 text-xs sm:text-sm h-8"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              SwQoS
+            </Button>
+            <Button
               variant={isReferralsPage ? "default" : "ghost"}
               size="sm"
               onClick={() => navigate('/admin/referrals')}
