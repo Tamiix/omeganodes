@@ -13,6 +13,13 @@ interface AppliedDiscount {
   discount_value: number;
 }
 
+interface SwqosCodeApplied {
+  code: string;
+  stake_packages: number;
+  duration_days: number;
+  price_usd: number;
+}
+
 interface CryptoPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -30,6 +37,7 @@ interface CryptoPaymentModalProps {
   includeShredsFromPricing?: boolean;
   additionalStakePackages?: number;
   initialReferralCode?: string;
+  swqosCode?: SwqosCodeApplied | null;
 }
 
 const PRODUCTION_WALLET = "8b6cCUhEYL2B7UMC15phYkf9y9GEs3cUV2UQ4zECHroA";
