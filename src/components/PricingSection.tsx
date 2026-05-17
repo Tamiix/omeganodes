@@ -128,6 +128,56 @@ const PricingSection = () => {
   const isSwQoS = selectedServerType === "swqos";
   const isWeekly = selectedCommitment === "weekly";
   const [swqosStakePackages, setSwqosStakePackages] = useState(1);
+
+  // SwQoS redeem code (admin-issued: custom packages / duration / price)
+  const [swqosCodeInput, setSwqosCodeInput] = useState("");
+  const [swqosAppliedCode, setSwqosAppliedCode] = useState<{
+    code: string;
+    stake_packages: number;
+    duration_days: number;
+    price_usd: number;
+  } | null>(null);
+  const [swqosCodeError, setSwqosCodeError] = useState("");
+  const [isValidatingSwqosCode, setIsValidatingSwqosCode] = useState(false);
+
+  const applySwqosCode = async () => {
+    const code = swqosCodeInput.trim().toUpperCase();
+    if (!code) return;
+    if (!user) {
+      setSwqosCodeError("Please sign in to apply a code");
+      return;
+    }
+    setIsValidatingSwqosCode(true);
+    setSwqosCodeError("");
+    try {
+      const { data, error } = await supabase.rpc('validate_swqos_code', { p_code: code });
+      if (error) { setSwqosCodeError("Failed to validate code"); return; }
+      const result = data?.[0];
+      if (!result || !result.is_valid) {
+        setSwqosCodeError(result?.error_message || "Invalid code");
+        setSwqosAppliedCode(null);
+        return;
+      }
+      setSwqosAppliedCode({
+        code: result.code,
+        stake_packages: result.stake_packages,
+        duration_days: result.duration_days,
+        price_usd: Number(result.price_usd),
+      });
+      setSwqosStakePackages(result.stake_packages);
+      setSwqosCodeInput("");
+    } catch (err) {
+      setSwqosCodeError("Failed to validate code");
+    } finally {
+      setIsValidatingSwqosCode(false);
+    }
+  };
+
+  const removeSwqosCode = () => {
+    setSwqosAppliedCode(null);
+    setSwqosCodeError("");
+    setSwqosCodeInput("");
+  };
   
   // Check if commitment discount is active (any commitment other than monthly or weekly)
   const hasCommitmentDiscount = selectedCommitment !== "monthly" && selectedCommitment !== "weekly";
