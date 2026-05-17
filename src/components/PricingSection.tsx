@@ -702,8 +702,50 @@ const PricingSection = () => {
               viewport={{ once: true }}
               className="lg:col-span-2 space-y-3"
             >
-              {/* Stake Package Selector */}
+              {/* SwQoS Redeem Code */}
               <div className="p-4 rounded-lg border border-border bg-card">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                  <Tag className="w-4 h-4 text-primary" />
+                  Redeem Code
+                </h3>
+                {swqosAppliedCode ? (
+                  <div className="flex items-center justify-between gap-3 p-2.5 rounded-md bg-primary/10 border border-primary/30">
+                    <div className="text-xs">
+                      <div className="font-mono font-semibold text-primary">{swqosAppliedCode.code}</div>
+                      <div className="text-muted-foreground">
+                        {swqosAppliedCode.stake_packages}× pkg ({(swqosAppliedCode.stake_packages * 100000).toLocaleString()} SOL) ·
+                        {' '}${swqosAppliedCode.price_usd} · {swqosAppliedCode.duration_days} days
+                      </div>
+                    </div>
+                    <Button size="sm" variant="ghost" onClick={removeSwqosCode}>Remove</Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="SWQOS-XXXXXXXX"
+                        value={swqosCodeInput}
+                        onChange={(e) => setSwqosCodeInput(e.target.value.toUpperCase())}
+                        className="text-sm font-mono"
+                        disabled={!user}
+                      />
+                      <Button
+                        size="sm"
+                        onClick={applySwqosCode}
+                        disabled={!user || !swqosCodeInput.trim() || isValidatingSwqosCode}
+                      >
+                        {isValidatingSwqosCode ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
+                      </Button>
+                    </div>
+                    {swqosCodeError && (
+                      <p className="text-xs text-destructive mt-2">{swqosCodeError}</p>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Stake Package Selector */}
+              <div className={`p-4 rounded-lg border border-border bg-card ${swqosAppliedCode ? 'opacity-60 pointer-events-none' : ''}`}>
                 <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-primary" />
                   Stake Packages
@@ -716,19 +758,21 @@ const PricingSection = () => {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setSwqosStakePackages(Math.max(1, swqosStakePackages - 1))}
-                      disabled={swqosStakePackages <= 1}
+                      disabled={swqosStakePackages <= 1 || !!swqosAppliedCode}
                       className="w-10 h-10 sm:w-8 sm:h-8 rounded-md bg-muted flex items-center justify-center font-medium hover:bg-muted/80 disabled:opacity-40"
                     >−</button>
                     <span className="w-6 text-center font-semibold">{swqosStakePackages}</span>
                     <button
                       onClick={() => setSwqosStakePackages(Math.min(10, swqosStakePackages + 1))}
-                      className="w-10 h-10 sm:w-8 sm:h-8 rounded-md bg-primary text-white flex items-center justify-center font-medium hover:bg-primary/90"
+                      disabled={!!swqosAppliedCode}
+                      className="w-10 h-10 sm:w-8 sm:h-8 rounded-md bg-primary text-white flex items-center justify-center font-medium hover:bg-primary/90 disabled:opacity-40"
                     >+</button>
                   </div>
                 </div>
                 <p className="text-xs text-secondary mt-2">
                   Total stake: {(swqosStakePackages * 100000).toLocaleString()} SOL
-                  {swqosStakePackages >= 10 && ' — Save $4,000/mo vs per-package pricing'}
+                  {swqosAppliedCode && ` · Custom (${swqosAppliedCode.duration_days} days for $${swqosAppliedCode.price_usd})`}
+                  {!swqosAppliedCode && swqosStakePackages >= 10 && ' — Save $4,000/mo vs per-package pricing'}
                 </p>
               </div>
 
