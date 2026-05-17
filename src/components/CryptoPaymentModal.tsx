@@ -232,9 +232,11 @@ const CryptoPaymentModal = ({ isOpen, onClose, amount, commitment, planName, rps
         const signature = data.signature || `OMG-${Date.now().toString(36).toUpperCase()}`;
         setTransactionRef(signature);
         
-        // Calculate expiration date based on commitment
+        // Calculate expiration date based on commitment / swqos code
         const expiresAt = new Date();
-        if (isWeekly) {
+        if (swqosCode) {
+          expiresAt.setDate(expiresAt.getDate() + swqosCode.duration_days);
+        } else if (isWeekly) {
           expiresAt.setDate(expiresAt.getDate() + 7);
         } else {
           const months = getTotalMonths();
