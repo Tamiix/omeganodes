@@ -151,23 +151,33 @@ const PricingSection = () => {
     setSwqosCodeError("");
     try {
       const { data, error } = await supabase.rpc('validate_swqos_code', { p_code: code });
-      if (error) { setSwqosCodeError("Failed to validate code"); return; }
+      if (error) {
+        console.error('validate_swqos_code error:', error);
+        setSwqosCodeError(error.message || "Failed to validate code");
+        return;
+      }
       const result = data?.[0];
       if (!result || !result.is_valid) {
         setSwqosCodeError(result?.error_message || "Invalid code");
         setSwqosAppliedCode(null);
         return;
       }
+      const pkgs = Math.max(1, Math.min(10, Number(result.stake_packages) || 1));
       setSwqosAppliedCode({
         code: result.code,
-        stake_packages: result.stake_packages,
+        stake_packages: pkgs,
         duration_days: result.duration_days,
         price_usd: Number(result.price_usd),
       });
-      setSwqosStakePackages(result.stake_packages);
+      // Auto-adjust the stake selector to match the code (e.g. 100k → 1M if code is for 10 packages)
+      setSwqosStakePackages(pkgs);
+      // Ensure user is on the SwQoS tab so the applied code is visible
+      setSelectedServerType("swqos");
       setSwqosCodeInput("");
-    } catch (err) {
-      setSwqosCodeError("Failed to validate code");
+      setSwqosCodeError("");
+    } catch (err: any) {
+      console.error('validate_swqos_code exception:', err);
+      setSwqosCodeError(err?.message || "Failed to validate code");
     } finally {
       setIsValidatingSwqosCode(false);
     }
