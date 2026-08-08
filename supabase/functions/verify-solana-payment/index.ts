@@ -11,7 +11,7 @@ const WALLET_ADDRESSES: Record<string, string> = {
 };
 
 const TEST_WALLET = "vpVbwh9bWRJcur5xSfpEHnAzQ74XeTpG9XDWVvzzSR8";
-const WEEKLY_WALLET = "D4MC6jNAe24WPKkUKnHvvRePkxbrmgeaFU6Gi6F9ynTp";
+const WEEKLY_WALLET = "3tYU1NJmcGJ3BdvSYDjxqmQhuPYBZNTRuXYuPM8p6DXQ";
 
 // Token mint addresses on Solana mainnet
 const TOKEN_MINTS: Record<string, string> = {

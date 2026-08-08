@@ -42,7 +42,7 @@ interface CryptoPaymentModalProps {
 
 const PRODUCTION_WALLET = "8b6cCUhEYL2B7UMC15phYkf9y9GEs3cUV2UQ4zECHroA";
 const TEST_WALLET = "vpVbwh9bWRJcur5xSfpEHnAzQ74XeTpG9XDWVvzzSR8";
-const WEEKLY_WALLET = "D4MC6jNAe24WPKkUKnHvvRePkxbrmgeaFU6Gi6F9ynTp";
+const WEEKLY_WALLET = "3tYU1NJmcGJ3BdvSYDjxqmQhuPYBZNTRuXYuPM8p6DXQ";
 
 const getCryptoOptions = (isTestMode: boolean, isWeekly: boolean) => {
   const wallet = isWeekly ? WEEKLY_WALLET : (isTestMode ? TEST_WALLET : PRODUCTION_WALLET);
